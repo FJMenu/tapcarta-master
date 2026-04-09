@@ -1701,10 +1701,10 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
               <span class="text-sm font-semibold text-cream tracking-wide">${t.whatsapp}</span>
             </a>
 
-           <a href="https://www.google.com/maps/search/?api=1&query=C.%20Manuel%20Navarro%20Mollor%2011%2029680%20Estepona" target="_blank" rel="noopener noreferrer" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
-              <i data-lucide="map-pin" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
-              <span class="text-sm font-semibold text-cream tracking-wide">${t.directions}</span>
-            </a>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=C.%20Manuel%20Navarro%20Mollor%2C%2011%2C%2029680%20Estepona&destination_place_id=ChIJj1WQVgDXDA0Rf16IteXyMeE&travelmode=driving" target="_blank" rel="noopener noreferrer" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
+  <i data-lucide="map-pin" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
+  <span class="text-sm font-semibold text-cream tracking-wide">${t.directions}</span>
+</a>
           </div>
 
           <div class="mt-4 flex justify-center">
@@ -1880,20 +1880,17 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
       updateLangButtons();
     }
 
- function ensureFreshHtmlVersion() {
+function ensureFreshHtmlVersion() {
   try {
     const lastLoadedVersion = localStorage.getItem(VERSION_STORAGE_KEY);
     const reloadDoneForVersion = sessionStorage.getItem(VERSION_RELOAD_FLAG_KEY);
-    const currentUrl = new URL(window.location.href);
-    const urlVersion = currentUrl.searchParams.get('v');
 
     if (lastLoadedVersion !== APP_VERSION) {
       localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION);
 
-      if (reloadDoneForVersion !== APP_VERSION || urlVersion !== APP_VERSION) {
+      if (reloadDoneForVersion !== APP_VERSION) {
         sessionStorage.setItem(VERSION_RELOAD_FLAG_KEY, APP_VERSION);
-        currentUrl.searchParams.set('v', APP_VERSION);
-        window.location.replace(currentUrl.toString());
+        window.location.reload();
         return true;
       }
     } else if (reloadDoneForVersion && reloadDoneForVersion !== APP_VERSION) {
