@@ -2,10 +2,2013 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TapCarta</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>TapCarta – Menu QR pour restaurants</title>
+  <meta name="description" content="TapCarta est une solution de menu digital QR pour restaurants : multilingue, rapide, élégante et pensée pour le mobile.">
+  <meta name="theme-color" content="#0F0F0F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <link id="site-favicon" rel="icon" type="image/png" href="">
+<link id="site-apple-icon" rel="apple-touch-icon" href="">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="TapCarta – Menu QR pour restaurants">
+<meta property="og:description" content="Menu QR multilingue pour restaurants : WhatsApp, GPS, avis Google, options simples et version mobile élégante.">
+<meta id="meta-og-image" property="og:image" content="">
+<meta id="meta-og-url" property="og:url" content="">
+<meta property="og:site_name" content="TapCarta">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TapCarta – Menu QR pour restaurants">
+<meta name="twitter:description" content="Menu QR multilingue pour restaurants : WhatsApp, GPS, avis Google, options simples et version mobile élégante.">
+<meta id="meta-twitter-image" name="twitter:image" content="">
+
+  <style>
+    :root{
+      --bg:#0f0f0f;
+      --bg-soft:#151515;
+      --card:#1a1a1a;
+      --card-2:#202020;
+      --text:#ffffff;
+      --muted:#b9b9b9;
+      --gold:#f2c744;
+      --gold-dark:#d4a820;
+      --line:rgba(255,255,255,.08);
+      --line-strong:rgba(242,199,68,.25);
+      --shadow:0 18px 50px rgba(0,0,0,.38);
+      --radius:22px;
+      --max:1180px;
+      --wa:#1fa855;
+      --warning-bg:rgba(242,199,68,.10);
+      --warning-line:rgba(242,199,68,.20);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    html{
+      scroll-behavior:smooth;
+    }
+
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(242,199,68,.10), transparent 30%),
+        radial-gradient(circle at top right, rgba(242,199,68,.05), transparent 22%),
+        linear-gradient(180deg, #101010 0%, #0c0c0c 100%);
+      color:var(--text);
+      overflow-x:hidden;
+    }
+
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
+
+    img{
+      max-width:100%;
+      display:block;
+    }
+
+    .container{
+      width:min(var(--max), calc(100% - 28px));
+      margin:0 auto;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:40;
+      backdrop-filter:blur(14px);
+      background:rgba(10,10,10,.80);
+      border-bottom:1px solid var(--line);
+    }
+
+    .topbar-inner{
+      min-height:78px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+
+    .brand-icon{
+      width:56px;
+      height:56px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg, #1d1d1d 0%, #111 100%);
+      border:1px solid rgba(242,199,68,.28);
+      box-shadow:var(--shadow);
+      flex-shrink:0;
+      overflow:hidden;
+    }
+
+    .brand-icon svg{
+      width:40px;
+      height:40px;
+      display:block;
+    }
+
+    .brand-text{
+      min-width:0;
+    }
+
+    .brand-title{
+      margin:0;
+      line-height:1;
+      font-size:29px;
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+
+    .brand-title .tap{
+      color:#fff;
+    }
+
+    .brand-title .carta{
+      color:var(--gold);
+    }
+
+    .brand-sub{
+      margin-top:5px;
+      color:var(--muted);
+      font-size:13px;
+      white-space:nowrap;
+    }
+
+    .topbar-right{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .nav-links{
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+      align-items:center;
+      color:#ddd;
+      font-size:14px;
+    }
+
+    .nav-links a{
+      opacity:.92;
+    }
+
+    .nav-links a:hover{
+      color:var(--gold);
+    }
+
+    .lang-switcher{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .lang-btn{
+      border:1px solid var(--line);
+      background:#171717;
+      color:#fff;
+      border-radius:999px;
+      padding:9px 12px;
+      cursor:pointer;
+      font-size:13px;
+      transition:.2s ease;
+      font-weight:700;
+    }
+
+    .lang-btn:hover,
+    .lang-btn.active{
+      border-color:rgba(242,199,68,.45);
+      background:rgba(242,199,68,.10);
+      color:var(--gold);
+    }
+
+    .hero{
+      padding:72px 0 34px;
+      scroll-margin-top:90px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:24px;
+      align-items:stretch;
+    }
+
+    .hero-card,
+    .visual-card,
+    .feature-card,
+    .pricing-card,
+    .contact-card,
+    .demo-card,
+    .install-card,
+    .notice-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.014));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .hero-card{
+      padding:34px;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 14px;
+      border-radius:999px;
+      border:1px solid rgba(242,199,68,.18);
+      background:rgba(242,199,68,.10);
+      color:var(--gold);
+      font-size:13px;
+      margin-bottom:18px;
+      font-weight:700;
+    }
+
+    .hero h1{
+      margin:0 0 14px;
+      font-size:clamp(38px, 6vw, 64px);
+      line-height:1.01;
+      letter-spacing:-.045em;
+      max-width:760px;
+    }
+
+    .hero .lead{
+      margin:0;
+      color:var(--muted);
+      font-size:clamp(18px, 2vw, 21px);
+      line-height:1.65;
+      max-width:780px;
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px;
+      margin-top:28px;
+    }
+
+    .btn{
+      min-height:54px;
+      padding:0 22px;
+      border-radius:15px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      font-weight:800;
+      transition:.2s ease;
+      border:1px solid transparent;
+      cursor:pointer;
+    }
+
+    .btn-primary{
+      background:var(--gold);
+      color:#111;
+    }
+
+    .btn-primary:hover{
+      background:var(--gold-dark);
+      transform:translateY(-1px);
+    }
+
+    .btn-secondary{
+      background:#171717;
+      border-color:var(--line);
+      color:#fff;
+    }
+
+    .btn-secondary:hover{
+      border-color:rgba(242,199,68,.35);
+      color:var(--gold);
+    }
+
+    .btn-whatsapp{
+      background:var(--wa);
+      color:#fff;
+    }
+
+    .btn-whatsapp:hover{
+      filter:brightness(1.06);
+      transform:translateY(-1px);
+    }
+
+    .hero-points{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:24px;
+    }
+
+    .hero-point{
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      color:#e7e7e7;
+      font-size:14px;
+    }
+
+    .visual-card{
+      padding:22px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .phone{
+      width:100%;
+      max-width:355px;
+      border-radius:34px;
+      background:#0b0b0b;
+      border:1px solid rgba(255,255,255,.08);
+      padding:14px;
+      box-shadow:0 20px 60px rgba(0,0,0,.48);
+    }
+
+    .phone-screen{
+      min-height:640px;
+      border-radius:24px;
+      overflow:hidden;
+      background:linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+      border:1px solid rgba(255,255,255,.05);
+    }
+
+    .screen-top{
+      padding:18px 18px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+
+    .screen-badge{
+      display:inline-block;
+      font-size:11px;
+      color:var(--gold);
+      background:rgba(242,199,68,.10);
+      border:1px solid rgba(242,199,68,.18);
+      border-radius:999px;
+      padding:6px 10px;
+      margin-bottom:12px;
+      font-weight:700;
+    }
+
+    .screen-title{
+      font-size:25px;
+      margin:0 0 5px;
+      font-weight:900;
+      letter-spacing:-.02em;
+    }
+
+    .screen-sub{
+      margin:0;
+      color:#c9c9c9;
+      font-size:14px;
+    }
+
+    .screen-actions{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      padding:16px 18px;
+    }
+
+    .screen-action{
+      background:#181818;
+      border:1px solid rgba(255,255,255,.05);
+      border-radius:16px;
+      padding:13px 9px;
+      text-align:center;
+      font-size:12px;
+      color:#ececec;
+      font-weight:700;
+    }
+
+    .screen-section{
+      padding:0 18px 18px;
+    }
+
+    .screen-cat{
+      margin:18px 0 10px;
+      color:var(--gold);
+      text-transform:uppercase;
+      font-size:13px;
+      letter-spacing:.04em;
+      font-weight:800;
+    }
+
+    .screen-item{
+      display:flex;
+      justify-content:space-between;
+      gap:18px;
+      padding:12px 0;
+      border-bottom:1px solid rgba(255,255,255,.05);
+      font-size:15px;
+    }
+
+    .screen-item strong{
+      display:block;
+      margin-bottom:4px;
+      font-size:15px;
+    }
+
+    .screen-item small{
+      color:#aaaaaa;
+      font-size:12px;
+    }
+
+    .section{
+      padding:30px 0;
+      scroll-margin-top:95px;
+    }
+
+    .section-head{
+      margin-bottom:22px;
+    }
+
+    .section-head h2{
+      margin:0 0 10px;
+      font-size:clamp(28px, 4vw, 42px);
+      letter-spacing:-.03em;
+    }
+
+    .section-head p{
+      margin:0;
+      color:var(--muted);
+      font-size:18px;
+      line-height:1.65;
+      max-width:880px;
+    }
+
+    .features-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+    }
+
+    .feature-card{
+      padding:26px;
+    }
+
+    .feature-icon{
+      width:54px;
+      height:54px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(242,199,68,.12);
+      border:1px solid rgba(242,199,68,.22);
+      color:var(--gold);
+      font-size:24px;
+      margin-bottom:16px;
+      font-weight:900;
+    }
+
+    .feature-card h3{
+      margin:0 0 10px;
+      font-size:22px;
+      letter-spacing:-.02em;
+    }
+
+    .feature-card p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:16px;
+    }
+
+    .demo-card{
+      padding:28px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px;
+      flex-wrap:wrap;
+    }
+
+    .demo-left{
+      max-width:760px;
+    }
+
+    .demo-card h3{
+      margin:0 0 10px;
+      font-size:28px;
+      letter-spacing:-.02em;
+    }
+
+    .demo-card p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:17px;
+    }
+
+    .notice-card{
+      margin-top:18px;
+      padding:18px 20px;
+      background:linear-gradient(180deg, var(--warning-bg), rgba(255,255,255,.02));
+      border:1px solid var(--warning-line);
+    }
+
+    .notice-card strong{
+      color:var(--gold);
+      display:block;
+      margin-bottom:6px;
+      font-size:15px;
+    }
+
+    .notice-card p{
+      margin:0;
+      color:#e7e7e7;
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .pricing-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      align-items:stretch;
+    }
+
+    .pricing-card{
+      padding:28px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .pricing-card.highlight{
+      border-color:var(--line-strong);
+      transform:translateY(-2px);
+      box-shadow:0 25px 60px rgba(0,0,0,.45);
+    }
+
+    .plan-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      margin-bottom:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:#e6e6e6;
+    }
+
+    .plan-badge.gold{
+      background:rgba(242,199,68,.10);
+      border-color:rgba(242,199,68,.18);
+      color:var(--gold);
+    }
+
+    .pricing-card h3{
+      margin:0 0 8px;
+      font-size:26px;
+      letter-spacing:-.02em;
+    }
+
+    .pricing-card p.plan-desc{
+      margin:0 0 20px;
+      color:var(--muted);
+      line-height:1.6;
+      min-height:96px;
+      font-size:15px;
+    }
+
+    .price{
+      display:flex;
+      align-items:flex-end;
+      gap:8px;
+      margin-bottom:18px;
+    }
+
+    .price .amount{
+      font-size:48px;
+      font-weight:900;
+      line-height:1;
+      color:var(--gold);
+      letter-spacing:-.04em;
+    }
+
+    .price .period{
+      color:var(--muted);
+      font-size:15px;
+      padding-bottom:7px;
+    }
+
+    .features{
+      list-style:none;
+      padding:0;
+      margin:0;
+      display:grid;
+      gap:11px;
+    }
+
+    .features li{
+      position:relative;
+      padding-left:27px;
+      color:#ececec;
+      line-height:1.55;
+      font-size:15px;
+    }
+
+    .features li::before{
+      content:"✓";
+      position:absolute;
+      left:0;
+      top:0;
+      color:var(--gold);
+      font-weight:900;
+    }
+
+    .options-features{
+      list-style:none;
+      padding:0;
+      margin:0;
+      display:grid;
+      gap:0;
+    }
+
+    .options-features li{
+      list-style:none;
+    }
+
+    .options-features .option-main{
+      position:relative;
+      padding-left:27px;
+      color:#ececec;
+      line-height:1.55;
+      font-size:15px;
+      margin-bottom:8px;
+    }
+
+    .options-features .option-main::before{
+      content:"✓";
+      position:absolute;
+      left:0;
+      top:0;
+      color:var(--gold);
+      font-weight:900;
+    }
+
+    .options-features .option-detail{
+      padding-left:27px;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+      margin-bottom:14px;
+    }
+
+    .options-features .option-detail:last-child{
+      margin-bottom:0;
+    }
+
+    .pricing-card .btn{
+      margin-top:22px;
+      width:100%;
+    }
+
+    .plan-note{
+      margin-top:14px;
+      font-size:13px;
+      color:#b3b3b3;
+      line-height:1.6;
+    }
+
+    .asterisk{
+      color:var(--gold);
+      font-weight:900;
+      margin-left:2px;
+    }
+
+    .limits{
+      margin-top:20px;
+      padding:18px 20px;
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      color:#d9d9d9;
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    .limits strong{
+      color:var(--gold);
+    }
+
+    .install-card{
+      margin-top:20px;
+      padding:24px;
+    }
+
+    .install-card h3{
+      margin:0 0 12px;
+      font-size:24px;
+      letter-spacing:-.02em;
+    }
+
+    .install-card p{
+      margin:0 0 12px;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:15px;
+    }
+
+    .install-card ul{
+      list-style:none;
+      padding:0;
+      margin:0 0 12px;
+      display:grid;
+      gap:10px;
+    }
+
+    .install-card li{
+      position:relative;
+      padding-left:24px;
+      color:#ececec;
+      line-height:1.6;
+      font-size:15px;
+    }
+
+    .install-card li::before{
+      content:"•";
+      position:absolute;
+      left:0;
+      top:0;
+      color:var(--gold);
+      font-weight:900;
+    }
+
+    .contact-card{
+      padding:28px;
+      display:grid;
+      grid-template-columns:1.08fr .92fr;
+      gap:20px;
+      align-items:start;
+    }
+
+    .contact-card h3{
+      margin:0 0 10px;
+      font-size:30px;
+      letter-spacing:-.02em;
+    }
+
+    .contact-card p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:17px;
+    }
+
+    .contact-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:20px;
+    }
+
+    .contact-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .contact-item{
+      padding:16px 18px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      border-radius:16px;
+    }
+
+    .contact-item-label{
+      font-size:12px;
+      color:var(--gold);
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      font-weight:800;
+      margin-bottom:6px;
+    }
+
+    .contact-item-value{
+      color:#f3f3f3;
+      line-height:1.6;
+      font-size:15px;
+    }
+
+    .footer{
+      padding:32px 0 48px;
+      border-top:1px solid var(--line);
+      margin-top:26px;
+    }
+
+    .footer-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      flex-wrap:wrap;
+    }
+
+    .powered{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      color:var(--muted);
+      font-size:15px;
+      flex-wrap:wrap;
+    }
+
+    .powered-text{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      line-height:1.25;
+    }
+
+    .powered-text strong{
+      color:#fff;
+      font-size:16px;
+      font-weight:800;
+    }
+
+    .site-version{
+      margin-top:6px;
+      color:#9f9f9f;
+      font-size:12px;
+      letter-spacing:.04em;
+    }
+
+    .fj-logo-wrap{
+      width:54px;
+      height:54px;
+      border-radius:14px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 10px 18px rgba(0,0,0,.28);
+      flex-shrink:0;
+      background:#111;
+    }
+
+    .fj-logo{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .footer-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:18px;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .footer-links a:hover{
+      color:var(--gold);
+    }
+
+    @media (max-width:1020px){
+      .hero-grid,
+      .features-grid,
+      .pricing-grid,
+      .contact-card{
+        grid-template-columns:1fr;
+      }
+
+      .topbar-inner{
+        align-items:flex-start;
+        flex-direction:column;
+        padding:14px 0;
+      }
+
+      .topbar-right{
+        justify-content:flex-start;
+      }
+
+      .phone{
+        max-width:420px;
+      }
+
+      .pricing-card.highlight{
+        transform:none;
+      }
+    }
+
+    @media (max-width:640px){
+      .container{
+        width:min(var(--max), calc(100% - 20px));
+      }
+
+      .hero{
+        padding-top:34px;
+      }
+
+      .hero-card,
+      .visual-card,
+      .feature-card,
+      .pricing-card,
+      .demo-card,
+      .contact-card,
+      .install-card,
+      .notice-card{
+        padding:20px;
+      }
+
+      .brand-title{
+        font-size:25px;
+      }
+
+      .brand-sub{
+        white-space:normal;
+      }
+
+      .hero-actions,
+      .contact-actions{
+        flex-direction:column;
+      }
+
+      .btn{
+        width:100%;
+      }
+
+      .nav-links{
+        gap:12px;
+      }
+
+      .screen-actions{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .powered{
+        align-items:flex-start;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>TapCarta</h1>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="#top" class="brand" aria-label="TapCarta">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none">
+            <rect x="15" y="6" width="34" height="52" rx="9" stroke="#F2C744" stroke-width="3"/>
+            <rect x="27" y="11" width="10" height="3" rx="1.5" fill="#F2C744"/>
+            <rect x="10" y="18" width="8" height="8" fill="#F2C744"/>
+            <rect x="20" y="18" width="8" height="8" fill="#F2C744"/>
+            <rect x="30" y="18" width="8" height="8" fill="#F2C744"/>
+            <rect x="10" y="28" width="8" height="8" fill="#F2C744"/>
+            <rect x="30" y="28" width="8" height="8" fill="#F2C744"/>
+            <rect x="40" y="28" width="8" height="8" fill="#F2C744"/>
+            <rect x="10" y="38" width="8" height="8" fill="#F2C744"/>
+            <rect x="20" y="38" width="8" height="8" fill="#F2C744"/>
+            <rect x="40" y="38" width="8" height="8" fill="#F2C744"/>
+            <circle cx="31" cy="35" r="6" fill="#ffffff"/>
+            <path d="M31 29.8c2.9 0 5.2 2.2 5.2 5.1 0 2.1-1.2 3.9-3.1 4.7" stroke="#111" stroke-width="2.3" stroke-linecap="round"/>
+            <path d="M32 40.8l5.4 5.4" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="brand-text">
+          <div class="brand-title"><span class="tap">Tap</span><span class="carta">Carta</span></div>
+          <div class="brand-sub" data-i18n="brand_sub">Menu QR pour restaurants</div>
+        </div>
+      </a>
+
+      <div class="topbar-right">
+        <nav class="nav-links">
+          <a href="#features" data-i18n="nav_features">Fonctionnement</a>
+          <a href="#demo" data-i18n="nav_demo">Démo</a>
+          <a href="#pricing" data-i18n="nav_pricing">Offres</a>
+          <a href="#contact" data-i18n="nav_contact">Contact</a>
+        </nav>
+
+        <div class="lang-switcher" aria-label="Language selector">
+          <button class="lang-btn" data-lang="fr">FR</button>
+          <button class="lang-btn" data-lang="es">ES</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="nl">NL</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-card">
+          <div class="eyebrow" data-i18n="hero_badge">Solution digitale pensée pour le mobile</div>
+
+          <h1 data-i18n="hero_title">Le menu QR intelligent pour restaurants</h1>
+
+          <p class="lead" data-i18n="hero_text">
+            TapCarta transforme votre carte en expérience mobile rapide, élégante et multilingue. Vos clients scannent, consultent, trouvent l’itinéraire, laissent un avis Google et peuvent commander ou réserver directement via le WhatsApp du restaurateur. Dès la version Standard, votre établissement bénéficie aussi d’un référencement sur TapCarta pour renforcer sa visibilité en ligne.
+          </p>
+
+          <div class="hero-actions">
+          <a class="btn btn-primary" href="#" target="_blank" rel="noopener" data-link="standard-demo" data-i18n="hero_cta_demo">Voir la démo</a>
+            <a class="btn btn-secondary" href="#pricing" data-i18n="hero_cta_pricing">Découvrir les offres</a>
+            <a class="btn btn-secondary" href="#contact" data-i18n="hero_cta_contact">Je suis restaurateur</a>
+          </div>
+
+          <div class="hero-points">
+            <div class="hero-point" data-i18n="hero_point_1">QR code permanent</div>
+            <div class="hero-point" data-i18n="hero_point_2">Multilingue automatique</div>
+            <div class="hero-point" data-i18n="hero_point_3">Chargement rapide</div>
+            <div class="hero-point" data-i18n="hero_point_4">WhatsApp + GPS + avis Google</div>
+            <div class="hero-point" data-i18n="hero_point_5">Référencement TapCarta dès 30€</div>
+          </div>
+        </div>
+
+        <div class="visual-card">
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="screen-top">
+                <div class="screen-badge" data-i18n="mockup_badge">Exemple TapCarta</div>
+                <h2 class="screen-title" data-i18n="mockup_title">La Bonne Fourchette</h2>
+                <p class="screen-sub" data-i18n="mockup_sub">Menu digital multilingue</p>
+              </div>
+
+              <div class="screen-actions">
+                <div class="screen-action" data-i18n="mockup_whatsapp">WhatsApp</div>
+                <div class="screen-action" data-i18n="mockup_route">Itinéraire</div>
+                <div class="screen-action" data-i18n="mockup_review">Avis Google</div>
+                <div class="screen-action" data-i18n="mockup_booking">Réserver</div>
+              </div>
+
+              <div class="screen-section">
+                <div class="screen-cat" data-i18n="mockup_cat_1">Entrées</div>
+
+<div class="screen-item">
+  <div>
+    <strong data-i18n="mockup_item_1">Croquettes de crevettes grises</strong>
+    <small data-i18n="mockup_desc_1">Spécialité de la côte belge</small>
+  </div>
+  <div>11€</div>
+</div>
+
+<div class="screen-item">
+  <div>
+    <strong data-i18n="mockup_item_2">Boulettes sauce tomate</strong>
+    <small data-i18n="mockup_desc_2">Avec la recette typique de Bruxelles</small>
+  </div>
+  <div>13€</div>
+</div>
+
+<div class="screen-cat" data-i18n="mockup_cat_2">Plats</div>
+
+<div class="screen-item">
+  <div>
+    <strong data-i18n="mockup_item_3">Carbonnade flamande</strong>
+    <small data-i18n="mockup_desc_3">Mijotée à la bière belge</small>
+  </div>
+  <div>19€</div>
+</div>
+
+<div class="screen-item">
+  <div>
+    <strong data-i18n="mockup_item_4">Moules marinières</strong>
+    <small data-i18n="mockup_desc_4">Le classique moules-frites</small>
+  </div>
+  <div>21€</div>
+</div>
+
+<div class="screen-cat" data-i18n="mockup_cat_3">Desserts</div>
+
+<div class="screen-item">
+  <div>
+    <strong data-i18n="mockup_item_5">Crêpe au sucre</strong>
+    <small data-i18n="mockup_desc_5">Simple et gourmande</small>
+  </div>
+  <div>6€</div>
+</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-head">
+          <h2 data-i18n="features_title">Une solution claire, rapide et utile</h2>
+          <p data-i18n="features_text">
+            TapCarta est pensé pour les restaurants qui veulent une présence mobile propre, moderne et facile à comprendre pour leurs clients.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">1</div>
+            <h3 data-i18n="feature_1_title">Le client scanne</h3>
+            <p data-i18n="feature_1_text">
+              Le QR code ouvre immédiatement le menu sur smartphone, sans friction et sans étape inutile.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">2</div>
+            <h3 data-i18n="feature_2_title">Le menu s’adapte</h3>
+            <p data-i18n="feature_2_text">
+              La langue s’adapte automatiquement et la lecture reste claire pour une consultation rapide à table.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">3</div>
+            <h3 data-i18n="feature_3_title">Le client agit</h3>
+            <p data-i18n="feature_3_text">
+              WhatsApp, avis Google, commande, réservation ou GPS : chaque action utile est accessible en un geste.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="demo">
+      <div class="container">
+        <div class="demo-card">
+          <div class="demo-left">
+            <h3 data-i18n="demo_title">Voir la démonstration complète</h3>
+            <p data-i18n="demo_text">
+              Ouvrez un exemple complet de menu TapCarta et découvrez l’expérience telle qu’un client la vit sur son téléphone.
+            </p>
+          </div>
+
+       <a class="btn btn-primary" href="#" target="_blank" rel="noopener" data-link="demo-menu" data-i18n="demo_btn">Ouvrir la démo</a> 
+        </div>
+
+        <div class="notice-card">
+          <strong data-i18n="demo_notice_title">Avertissement démonstration</strong>
+          <p data-i18n="demo_notice_text">
+            Le restaurant présenté dans cette démonstration est fictif. L’adresse, les boutons, les avis Google et les liens visibles sur cette démo sont utilisés uniquement à des fins de présentation du service TapCarta.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="pricing">
+      <div class="container">
+        <div class="section-head">
+          <h2 data-i18n="pricing_title_main">Des offres simples à comprendre</h2>
+          <p data-i18n="pricing_text_main">
+            Une version gratuite pour exister, une base professionnelle à 30 € / mois pour être visible et joignable, puis des options claires selon les besoins du restaurant.
+          </p>
+        </div>
+
+        <div class="pricing-grid">
+          <div class="pricing-card">
+            <div class="plan-badge" data-i18n="plan_light_badge">Entrée de gamme</div>
+            <h3 data-i18n="plan_light_title">Version Light</h3>
+            <p class="plan-desc" data-i18n="plan_light_desc">
+              Une version ultra légère pour une présence simple, rapide et immédiate.
+            </p>
+
+            <div class="price">
+              <div class="amount">0€</div>
+              <div class="period" data-i18n="plan_light_period">gratuit</div>
+            </div>
+
+            <ul class="features">
+              <li data-i18n="plan_light_li_1">Localisation du restaurant</li>
+              <li data-i18n="plan_light_li_2">Bouton appel direct</li>
+              <li data-i18n="plan_light_li_3">QR code permanent</li>
+            </ul>
+
+            <div class="plan-note" data-i18n="plan_light_note">
+              Idéal pour démarrer avec une présence minimale mais propre.
+            </div>
+
+            <a class="btn btn-secondary" href="#contact" data-i18n="plan_light_btn">Demander des infos</a>
+          </div>
+
+          <div class="pricing-card highlight">
+            <div class="plan-badge gold" data-i18n="plan_standard_badge">Offre principale</div>
+            <h3 data-i18n="plan_standard_title">Version Standard</h3>
+            <p class="plan-desc" data-i18n="plan_standard_desc">
+              La base professionnelle TapCarta pour présenter votre carte, faciliter le contact avec vos clients et améliorer votre visibilité en ligne.
+            </p>
+
+            <div class="price">
+              <div class="amount">30€</div>
+              <div class="period" data-i18n="plan_standard_period">/ mois</div>
+            </div>
+
+            <ul class="features">
+              <li data-i18n="plan_standard_li_1">Menu digital accessible via QR code</li>
+              <li data-i18n="plan_standard_li_2">Installation possible sur téléphone</li>
+              <li data-i18n="plan_standard_li_3">Bouton WhatsApp</li>
+              <li data-i18n="plan_standard_li_4">Accès avis Google</li>
+              <li data-i18n="plan_standard_li_5">Accès GPS vers le restaurant</li>
+              <li data-i18n="plan_standard_li_6">Détection automatique de la langue</li>
+              <li data-i18n="plan_standard_li_7">Menu multilingue : 4 langues incluses*</li>
+              <li data-i18n="plan_standard_li_8">1 modification du menu par mois</li>
+              <li data-i18n="plan_standard_li_9">Référencement du restaurant sur TapCarta</li>
+            </ul>
+
+            <a class="btn btn-primary" href="#contact" data-i18n="plan_standard_btn">Recevoir une proposition</a>
+          </div>
+
+          <div class="pricing-card">
+            <div class="plan-badge" data-i18n="plan_options_badge">Options disponibles</div>
+            <h3 data-i18n="plan_options_title">Options</h3>
+            <p class="plan-desc" data-i18n="plan_options_desc">
+              Vous ajoutez uniquement les options utiles à votre restaurant. Rien n’est imposé.
+            </p>
+
+            <ul class="options-features">
+              <li class="option-main" data-i18n="plan_options_li_1">Site web simple : +10 € / mois</li>
+              <li class="option-detail" data-i18n="plan_options_li_2">Présentation du restaurant, accès au menu, informations et localisation GPS</li>
+
+             <li class="option-main" data-i18n="plan_options_li_3">Commande et réservation via WhatsApp : +10 € / mois</li>
+<li class="option-detail" style="color:#9f9f9f; font-size:13px;" data-i18n="plan_options_li_4">Fonctionnalité en cours de développement</li>
+
+              <li class="option-main" data-i18n="plan_options_li_5">Photos des plats dans le menu* : +10 € / mois</li>
+              <li class="option-detail" data-i18n="plan_options_li_6">Jusqu’à 10 photos intégrées dans le menu digital</li>
+
+              <li class="option-main" data-i18n="plan_options_li_7">Langue supplémentaire : +5 € / mois</li>
+              <li class="option-detail" data-i18n="plan_options_li_8">Au-delà des 4 langues incluses dans la version Standard</li>
+
+              <li class="option-main" data-i18n="plan_options_li_9">Adresse personnalisée : 50 € / an</li>
+              <li class="option-detail" data-i18n="plan_options_li_10">Exemple : www.nomdurestaurant.tapcarta.com</li>
+            </ul>
+
+            <div class="plan-note" data-i18n="plan_options_note">
+              Les options viennent s’ajouter à la version Standard à 30 € / mois.
+            </div>
+
+            <a class="btn btn-secondary" href="#contact" data-i18n="plan_options_btn">Composer mon offre</a>
+          </div>
+        </div>
+
+        <div class="limits">
+          <strong data-i18n="limits_label">* Limites prévues pour garantir la fluidité :</strong>
+          <span data-i18n="limits_text">
+            photos des plats limitées à un maximum de 10 par menu. 4 langues sont incluses dans le forfait standard, avec un maximum total de 6 langues, afin de conserver une navigation claire, lisible et rapide sur téléphone.
+          </span>
+        </div>
+
+        <div class="install-card">
+          <h3 data-i18n="install_title">Frais d’installation</h3>
+          <p data-i18n="install_text_1">
+            Les frais d’installation du service TapCarta sont fixés à 50 € HTVA.
+          </p>
+          <ul>
+            <li data-i18n="install_li_1">la configuration du menu digital</li>
+            <li data-i18n="install_li_2">la mise en place du QR code</li>
+            <li data-i18n="install_li_3">l’intégration des premières informations du restaurant</li>
+            <li data-i18n="install_li_4">la mise en ligne du menu</li>
+          </ul>
+          <p data-i18n="install_text_2">
+            Ces frais sont offerts dans le cadre d’un engagement minimum de 12 mois.
+          </p>
+          <p data-i18n="install_text_3">
+            Cette gratuité constitue une remise commerciale conditionnée au respect de la durée d’engagement.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="container">
+        <div class="contact-card">
+          <div>
+            <h3 data-i18n="contact_title">Vous êtes restaurateur ?</h3>
+            <p data-i18n="contact_text">
+              TapCarta est conçu pour être simple à mettre en place, professionnel à présenter et facile à comprendre pour vos clients. Vous partez sur une base claire à 30 € / mois, puis vous ajoutez uniquement les options réellement utiles à votre restaurant.
+            </p>
+
+ <div class="contact-actions">
+  <a class="btn btn-primary" href="#" target="_blank" rel="noopener" data-link="demo-menu" data-i18n="contact_btn_demo">Voir la démo</a>
+  <a class="btn btn-whatsapp" href="#" target="_blank" rel="noopener" data-link="whatsapp" data-i18n="contact_btn_whatsapp">Contacter TapCarta sur WhatsApp</a>
+  <a class="btn btn-secondary" href="#" data-link="email" data-i18n="contact_btn_mail">Envoyer un email</a>
+</div>
+          </div>
+
+          <div class="contact-list">
+            <div class="contact-item">
+              <div class="contact-item-label" data-i18n="contact_box_1_label">Réponse rapide</div>
+              <div class="contact-item-value" data-i18n="contact_box_1_text">
+                Une question ? Nous vous répondons rapidement sur WhatsApp.
+              </div>
+            </div>
+
+            <div class="contact-item">
+              <div class="contact-item-label" data-i18n="contact_box_2_label">Version Standard</div>
+              <div class="contact-item-value" data-i18n="contact_box_2_text">
+                Menu QR, WhatsApp, avis Google, GPS, 4 langues incluses et référencement TapCarta dès 30 € / mois.
+              </div>
+            </div>
+
+            <div class="contact-item">
+              <div class="contact-item-label" data-i18n="contact_box_3_label">Options</div>
+              <div class="contact-item-value" data-i18n="contact_box_3_text">
+                Site web simple, commande et réservation via WhatsApp, photos des plats, langues supplémentaires et adresse personnalisée selon les besoins réels du restaurant.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="powered">
+        <span class="fj-logo-wrap" aria-label="FJ">
+        <img id="footer-logo" src="" alt="TapCarta by FJ" class="fj-logo">
+        </span>
+        <div class="powered-text">
+          <span data-i18n="footer_powered">Powered by</span>
+          <strong data-i18n="footer_brand">TapCarta by FJ</strong>
+     <span class="site-version" id="site-version"></span>
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <a href="#features" data-i18n="footer_link_1">Fonctionnement</a>
+        <a href="#demo" data-i18n="footer_link_2">Démo</a>
+        <a href="#pricing" data-i18n="footer_link_3">Offres</a>
+        <a href="#contact" data-i18n="footer_link_4">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+ <script>
+const SITE_VERSION = "V1.2.7";
+
+const CONFIG = {
+  SITE_VERSION,
+  SITE_URL: "https://fjmenu.github.io/tapcarta-site/",
+  LOGO_URL: "https://fjmenu.github.io/tapcarta-site/logo-fj.png",
+DEMO_MENU_URL: "https://tapcarta.com/demo/",
+STANDARD_DEMO_URL: "https://tapcarta.com/demo/",
+  WHATSAPP_NUMBER: "34672486699",
+  CONTACT_EMAIL: "fj.es@outlook.be",
+  WHATSAPP_TEXT: "Bonjour, je souhaite des informations sur TapCarta."
+};
+
+const translations = {
+    fr: {
+      brand_sub: "Menu QR pour restaurants",
+      nav_features: "Fonctionnement",
+      nav_demo: "Démo",
+      nav_pricing: "Offres",
+      nav_contact: "Contact",
+
+      hero_badge: "Solution digitale pensée pour le mobile",
+      hero_title: "Le menu QR intelligent pour restaurants",
+      hero_text: "TapCarta transforme votre carte en expérience mobile rapide, élégante et multilingue. Vos clients scannent, consultent, trouvent l’itinéraire, laissent un avis Google et peuvent commander ou réserver directement via le WhatsApp du restaurateur. Dès la version Standard, votre établissement bénéficie aussi d’un référencement sur TapCarta pour renforcer sa visibilité en ligne.",
+      hero_cta_demo: "Voir la démo",
+      hero_cta_pricing: "Découvrir les offres",
+      hero_cta_contact: "Je suis restaurateur",
+      hero_point_1: "QR code permanent",
+      hero_point_2: "Multilingue automatique",
+      hero_point_3: "Chargement rapide",
+      hero_point_4: "WhatsApp + GPS + avis Google",
+      hero_point_5: "Référencement TapCarta dès 30€",
+
+mockup_badge: "Aperçu client TapCarta",
+mockup_title: "La Bonne Fourchette",
+mockup_sub: "Carte digitale claire et multilingue",
+mockup_whatsapp: "WhatsApp",
+mockup_route: "Itinéraire",
+mockup_review: "Avis Google",
+mockup_booking: "Réserver",
+mockup_cat_1: "Entrées",
+mockup_item_1: "Croquettes de crevettes grises",
+mockup_desc_1: "Spécialité de la côte belge",
+mockup_item_2: "Boulettes sauce tomate",
+mockup_desc_2: "Avec la recette typique de Bruxelles",
+mockup_cat_2: "Plats",
+mockup_item_3: "Carbonnade flamande",
+mockup_desc_3: "Mijotée à la bière belge",
+mockup_item_4: "Moules marinières",
+mockup_desc_4: "Le classique moules-frites",
+mockup_cat_3: "Desserts",
+mockup_item_5: "Crêpe au sucre",
+mockup_desc_5: "Simple et gourmande",
+
+      features_title: "Une solution claire, rapide et utile",
+      features_text: "TapCarta est pensé pour les restaurants qui veulent une présence mobile propre, moderne et facile à comprendre pour leurs clients.",
+      feature_1_title: "Le client scanne",
+      feature_1_text: "Le QR code ouvre immédiatement le menu sur smartphone, sans friction et sans étape inutile.",
+      feature_2_title: "Le menu s’adapte",
+      feature_2_text: "La langue s’adapte automatiquement et la lecture reste claire pour une consultation rapide à table.",
+      feature_3_title: "Le client agit",
+      feature_3_text: "WhatsApp, avis Google, commande, réservation ou GPS : chaque action utile est accessible en un geste.",
+
+      demo_title: "Voir la démonstration complète",
+      demo_text: "Ouvrez un exemple complet de menu TapCarta et découvrez l’expérience telle qu’un client la vit sur son téléphone.",
+      demo_btn: "Ouvrir la démo",
+      demo_notice_title: "Avertissement démonstration",
+      demo_notice_text: "Le restaurant présenté dans cette démonstration est fictif. L’adresse, les boutons, les avis Google et les liens visibles sur cette démo sont utilisés uniquement à des fins de présentation du service TapCarta.",
+
+      pricing_title_main: "Des offres simples à comprendre",
+      pricing_text_main: "Une version gratuite pour exister, une base professionnelle à 30 € / mois pour être visible et joignable, puis des options claires selon les besoins du restaurant.",
+
+      plan_light_badge: "Entrée de gamme",
+      plan_light_title: "Version Light",
+      plan_light_desc: "Une version ultra légère pour une présence simple, rapide et immédiate.",
+      plan_light_period: "gratuit",
+      plan_light_li_1: "Localisation du restaurant",
+      plan_light_li_2: "Bouton appel direct",
+      plan_light_li_3: "QR code permanent",
+      plan_light_note: "Idéal pour démarrer avec une présence minimale mais propre.",
+      plan_light_btn: "Demander des infos",
+
+      plan_standard_badge: "Offre principale",
+      plan_standard_title: "Version Standard",
+      plan_standard_desc: "La base professionnelle TapCarta pour présenter votre carte, faciliter le contact avec vos clients et améliorer votre visibilité en ligne.",
+      plan_standard_period: "/ mois",
+      plan_standard_li_1: "Menu digital accessible via QR code",
+      plan_standard_li_2: "Installation possible sur téléphone",
+      plan_standard_li_3: "Bouton WhatsApp",
+      plan_standard_li_4: "Accès avis Google",
+      plan_standard_li_5: "Accès GPS vers le restaurant",
+      plan_standard_li_6: "Détection automatique de la langue",
+      plan_standard_li_7: "Menu multilingue : 4 langues incluses*",
+      plan_standard_li_8: "1 modification du menu par mois",
+      plan_standard_li_9: "Référencement du restaurant sur TapCarta",
+      plan_standard_btn: "Recevoir une proposition",
+
+      plan_options_badge: "Options disponibles",
+      plan_options_title: "Options",
+      plan_options_desc: "Vous ajoutez uniquement les options utiles à votre restaurant. Rien n’est imposé.",
+      plan_options_li_1: "Site web simple : +10 € / mois",
+      plan_options_li_2: "Présentation du restaurant, accès au menu, informations et localisation GPS",
+      plan_options_li_3: "Commande et réservation via WhatsApp : +10 € / mois",
+    plan_options_li_4: "Fonctionnalité en cours de développement",
+      plan_options_li_5: "Photos des plats dans le menu* : +10 € / mois",
+      plan_options_li_6: "Jusqu’à 10 photos intégrées dans le menu digital",
+      plan_options_li_7: "Langue supplémentaire : +5 € / mois",
+      plan_options_li_8: "Au-delà des 4 langues incluses dans la version Standard",
+      plan_options_li_9: "Adresse personnalisée : 50 € / an",
+      plan_options_li_10: "Exemple : www.nomdurestaurant.tapcarta.com",
+      plan_options_note: "Les options viennent s’ajouter à la version Standard à 30 € / mois.",
+      plan_options_btn: "Composer mon offre",
+
+      limits_label: "* Limites prévues pour garantir la fluidité :",
+      limits_text: "photos des plats limitées à un maximum de 10 par menu. 4 langues sont incluses dans le forfait standard, avec un maximum total de 6 langues, afin de conserver une navigation claire, lisible et rapide sur téléphone.",
+
+      install_title: "Frais d’installation",
+      install_text_1: "Les frais d’installation du service TapCarta sont fixés à 50 € HTVA.",
+      install_li_1: "la configuration du menu digital",
+      install_li_2: "la mise en place du QR code",
+      install_li_3: "l’intégration des premières informations du restaurant",
+      install_li_4: "la mise en ligne du menu",
+      install_text_2: "Ces frais sont offerts dans le cadre d’un engagement minimum de 12 mois.",
+      install_text_3: "Cette gratuité constitue une remise commerciale conditionnée au respect de la durée d’engagement.",
+
+      contact_title: "Vous êtes restaurateur ?",
+      contact_text: "TapCarta est conçu pour être simple à mettre en place, professionnel à présenter et facile à comprendre pour vos clients. Vous partez sur une base claire à 30 € / mois, puis vous ajoutez uniquement les options réellement utiles à votre restaurant.",
+      contact_btn_demo: "Voir la démo",
+      contact_btn_whatsapp: "Contacter TapCarta sur WhatsApp",
+      contact_btn_mail: "Envoyer un email",
+      contact_box_1_label: "Réponse rapide",
+      contact_box_1_text: "Une question ? Nous vous répondons rapidement sur WhatsApp.",
+      contact_box_2_label: "Version Standard",
+      contact_box_2_text: "Menu QR, WhatsApp, avis Google, GPS, 4 langues incluses et référencement TapCarta dès 30 € / mois.",
+      contact_box_3_label: "Options",
+      contact_box_3_text: "Site web simple, commande et réservation via WhatsApp, photos des plats, langues supplémentaires et adresse personnalisée selon les besoins réels du restaurant.",
+
+      footer_powered: "Powered by",
+      footer_brand: "TapCarta by FJ",
+      footer_link_1: "Fonctionnement",
+      footer_link_2: "Démo",
+      footer_link_3: "Offres",
+      footer_link_4: "Contact",
+    site_version_label: "Version du site"
+    },
+
+    es: {
+      brand_sub: "Menú QR para restaurantes",
+      nav_features: "Funcionamiento",
+      nav_demo: "Demo",
+      nav_pricing: "Planes",
+      nav_contact: "Contacto",
+
+      hero_badge: "Solución digital pensada para móvil",
+      hero_title: "El menú QR inteligente para restaurantes",
+      hero_text: "TapCarta convierte tu carta en una experiencia móvil rápida, elegante y multilingüe. Tus clientes escanean, consultan, encuentran la ruta, dejan una reseña en Google y pueden pedir o reservar directamente por el WhatsApp del restaurante. Desde la versión Standard, tu establecimiento también se beneficia de una referencia en TapCarta para reforzar su visibilidad online.",
+      hero_cta_demo: "Ver la demo",
+      hero_cta_pricing: "Descubrir planes",
+      hero_cta_contact: "Soy restaurador",
+      hero_point_1: "Código QR permanente",
+      hero_point_2: "Multilingüe automático",
+      hero_point_3: "Carga rápida",
+      hero_point_4: "WhatsApp + GPS + reseñas Google",
+      hero_point_5: "Visibilidad TapCarta desde 30€",
+
+mockup_badge: "Vista cliente TapCarta",
+mockup_title: "La Bonne Fourchette",
+mockup_sub: "Carta digital clara y multilingüe",
+mockup_whatsapp: "WhatsApp",
+mockup_route: "Cómo llegar",
+mockup_review: "Reseña Google",
+mockup_booking: "Reservar",
+mockup_cat_1: "Entrantes",
+mockup_item_1: "Croquetas de gambas grises",
+mockup_desc_1: "Especialidad de la costa belga",
+mockup_item_2: "Albóndigas en salsa de tomate",
+mockup_desc_2: "Con la receta típica de Bruselas",
+mockup_cat_2: "Platos",
+mockup_item_3: "Estufado al estilo flamenco",
+mockup_desc_3: "Cocinada a fuego lento con cerveza belga",
+mockup_item_4: "Mejillones a la marinera",
+mockup_desc_4: "El clásico de mejillones con patatas fritas",
+mockup_cat_3: "Postres",
+mockup_item_5: "Crepe con azúcar",
+mockup_desc_5: "Simple y golosa",
+
+      features_title: "Una solución clara, rápida y útil",
+      features_text: "TapCarta está pensado para restaurantes que quieren una presencia móvil limpia, moderna y fácil de entender para sus clientes.",
+      feature_1_title: "El cliente escanea",
+      feature_1_text: "El código QR abre el menú inmediatamente en el smartphone, sin fricción ni pasos innecesarios.",
+      feature_2_title: "El menú se adapta",
+      feature_2_text: "El idioma se adapta automáticamente y la lectura sigue siendo clara para una consulta rápida en mesa.",
+      feature_3_title: "El cliente actúa",
+      feature_3_text: "WhatsApp, reseñas Google, pedido, reserva o GPS: cada acción útil está disponible en un gesto.",
+
+      demo_title: "Ver la demostración completa",
+      demo_text: "Abre un ejemplo completo de menú TapCarta y descubre la experiencia tal como la vive un cliente en su teléfono.",
+      demo_btn: "Abrir demo",
+      demo_notice_title: "Aviso de demostración",
+      demo_notice_text: "El restaurante presentado en esta demostración es ficticio. La dirección, los botones, las reseñas de Google y los enlaces visibles en esta demo se utilizan únicamente con fines de presentación del servicio TapCarta.",
+
+      pricing_title_main: "Planes fáciles de entender",
+      pricing_text_main: "Una versión gratuita para existir, una base profesional de 30 € / mes para ser visible y localizable, y después opciones claras según las necesidades del restaurante.",
+
+      plan_light_badge: "Entrada de gama",
+      plan_light_title: "Versión Light",
+      plan_light_desc: "Una versión ultra ligera para una presencia simple, rápida e inmediata.",
+      plan_light_period: "gratis",
+      plan_light_li_1: "Ubicación del restaurante",
+      plan_light_li_2: "Botón de llamada directa",
+      plan_light_li_3: "Código QR permanente",
+      plan_light_note: "Ideal para empezar con una presencia mínima pero limpia.",
+      plan_light_btn: "Pedir información",
+
+      plan_standard_badge: "Oferta principal",
+      plan_standard_title: "Versión Standard",
+      plan_standard_desc: "La base profesional TapCarta para presentar tu carta, facilitar el contacto con tus clientes y mejorar tu visibilidad online.",
+      plan_standard_period: "/ mes",
+      plan_standard_li_1: "Menú digital accesible por código QR",
+      plan_standard_li_2: "Instalación posible en el teléfono",
+      plan_standard_li_3: "Botón WhatsApp",
+      plan_standard_li_4: "Acceso a reseñas Google",
+      plan_standard_li_5: "Acceso GPS al restaurante",
+      plan_standard_li_6: "Detección automática del idioma",
+      plan_standard_li_7: "Menú multilingüe: 4 idiomas incluidos*",
+      plan_standard_li_8: "1 modificación del menú al mes",
+      plan_standard_li_9: "Referencia del restaurante en TapCarta",
+      plan_standard_btn: "Recibir propuesta",
+
+      plan_options_badge: "Opciones disponibles",
+      plan_options_title: "Opciones",
+      plan_options_desc: "Añades solo las opciones útiles para tu restaurante. Nada es obligatorio.",
+      plan_options_li_1: "Web simple: +10 € / mes",
+      plan_options_li_2: "Presentación del restaurante, acceso al menú, información y localización GPS",
+      plan_options_li_3: "Pedido y reserva por WhatsApp: +10 € / mes",
+plan_options_li_4: "Funcionalidad en desarrollo",
+      plan_options_li_5: "Fotos de platos en el menú* : +10 € / mes",
+      plan_options_li_6: "Hasta 10 fotos integradas en el menú digital",
+      plan_options_li_7: "Idioma adicional: +5 € / mes",
+      plan_options_li_8: "Más allá de los 4 idiomas incluidos en la versión Standard",
+      plan_options_li_9: "Dirección personalizada: 50 € / año",
+      plan_options_li_10: "Ejemplo: www.nomdurestaurant.tapcarta.com",
+      plan_options_note: "Las opciones se añaden a la versión Standard de 30 € / mes.",
+      plan_options_btn: "Componer mi oferta",
+
+      limits_label: "* Límites previstos para garantizar fluidez:",
+      limits_text: "las fotos de platos están limitadas a un máximo de 10 por menú. 4 idiomas están incluidos en el plan estándar, con un máximo total de 6 idiomas, para conservar una navegación clara, legible y rápida en el móvil.",
+
+      install_title: "Gastos de instalación",
+      install_text_1: "Los gastos de instalación del servicio TapCarta son de 50 € sin IVA.",
+      install_li_1: "la configuración del menú digital",
+      install_li_2: "la puesta en marcha del código QR",
+      install_li_3: "la integración de la información inicial del restaurante",
+      install_li_4: "la publicación del menú",
+      install_text_2: "Estos gastos son ofrecidos en el marco de un compromiso mínimo de 12 meses.",
+      install_text_3: "Esta gratuidad constituye un descuento comercial condicionado al respeto de la duración del compromiso.",
+
+      contact_title: "¿Eres restaurador?",
+      contact_text: "TapCarta está diseñado para ser fácil de implementar, profesional de presentar y fácil de entender para tus clientes. Partes de una base clara de 30 € / mes y después añades solo las opciones realmente útiles para tu restaurante.",
+      contact_btn_demo: "Ver la demo",
+      contact_btn_whatsapp: "Contactar TapCarta por WhatsApp",
+      contact_btn_mail: "Enviar un email",
+      contact_box_1_label: "Respuesta rápida",
+      contact_box_1_text: "¿Una pregunta? Te respondemos rápidamente por WhatsApp.",
+      contact_box_2_label: "Versión Standard",
+      contact_box_2_text: "Menú QR, WhatsApp, reseñas Google, GPS, 4 idiomas incluidos y visibilidad TapCarta desde 30 € / mes.",
+      contact_box_3_label: "Opciones",
+      contact_box_3_text: "Web simple, pedido y reserva por WhatsApp, fotos de platos, idiomas adicionales y dirección personalizada según las necesidades reales del restaurante.",
+
+      footer_powered: "Powered by",
+      footer_brand: "TapCarta by FJ",
+      footer_link_1: "Funcionamiento",
+      footer_link_2: "Demo",
+      footer_link_3: "Planes",
+      footer_link_4: "Contacto",
+    site_version_label: "Versión del sitio"
+    },
+
+    en: {
+      brand_sub: "QR menu for restaurants",
+      nav_features: "How it works",
+      nav_demo: "Demo",
+      nav_pricing: "Plans",
+      nav_contact: "Contact",
+
+      hero_badge: "A mobile-first digital solution",
+      hero_title: "The smart QR menu for restaurants",
+      hero_text: "TapCarta turns your menu into a fast, elegant and multilingual mobile experience. Customers scan, browse, get directions, leave a Google review and can order or book directly through the restaurant’s WhatsApp. From the Standard version onward, your restaurant also benefits from a TapCarta listing to improve online visibility.",
+      hero_cta_demo: "View demo",
+      hero_cta_pricing: "Discover plans",
+      hero_cta_contact: "I am a restaurant owner",
+      hero_point_1: "Permanent QR code",
+      hero_point_2: "Automatic multilingual mode",
+      hero_point_3: "Fast loading",
+      hero_point_4: "WhatsApp + GPS + Google reviews",
+      hero_point_5: "TapCarta visibility from €30",
+
+mockup_badge: "TapCarta customer view",
+mockup_title: "La Bonne Fourchette",
+mockup_sub: "Clear and multilingual digital menu",
+mockup_whatsapp: "WhatsApp",
+mockup_route: "Directions",
+mockup_review: "Google review",
+mockup_booking: "Book",
+mockup_cat_1: "Starters",
+mockup_item_1: "Grey shrimp croquettes",
+mockup_desc_1: "A specialty from the Belgian coast",
+mockup_item_2: "Meatballs in tomato sauce",
+mockup_desc_2: "With the typical Brussels recipe",
+mockup_cat_2: "Main dishes",
+mockup_item_3: "Flemish beef stew",
+mockup_desc_3: "Slow-cooked with Belgian beer",
+mockup_item_4: "Mussels marinière",
+mockup_desc_4: "The classic mussels and fries",
+mockup_cat_3: "Desserts",
+mockup_item_5: "Sugar crêpe",
+mockup_desc_5: "Simple and indulgent",
+
+      features_title: "A clear, fast and useful solution",
+      features_text: "TapCarta is built for restaurants that want a clean, modern mobile presence that customers understand instantly.",
+      feature_1_title: "The customer scans",
+      feature_1_text: "The QR code opens the menu immediately on smartphone, with no friction and no useless steps.",
+      feature_2_title: "The menu adapts",
+      feature_2_text: "Language adapts automatically and reading stays clear for quick browsing at the table.",
+      feature_3_title: "The customer acts",
+      feature_3_text: "WhatsApp, Google reviews, ordering, booking or GPS: every useful action is one tap away.",
+
+      demo_title: "See the full demonstration",
+      demo_text: "Open a full TapCarta menu example and discover the experience exactly as a customer sees it on a phone.",
+      demo_btn: "Open demo",
+      demo_notice_title: "Demo notice",
+      demo_notice_text: "The restaurant shown in this demonstration is fictional. The address, buttons, Google reviews and visible links in this demo are used only for presenting the TapCarta service.",
+
+      pricing_title_main: "Simple plans, easy to understand",
+      pricing_text_main: "A free version to exist, a professional €30 / month base to be visible and reachable, then clear options depending on the restaurant’s needs.",
+
+      plan_light_badge: "Entry level",
+      plan_light_title: "Light version",
+      plan_light_desc: "An ultra-light version for a simple, fast and immediate presence.",
+      plan_light_period: "free",
+      plan_light_li_1: "Restaurant location",
+      plan_light_li_2: "Direct call button",
+      plan_light_li_3: "Permanent QR code",
+      plan_light_note: "Ideal to start with a minimal but clean presence.",
+      plan_light_btn: "Request information",
+
+      plan_standard_badge: "Main offer",
+      plan_standard_title: "Standard version",
+      plan_standard_desc: "The professional TapCarta base to present your menu, make contact easier and improve your online visibility.",
+      plan_standard_period: "/ month",
+      plan_standard_li_1: "Digital menu accessible via QR code",
+      plan_standard_li_2: "Can be installed on the phone",
+      plan_standard_li_3: "WhatsApp button",
+      plan_standard_li_4: "Google reviews access",
+      plan_standard_li_5: "GPS access to the restaurant",
+      plan_standard_li_6: "Automatic language detection",
+      plan_standard_li_7: "Multilingual menu: 4 languages included*",
+      plan_standard_li_8: "1 menu update per month",
+      plan_standard_li_9: "Restaurant listing on TapCarta",
+      plan_standard_btn: "Get a proposal",
+
+      plan_options_badge: "Available options",
+      plan_options_title: "Options",
+      plan_options_desc: "You only add the options useful for your restaurant. Nothing is imposed.",
+      plan_options_li_1: "Simple website: +€10 / month",
+      plan_options_li_2: "Restaurant presentation, menu access, information and GPS location",
+      plan_options_li_3: "Ordering and booking via WhatsApp: +€10 / month",
+plan_options_li_4: "Feature in development",
+      plan_options_li_5: "Dish photos in the menu* : +€10 / month",
+      plan_options_li_6: "Up to 10 photos integrated into the digital menu",
+      plan_options_li_7: "Additional language: +€5 / month",
+      plan_options_li_8: "Beyond the 4 languages included in the Standard version",
+      plan_options_li_9: "Custom address: €50 / year",
+      plan_options_li_10: "Example: www.nomdurestaurant.tapcarta.com",
+      plan_options_note: "Options are added to the Standard version at €30 / month.",
+      plan_options_btn: "Build my offer",
+
+      limits_label: "* Limits designed to keep the experience smooth:",
+      limits_text: "dish photos are limited to a maximum of 10 per menu. 4 languages are included in the standard plan, with a total maximum of 6 languages, in order to keep navigation clear, readable and fast on mobile.",
+
+      install_title: "Installation fee",
+      install_text_1: "The TapCarta service installation fee is €50 excluding VAT.",
+      install_li_1: "digital menu configuration",
+      install_li_2: "QR code setup",
+      install_li_3: "integration of the restaurant’s first information",
+      install_li_4: "menu publication",
+      install_text_2: "These fees are waived with a minimum 12-month commitment.",
+      install_text_3: "This free setup is a commercial discount conditional upon respecting the commitment period.",
+
+      contact_title: "Are you a restaurant owner?",
+      contact_text: "TapCarta is designed to be easy to set up, professional to present and easy for your customers to understand. You start with a clear €30 / month base, then add only the options that are genuinely useful for your restaurant.",
+      contact_btn_demo: "View demo",
+      contact_btn_whatsapp: "Contact TapCarta on WhatsApp",
+      contact_btn_mail: "Send an email",
+      contact_box_1_label: "Fast reply",
+      contact_box_1_text: "A question? We reply quickly on WhatsApp.",
+      contact_box_2_label: "Standard version",
+      contact_box_2_text: "QR menu, WhatsApp, Google reviews, GPS, 4 languages included and TapCarta visibility from €30 / month.",
+      contact_box_3_label: "Options",
+      contact_box_3_text: "Simple website, ordering and booking via WhatsApp, dish photos, additional languages and custom address depending on the restaurant’s real needs.",
+
+      footer_powered: "Powered by",
+      footer_brand: "TapCarta by FJ",
+      footer_link_1: "How it works",
+      footer_link_2: "Demo",
+      footer_link_3: "Plans",
+      footer_link_4: "Contact",
+  site_version_label: "Site version"
+    },
+
+    nl: {
+      brand_sub: "QR-menu voor restaurants",
+      nav_features: "Werking",
+      nav_demo: "Demo",
+      nav_pricing: "Pakketten",
+      nav_contact: "Contact",
+
+      hero_badge: "Digitale oplossing voor mobiel gebruik",
+      hero_title: "Het slimme QR-menu voor restaurants",
+      hero_text: "TapCarta maakt van uw kaart een snelle, elegante en meertalige mobiele ervaring. Klanten scannen, bekijken, vinden de route, laten een Google-review achter en kunnen rechtstreeks bestellen of reserveren via de WhatsApp van het restaurant. Vanaf de Standard-versie krijgt uw restaurant ook een vermelding op TapCarta om de online zichtbaarheid te versterken.",
+      hero_cta_demo: "Bekijk demo",
+      hero_cta_pricing: "Ontdek pakketten",
+      hero_cta_contact: "Ik ben restauranthouder",
+      hero_point_1: "Permanente QR-code",
+      hero_point_2: "Automatische meertaligheid",
+      hero_point_3: "Snelle laadtijd",
+      hero_point_4: "WhatsApp + GPS + Google reviews",
+      hero_point_5: "TapCarta-zichtbaarheid vanaf €30",
+
+mockup_badge: "TapCarta klantweergave",
+mockup_title: "La Bonne Fourchette",
+mockup_sub: "Duidelijke en meertalige digitale kaart",
+mockup_whatsapp: "WhatsApp",
+mockup_route: "Route",
+mockup_review: "Google-review",
+mockup_booking: "Reserveren",
+mockup_cat_1: "Voorgerechten",
+mockup_item_1: "Grijze garnalenkroketten",
+mockup_desc_1: "Specialiteit van de Belgische kust",
+mockup_item_2: "Balletjes in tomatensaus",
+mockup_desc_2: "Met het typische Brusselse recept",
+mockup_cat_2: "Hoofdgerechten",
+mockup_item_3: "Vlaamse carbonnade",
+mockup_desc_3: "Gestoofd met Belgisch bier",
+mockup_item_4: "Mosselen marinière",
+mockup_desc_4: "De klassieke mosselen met friet",
+mockup_cat_3: "Desserts",
+mockup_item_5: "Pannenkoek met suiker",
+mockup_desc_5: "Eenvoudig en lekker",
+
+      features_title: "Een duidelijke, snelle en nuttige oplossing",
+      features_text: "TapCarta is gemaakt voor restaurants die een nette, moderne mobiele aanwezigheid willen die klanten meteen begrijpen.",
+      feature_1_title: "De klant scant",
+      feature_1_text: "De QR-code opent het menu onmiddellijk op smartphone, zonder frictie en zonder nutteloze stappen.",
+      feature_2_title: "Het menu past zich aan",
+      feature_2_text: "De taal past zich automatisch aan en het menu blijft duidelijk leesbaar voor snelle consultatie aan tafel.",
+      feature_3_title: "De klant onderneemt actie",
+      feature_3_text: "WhatsApp, Google reviews, bestellen, reserveren of GPS: elke nuttige actie is bereikbaar met één tik.",
+
+      demo_title: "Bekijk de volledige demonstratie",
+      demo_text: "Open een volledig TapCarta-voorbeeldmenu en ontdek de ervaring precies zoals een klant die op zijn telefoon ziet.",
+      demo_btn: "Open demo",
+      demo_notice_title: "Demo-waarschuwing",
+      demo_notice_text: "Het restaurant dat in deze demonstratie wordt getoond is fictief. Het adres, de knoppen, de Google-reviews en de zichtbare links in deze demo worden uitsluitend gebruikt om de TapCarta-service te presenteren.",
+
+      pricing_title_main: "Eenvoudige pakketten, makkelijk te begrijpen",
+      pricing_text_main: "Een gratis versie om aanwezig te zijn, een professionele basis van €30 / maand om zichtbaar en bereikbaar te zijn, en daarna duidelijke opties volgens de behoeften van het restaurant.",
+
+      plan_light_badge: "Instapniveau",
+      plan_light_title: "Light versie",
+      plan_light_desc: "Een ultra-lichte versie voor een eenvoudige, snelle en onmiddellijke aanwezigheid.",
+      plan_light_period: "gratis",
+      plan_light_li_1: "Locatie van het restaurant",
+      plan_light_li_2: "Directe belknop",
+      plan_light_li_3: "Permanente QR-code",
+      plan_light_note: "Ideaal om te starten met een minimale maar nette aanwezigheid.",
+      plan_light_btn: "Informatie aanvragen",
+
+      plan_standard_badge: "Hoofdaanbod",
+      plan_standard_title: "Standard versie",
+      plan_standard_desc: "De professionele TapCarta-basis om uw menu te presenteren, contact met uw klanten te vergemakkelijken en uw online zichtbaarheid te verbeteren.",
+      plan_standard_period: "/ maand",
+      plan_standard_li_1: "Digitaal menu toegankelijk via QR-code",
+      plan_standard_li_2: "Installatie mogelijk op de telefoon",
+      plan_standard_li_3: "WhatsApp-knop",
+      plan_standard_li_4: "Toegang tot Google reviews",
+      plan_standard_li_5: "GPS-toegang naar het restaurant",
+      plan_standard_li_6: "Automatische taaldetectie",
+      plan_standard_li_7: "Meertalig menu: 4 talen inbegrepen*",
+      plan_standard_li_8: "1 menuwijziging per maand",
+      plan_standard_li_9: "Vermelding van het restaurant op TapCarta",
+      plan_standard_btn: "Ontvang een voorstel",
+
+      plan_options_badge: "Beschikbare opties",
+      plan_options_title: "Opties",
+      plan_options_desc: "U voegt alleen de opties toe die nuttig zijn voor uw restaurant. Niets is verplicht.",
+      plan_options_li_1: "Eenvoudige website: +€10 / maand",
+      plan_options_li_2: "Presentatie van het restaurant, toegang tot het menu, informatie en GPS-locatie",
+      plan_options_li_3: "Bestellen en reserveren via WhatsApp: +€10 / maand",
+plan_options_li_4: "Functionaliteit in ontwikkeling",
+      plan_options_li_5: "Foto’s van gerechten in het menu* : +€10 / maand",
+      plan_options_li_6: "Tot 10 foto’s geïntegreerd in het digitale menu",
+      plan_options_li_7: "Extra taal: +€5 / maand",
+      plan_options_li_8: "Bovenop de 4 talen die in de Standard-versie inbegrepen zijn",
+      plan_options_li_9: "Gepersonaliseerd adres: €50 / jaar",
+      plan_options_li_10: "Voorbeeld: www.nomdurestaurant.tapcarta.com",
+      plan_options_note: "De opties worden toegevoegd aan de Standard-versie van €30 / maand.",
+      plan_options_btn: "Mijn aanbod samenstellen",
+
+      limits_label: "* Limieten om de ervaring vlot te houden:",
+      limits_text: "foto’s van gerechten zijn beperkt tot maximaal 10 per menu. 4 talen zijn inbegrepen in het standaardpakket, met een totaal maximum van 6 talen, om de navigatie duidelijk, leesbaar en snel te houden op mobiel.",
+
+      install_title: "Installatiekosten",
+      install_text_1: "De installatiekosten van de TapCarta-service bedragen €50 excl. btw.",
+      install_li_1: "de configuratie van het digitale menu",
+      install_li_2: "de opzet van de QR-code",
+      install_li_3: "de integratie van de eerste informatie van het restaurant",
+      install_li_4: "de online plaatsing van het menu",
+      install_text_2: "Deze kosten zijn gratis bij een minimum engagement van 12 maanden.",
+      install_text_3: "Deze gratis installatie is een commerciële korting onder voorwaarde van naleving van de engagementsduur.",
+
+      contact_title: "Bent u restauranthouder?",
+      contact_text: "TapCarta is ontworpen om eenvoudig te installeren, professioneel te presenteren en gemakkelijk te begrijpen voor uw klanten. U start met een duidelijke basis van €30 / maand en voegt daarna alleen de opties toe die echt nuttig zijn voor uw restaurant.",
+      contact_btn_demo: "Bekijk demo",
+      contact_btn_whatsapp: "Contacteer TapCarta via WhatsApp",
+      contact_btn_mail: "Stuur een e-mail",
+      contact_box_1_label: "Snel antwoord",
+      contact_box_1_text: "Een vraag? Wij antwoorden snel via WhatsApp.",
+      contact_box_2_label: "Standard versie",
+      contact_box_2_text: "QR-menu, WhatsApp, Google reviews, GPS, 4 talen inbegrepen en TapCarta-zichtbaarheid vanaf €30 / maand.",
+      contact_box_3_label: "Opties",
+      contact_box_3_text: "Eenvoudige website, bestellen en reserveren via WhatsApp, foto’s van gerechten, extra talen en gepersonaliseerd adres volgens de werkelijke behoeften van het restaurant.",
+
+      footer_powered: "Powered by",
+      footer_brand: "TapCarta by FJ",
+      footer_link_1: "Werking",
+      footer_link_2: "Demo",
+      footer_link_3: "Pakketten",
+      footer_link_4: "Contact",
+  site_version_label: "Siteversie"
+    }
+  };
+
+  function getUrlLanguage(){
+    const params = new URLSearchParams(window.location.search);
+    const lang = params.get("lang");
+    if(lang && translations[lang]) return lang;
+    return null;
+  }
+
+  function detectLanguage(){
+    const urlLang = getUrlLanguage();
+    if(urlLang) return urlLang;
+
+    const saved = localStorage.getItem("tapcarta_lang");
+    if(saved && translations[saved]) return saved;
+
+    const browserLang = (navigator.language || navigator.userLanguage || "fr").toLowerCase();
+
+    if(browserLang.startsWith("es")) return "es";
+    if(browserLang.startsWith("en")) return "en";
+    if(browserLang.startsWith("nl")) return "nl";
+    return "fr";
+  }
+
+  function initStaticAssets(){
+  const favicon = document.getElementById("site-favicon");
+  const appleIcon = document.getElementById("site-apple-icon");
+  const ogImage = document.getElementById("meta-og-image");
+  const ogUrl = document.getElementById("meta-og-url");
+  const twitterImage = document.getElementById("meta-twitter-image");
+  const footerLogo = document.getElementById("footer-logo");
+
+  if(favicon) favicon.href = CONFIG.LOGO_URL;
+  if(appleIcon) appleIcon.href = CONFIG.LOGO_URL;
+  if(ogImage) ogImage.content = CONFIG.LOGO_URL;
+  if(ogUrl) ogUrl.content = CONFIG.SITE_URL;
+  if(twitterImage) twitterImage.content = CONFIG.LOGO_URL;
+  if(footerLogo) footerLogo.src = CONFIG.LOGO_URL;
+}
+
+function updateSiteVersion(lang){
+  const dict = translations[lang] || translations.fr;
+  const versionEl = document.getElementById("site-version");
+  if(versionEl){
+    versionEl.textContent = `${dict.site_version_label} : ${CONFIG.SITE_VERSION}`;
+  }
+}
+
+function applyLanguage(lang){
+  const dict = translations[lang] || translations.fr;
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if(dict[key]){
+      el.textContent = dict[key];
+    }
+  });
+
+  document.querySelectorAll(".lang-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.lang === lang);
+  });
+
+  localStorage.setItem("tapcarta_lang", lang);
+  updateDynamicLinks(lang);
+  updateSiteVersion(lang);
+}
+
+ function forceTopOnLoad(){
+  if(window.location.hash && window.location.hash !== "#top"){
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+}
+
+window.addEventListener("load", forceTopOnLoad);
+
+initStaticAssets();
+  const initialLang = detectLanguage();
+  applyLanguage(initialLang);
+
+  document.querySelectorAll(".lang-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      applyLanguage(btn.dataset.lang);
+    });
+  });
+  function withLang(url, lang){
+  try{
+    const u = new URL(url);
+    u.searchParams.set("lang", lang);
+    return u.toString();
+  }catch{
+    return url;
+  }
+}
+
+function updateDynamicLinks(lang){
+  document.querySelectorAll('[data-link="standard-demo"]').forEach(el => {
+    el.href = withLang(CONFIG.STANDARD_DEMO_URL, lang);
+  });
+
+  document.querySelectorAll('[data-link="demo-menu"]').forEach(el => {
+    el.href = withLang(CONFIG.DEMO_MENU_URL, lang);
+  });
+
+  document.querySelectorAll('[data-link="whatsapp"]').forEach(el => {
+    el.href = `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(CONFIG.WHATSAPP_TEXT)}`;
+  });
+
+  document.querySelectorAll('[data-link="email"]').forEach(el => {
+    el.href = `mailto:${CONFIG.CONTACT_EMAIL}`;
+  });
+}
+</script>
 </body>
 </html>

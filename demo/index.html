@@ -1,0 +1,1942 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>La Bonne Fourchette</title>
+
+  <script>
+    const APP_VERSION = '1.2.11';
+
+    function getBasePath() {
+      const path = window.location.pathname;
+      return path.endsWith('/') ? path.slice(0, -1) : path.substring(0, path.lastIndexOf('/'));
+    }
+
+    const BASE_PATH = getBasePath();
+    const MANIFEST_URL = `${BASE_PATH}/manifest.webmanifest?v=${APP_VERSION}`;
+    const ICON_192_URL = `${BASE_PATH}/icon-192.png`;
+    const SW_URL = `${BASE_PATH}/sw.js?v=${APP_VERSION}`;
+  </script>
+
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    document.write(`<link rel="manifest" href="${MANIFEST_URL}">`);
+    document.write(`<link rel="apple-touch-icon" href="${ICON_192_URL}">`);
+  </script>
+
+  <meta name="theme-color" content="#0F0F0F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="La Bonne Fourchette">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: '#F2C744',
+            goldDark: '#D4A820',
+            dark: '#0F0F0F',
+            darkCard: '#1A1A1A',
+            cream: '#FAF6EE',
+            belgianRed: '#EF3340'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      background: #0F0F0F;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-text-size-adjust: 100%;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100vh;
+      background: #0F0F0F;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .font-display { font-family: 'Playfair Display', Georgia, serif; }
+    .font-body { font-family: 'DM Sans', 'Helvetica Neue', sans-serif; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-up {
+      animation: fadeUp 0.15s ease-out forwards;
+      opacity: 0;
+      will-change: opacity, transform;
+    }
+
+    .delay-1 { animation-delay: 0.01s; }
+    .delay-2 { animation-delay: 0.02s; }
+    .delay-3 { animation-delay: 0.03s; }
+    .delay-4 { animation-delay: 0.04s; }
+    .delay-5 { animation-delay: 0.05s; }
+    .delay-6 { animation-delay: 0.06s; }
+
+    .menu-category { scroll-margin-top: 90px; }
+
+    .btn-action {
+      transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out, border-color 0.15s ease-out;
+      will-change: transform;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+
+    .btn-action:active {
+      transform: scale(0.97);
+    }
+
+    .diamond-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 0;
+    }
+
+    .diamond-divider span {
+      width: 6px;
+      height: 6px;
+      background: #F2C744;
+      transform: rotate(45deg);
+      display: inline-block;
+    }
+
+    .diamond-divider span:nth-child(2) {
+      width: 8px;
+      height: 8px;
+    }
+
+    .desktop-lux-divider {
+      display: none;
+    }
+
+    .menu-item-row {
+      transition: background 0.15s ease-out;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .menu-item-row:active {
+      background: rgba(242, 199, 68, 0.08);
+    }
+
+    .language-selector {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      display: flex;
+      gap: 8px;
+      z-index: 50;
+      background: rgba(26, 26, 26, 0.92);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(242, 199, 68, 0.30);
+      max-width: calc(100vw - 24px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+      pointer-events: none;
+    }
+
+    .lang-btn {
+      min-width: 48px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 1px solid rgba(242, 199, 68, 0.18);
+      border-radius: 8px;
+      transition: all 0.15s ease-out;
+      background: rgba(255,255,255,0.01);
+      padding: 0 10px;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
+      color: rgba(250, 246, 238, 0.72);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      will-change: transform, border-color, background, box-shadow;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      flex-shrink: 0;
+      pointer-events: auto;
+      touch-action: manipulation;
+    }
+
+    .lang-btn:hover {
+      border-color: rgba(242, 199, 68, 0.45);
+      background: rgba(242, 199, 68, 0.08);
+      color: rgba(250, 246, 238, 0.96);
+    }
+
+    .lang-btn.active {
+      border-color: #F2C744;
+      background: rgba(242, 199, 68, 0.18);
+      color: #F2C744;
+      box-shadow: 0 0 12px rgba(242, 199, 68, 0.15);
+    }
+
+    .lang-btn:active {
+      transform: scale(0.95);
+    }
+
+    .lang-label {
+      display: inline-block;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .lang-flag {
+      display: none;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .menu-item-subtitle {
+      font-size: 0.75rem;
+      color: rgba(250, 246, 238, 0.6);
+      font-style: italic;
+      margin-top: 2px;
+      line-height: 1.35;
+    }
+
+    .icon-red {
+      color: #EF3340;
+      stroke: #EF3340;
+    }
+
+    .icon-gold {
+      color: #F2C744;
+      stroke: #F2C744;
+    }
+
+    .brand-card {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .install-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translate(-50%, 20px);
+      width: calc(100% - 24px);
+      max-width: 420px;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .install-toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .install-help-box {
+      margin-top: 8px;
+      padding: 18px 18px 16px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+      border: 2px solid rgba(242, 199, 68, 0.28);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+    }
+
+    .install-help-title {
+      font-size: 1.2rem;
+      line-height: 1.3;
+      font-weight: 800;
+      color: #FAF6EE;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .install-help-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 1.02rem;
+      line-height: 1.45;
+      color: rgba(250, 246, 238, 0.92);
+    }
+
+    .install-help-step strong {
+      color: #F2C744;
+      font-weight: 800;
+    }
+
+    .install-help-num {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(242, 199, 68, 0.16);
+      border: 1px solid rgba(242, 199, 68, 0.38);
+      color: #F2C744;
+      font-weight: 800;
+      font-size: 0.98rem;
+      margin-top: 1px;
+    }
+
+    .install-help-note {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(242, 199, 68, 0.18);
+      font-size: 1rem;
+      line-height: 1.45;
+      color: rgba(250, 246, 238, 0.88);
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .desktop-story-wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    .desktop-story-card {
+      background:
+        radial-gradient(circle at top left, rgba(242,199,68,.12), transparent 35%),
+        linear-gradient(180deg, rgba(255,255,255,.038), rgba(255,255,255,.015));
+      border: 1px solid rgba(242,199,68,.20);
+      box-shadow: 0 28px 74px rgba(0,0,0,.36);
+      backdrop-filter: blur(2px);
+    }
+
+    .desktop-story-image-wrap {
+      position: relative;
+      min-height: 100%;
+      overflow: hidden;
+      background: #111;
+    }
+
+    .desktop-story-image {
+      min-height: 470px;
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+      transform: scale(1.015);
+    }
+
+    .desktop-story-image-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(15,15,15,.24) 0%, rgba(15,15,15,.10) 30%, rgba(15,15,15,.28) 100%),
+        linear-gradient(180deg, rgba(0,0,0,.07) 0%, rgba(0,0,0,.24) 100%);
+      pointer-events: none;
+    }
+
+    .desktop-story-kicker {
+      color: rgba(242,199,68,.92);
+      letter-spacing: .20em;
+      text-transform: uppercase;
+      font-size: .78rem;
+      font-weight: 700;
+    }
+
+    .desktop-story-text {
+      color: rgba(250,246,238,.82);
+      line-height: 1.85;
+      font-size: 1rem;
+    }
+
+    .desktop-story-signature {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 0;
+      margin-bottom: 24px;
+      color: rgba(250,246,238,.52);
+      font-size: .86rem;
+      letter-spacing: .03em;
+    }
+
+    .desktop-story-signature::before {
+      content: "";
+      width: 34px;
+      height: 1px;
+      background: rgba(242,199,68,.30);
+      display: inline-block;
+    }
+
+    .desktop-story-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px 24px;
+      border-radius: 14px;
+      border: 2px solid rgba(242,199,68,.72);
+      background: linear-gradient(180deg, rgba(242,199,68,.24), rgba(242,199,68,.12));
+      color: #FAF6EE;
+      font-weight: 700;
+      letter-spacing: .03em;
+      box-shadow: 0 16px 30px rgba(0,0,0,.24), 0 0 0 1px rgba(242,199,68,.12) inset;
+      transition: transform .15s ease-out, border-color .15s ease-out, background .15s ease-out, box-shadow .15s ease-out;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .desktop-story-cta:hover {
+      border-color: #F2C744;
+      background: linear-gradient(180deg, rgba(242,199,68,.30), rgba(242,199,68,.16));
+      box-shadow: 0 20px 36px rgba(0,0,0,.28), 0 0 0 1px rgba(242,199,68,.18) inset;
+      transform: translateY(-1px);
+    }
+
+    .desktop-story-cta:active {
+      transform: scale(0.98);
+    }
+
+    .allergen-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .allergen-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .allergen-icon-wrap {
+      width: 50px;
+      height: 50px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(255,255,255,.02);
+      border: 2px solid currentColor;
+    }
+
+    .allergen-icon-wrap svg {
+      width: 28px;
+      height: 28px;
+      display: block;
+    }
+
+    .allergen-label {
+      font-size: 0.92rem;
+      line-height: 1.3;
+      color: rgba(250, 246, 238, 0.9);
+      font-weight: 600;
+    }
+
+    .allergen-legal-box {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid rgba(242,199,68,.18);
+    }
+
+    .allergen-legal-text {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: rgba(250,246,238,.78);
+    }
+
+    .allergen-subtitle {
+      font-size: 0.78rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(242,199,68,.78);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    @media (min-width: 768px) {
+      .allergen-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .desktop-lux-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        padding: 10px 0 18px;
+      }
+
+      .desktop-lux-divider-line {
+        width: 120px;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(242,199,68,0), rgba(242,199,68,.45), rgba(242,199,68,0));
+      }
+
+      .desktop-lux-divider-dots {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .desktop-lux-divider-dots span {
+        width: 6px;
+        height: 6px;
+        background: rgba(242,199,68,.9);
+        transform: rotate(45deg);
+        display: inline-block;
+      }
+
+      .desktop-lux-divider-dots span:nth-child(2) {
+        width: 8px;
+        height: 8px;
+      }
+
+      .allergen-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .language-selector {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        justify-content: center;
+        padding: 8px 10px;
+      }
+
+      .lang-btn {
+        min-width: 44px;
+        height: 42px;
+        padding: 0 8px;
+      }
+
+      .lang-label {
+        display: none;
+      }
+
+      .lang-flag {
+        display: inline-block;
+      }
+
+      .brand-card {
+        max-width: 100%;
+      }
+
+      .install-help-box {
+        padding: 18px 16px 16px;
+        border-radius: 16px;
+      }
+
+      .install-help-title {
+        font-size: 1.24rem;
+      }
+
+      .install-help-step {
+        font-size: 1.06rem;
+      }
+
+      .install-help-note {
+        font-size: 1.02rem;
+      }
+
+      .allergen-card {
+        padding: 10px 12px;
+      }
+
+      .allergen-icon-wrap {
+        width: 44px;
+        height: 44px;
+      }
+
+      .allergen-icon-wrap svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .allergen-label {
+        font-size: 0.86rem;
+      }
+    }
+  </style>
+
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+</head>
+
+<body class="font-body">
+  <div class="language-selector">
+    <button class="lang-btn" data-lang="fr" title="Français" aria-label="Français">
+      <span class="lang-label">FR</span>
+      <span class="lang-flag">🇫🇷</span>
+    </button>
+    <button class="lang-btn" data-lang="es" title="Español" aria-label="Español">
+      <span class="lang-label">ES</span>
+      <span class="lang-flag">🇪🇸</span>
+    </button>
+    <button class="lang-btn" data-lang="en" title="English" aria-label="English">
+      <span class="lang-label">GB</span>
+      <span class="lang-flag">🇬🇧</span>
+    </button>
+    <button class="lang-btn" data-lang="nl" title="Nederlands" aria-label="Nederlands">
+      <span class="lang-label">NL</span>
+      <span class="lang-flag">🇳🇱</span>
+    </button>
+  </div>
+
+  <div id="app-wrapper" class="w-full min-h-screen bg-dark text-cream">
+    <header class="relative overflow-hidden pt-12 pb-8 px-6 text-center animate-fade-up">
+      <div id="logo-container" class="mx-auto w-56 h-56 flex items-center justify-center rounded-lg border-2 border-dashed border-gold/30" style="background: rgba(242, 199, 68, 0.03);">
+        <p class="text-xs text-cream/30 text-center px-4">Insérez votre logo complet ici</p>
+      </div>
+    </header>
+  </div>
+
+  <div id="install-toast" class="install-toast">
+    <div class="flex items-start gap-3 rounded-2xl border-2 border-gold/50 bg-darkCard px-4 py-4 shadow-2xl">
+      <div class="w-10 h-10 rounded-full bg-gold/12 border border-gold/25 flex items-center justify-center flex-shrink-0">
+        <i data-lucide="check" class="w-5 h-5 text-gold"></i>
+      </div>
+      <div class="min-w-0">
+        <div id="install-toast-title" class="text-sm font-semibold text-cream"></div>
+        <div id="install-toast-text" class="text-xs text-cream/75 mt-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const siteConfig = {
+      logoUrl: "https://i.postimg.cc/bN0b11bS/logo-sans-fond.png",
+      brandLogoUrl: "https://i.postimg.cc/sX7n1G14/Chat-GPT-Image-14-fevr-2026-15-23-38.png",
+      productName: "TapCarta",
+      productSignature: "Created by FJ",
+      reviewUrl: "https://search.google.com/local/writereview?placeid=ChIJ3b0pGDb7wEcRs2VnXGk2mmE",
+      desktopCollageUrl: "liege-collage.jpg"
+    };
+
+    const menuData = {
+      snacks: [
+        { id: 'ailes_poulet', price: '4,50 €' },
+        { id: 'nuggets', price: '4,00 €' },
+        { id: 'bitterballs', price: '4,00 €' },
+        { id: 'fricadelle', price: '3,50 €' },
+        { id: 'fricadelle_speciale', price: '4,10 €' },
+        { id: 'cervelas', price: '4,50 €' },
+        { id: 'frites', price: '5,50 €' },
+        { id: 'patatas_bravas', price: '7,00 €' }
+      ],
+      entrees: [
+        { id: 'croquettes_fromage', price: '12,50 €' },
+        { id: 'camembert_frit', price: '12,50 €' },
+        { id: 'croquettes_crevettes', price: '18,50 €' },
+        { id: 'escargots_bourgogne', price: '9,50 €' },
+        { id: 'moule_escargot', price: '10,70 €' },
+        { id: 'gambas_pil_pil', price: '14,50 €' },
+        { id: 'salade_mixte', price: '8,50 €' }
+      ],
+      plats: [
+        { id: 'vol_auvent', price: '16,50 €' },
+        { id: 'carbonnade', price: '17,50 €' },
+        { id: 'boulets_tomate', price: '16,50 €' },
+        { id: 'boulets_liegeois', price: '16,50 €' },
+        { id: 'americain_frites', price: '19,50 €' },
+        { id: 'spaghetti_bolos', price: '19,50 €' },
+        { id: 'tomate_crevettes', specialPriceText: 'priceDay' }
+      ],
+      moules: [
+        { id: 'mariniere', price: '21,00 €' },
+
+        { id: 'vin_blanc', price: '23,00 €' },
+        { id: 'flambee_ricard', price: '23,00 €' }
+      ],
+      desserts: [
+        { id: 'banana_split', price: '8,50 €' },
+        { id: 'dame_blanche', price: '8,00 €' },
+        { id: 'coupe_brasilienne', price: '8,00 €' },
+        { id: 'coupe_avocat', price: '9,00 €' },
+        { id: 'fraise_melba', price: '9,50 €' },
+        { id: 'colonel', price: '9,00 €' }
+      ],
+      crepes: [
+        { id: 'crepe_sucre', price: '5,50 €' },
+        { id: 'crepe_mikado', price: '7,50 €' },
+        { id: 'crepe_grand_marnier', price: '10,50 €' }
+      ],
+      suggestions: [
+        { id: 'plat_du_jour', price: '11,50 €' },
+        { id: 'menu_3_services', price: '16,50 €' },
+        { id: 'demandez_suggestions', noPrice: true }
+      ],
+      supplements: [
+        { id: 'pain', price: '1,50 €' },
+        { id: 'sauce', price: '1,50 €' }
+      ],
+      boissons: []
+    };
+
+    const translations = {
+      fr: {
+        snacks: 'Snacks',
+        entrees: 'Entrées',
+        plats: 'Plats',
+        moules: 'Moules',
+        desserts: 'Desserts',
+        crepes: 'Crêpes',
+        suggestions: 'Menu et Suggestions',
+        supplements: 'Suppléments',
+        boissons: 'Boissons',
+        ourMenu: 'Notre Menu',
+        allergenes: 'Allergènes',
+        call: 'Appeler',
+        whatsapp: 'WhatsApp',
+        directions: 'Itinéraire',
+        address: 'Adresse',
+        addressButton: 'Adresse',
+        hours: 'Horaires',
+        tueFri: 'Mar – Ven',
+        satSun: 'Sam – Dim',
+        monday: 'Lundi',
+        closed: 'Fermé',
+        tueFriHours: '11:30 – 22:00',
+        satSunHours: '10:00 – 23:00',
+        copyright: '© 2026 La Bonne Fourchette',
+        logoPlaceholder: 'Insérez votre logo complet ici',
+        noticeAllFries: 'Tous nos plats sont accompagnés de frites.',
+        noticeTakeaway: 'Tous nos plats sont disponibles à emporter.',
+        friesInfo: 'Nos frites sont cuites dans de la graisse de bœuf selon la tradition belge.',
+        priceDay: 'Prix du jour',
+        comingSoon: 'À venir',
+        allergenTitle: 'Informations Allergènes',
+        allergenInfo: 'Certains plats peuvent contenir des allergènes.\nSi vous avez une allergie ou une intolérance alimentaire, veuillez en informer notre équipe.',
+        allergensPresent: 'Allergènes présents suivant les plats',
+        allergenPictosTitle: 'Principaux allergènes',
+        allergenLegalText: 'Conformément au règlement (UE) n° 1169/2011, des substances ou produits provoquant des allergies ou intolérances peuvent être présents dans certains plats. Veuillez informer notre équipe en cas d’allergie ou d’intolérance alimentaire.',
+        reviewCtaTitle: 'Vous avez apprécié votre expérience ?',
+        reviewCtaText: 'Un avis Google nous aide énormément. Merci ❤️',
+        reviewButton: 'Laisser un avis Google',
+        installApp: 'Installer le menu',
+        iosInstallHelp: 'Sur iPhone : appuyez sur <strong>Partager</strong>, puis <strong>Sur l’écran d’accueil</strong>.',
+        samsungInstallHelp: '<div class="install-help-box"><div class="install-help-title">Installer le menu sur votre téléphone</div><div class="install-help-step"><span class="install-help-num">1</span><span>Appuyez sur <strong>☰ les 3 lignes en bas à droite</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Appuyez sur <strong>+ Ajouter à</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Appuyez sur <strong>Écran d’accueil</strong></span></div><div class="install-help-note">Le menu apparaîtra ensuite comme une application sur votre téléphone.</div></div>',
+        installToastTitle: 'Menu ajouté au téléphone',
+        installToastText: 'Retrouvez-le dans vos applications.',
+        versionLabel: 'Version',
+        discoverTapCarta: 'Cliquez pour découvrir TapCarta',
+        storyKicker: 'Présentation du restaurant',
+        storyTitle: 'Une table belge chaleureuse au cœur de Liège',
+        storySignature: 'Cuisine belge authentique · ambiance chaleureuse',
+        storyP1: 'La Bonne Fourchette met à l’honneur la tradition belge dans un cadre convivial et élégant. L’idée est simple : proposer une cuisine généreuse, rassurante et authentique, dans l’esprit des belles tables de Liège.',
+        storyP2: 'On y retrouve les grands classiques que l’on aime vraiment retrouver : carbonnade flamande mijotée à la bière, boulets liégeois, moules marinières, croquettes, desserts généreux et frites croustillantes cuites dans la graisse de bœuf selon la tradition.',
+        storyP3: 'Que ce soit pour un déjeuner gourmand, un dîner détendu ou une vraie découverte de la cuisine belge, La Bonne Fourchette invite à prendre le temps, bien manger et profiter d’une ambiance chaleureuse.',
+        seeMenu: 'Voir le menu',
+        allergens: ['Gluten', 'Crustacés', 'Œufs', 'Poisson', 'Lait / lactose', 'Fruits à coque', 'Céleri', 'Moutarde', 'Sésame', 'Sulfites', 'Mollusques'],
+        items: {
+          ailes_poulet: { name: 'Ailes de poulet', subtitle: 'croustillantes et moelleuses' },
+          nuggets: { name: 'Nuggets', subtitle: 'poulet panés et frits' },
+          bitterballs: { name: 'Bitterballs', subtitle: 'boulettes de viande - fromage, panées et frites' },
+          fricadelle: { name: 'Fricadelle', subtitle: 'spécialité de friterie belge' },
+          fricadelle_speciale: { name: 'Fricadelle spéciale', subtitle: 'servie avec sauces et oignons' },
+          cervelas: { name: 'Cervelas', subtitle: 'saucisse de porc spécialité friterie belge' },
+          frites: { name: 'Frites', subtitle: 'coupées à la main, deux cuissons' },
+          patatas_bravas: { name: 'Patatas bravas', subtitle: 'pomme de terre, sauce tomatée piquante' },
+          croquettes_fromage: { name: 'Croquettes de fromage', subtitle: 'fromage fondu, panure dorée' },
+          camembert_frit: { name: 'Camembert frit', subtitle: 'cœur fondant, panure croustillante' },
+       croquettes_crevettes: { name: 'Croquettes de crevettes grises', subtitle: 'Spécialité de la côte belge' },
+          escargots_bourgogne: { name: 'Escargots de Bourgogne', subtitle: 'beurre, persil et ail' },
+          moule_escargot: { name: 'Moules à l’escargot', subtitle: 'beurre, ail et persil' },
+          gambas_pil_pil: { name: 'Gambas pil-pil', subtitle: 'crevettes épicées, huile d’ail' },
+          salade_mixte: { name: 'Salade mixte', subtitle: 'salade fraîche, vinaigrette maison' },
+          vol_auvent: { name: 'Vol-au-vent', subtitle: 'poulet, boulettes et sauce crémeuse' },
+  carbonnade: { name: 'Carbonnade flamande', subtitle: 'Mijotée à la bière belge' },
+boulets_tomate: { name: 'Boulettes sauce tomate', subtitle: 'Avec la recette typique de Bruxelles' },
+          boulets_liegeois: { name: 'Boulets liégeois', subtitle: 'boulettes sauce sucrée-salée' },
+          americain_frites: { name: 'Américain frites', subtitle: 'tartare haché minute' },
+          spaghetti_bolos: { name: 'Spaghetti bolognaise', subtitle: 'viande de bœuf mijotée dans une sauce tomate, vin et légumes' },
+          tomate_crevettes: { name: 'Tomate crevettes grises', subtitle: 'tomate fraîche et crevettes grises' },
+mariniere: { name: 'Moules marinières', subtitle: 'Le classique moules-frites' },
+          vin_blanc: { name: 'Moules au vin blanc', subtitle: 'vin blanc sec' },
+          flambee_ricard: { name: 'Moules flambées au Ricard', subtitle: 'note anisée' },
+          banana_split: { name: 'Banana split', subtitle: 'banane, glace, chocolat chaud' },
+          dame_blanche: { name: 'Dame blanche', subtitle: 'glace vanille, chocolat chaud, chantilly' },
+          coupe_brasilienne: { name: 'Coupe brésilienne', subtitle: 'glaces moka et vanille, caramel et garnitures' },
+          coupe_avocat: { name: 'Coupe avocat', subtitle: 'glace vanille, liqueur d’avocat' },
+          fraise_melba: { name: 'Fraise Melba', subtitle: 'glace vanille, fraises, coulis de fraises' },
+          colonel: { name: 'Colonel', subtitle: 'sorbet citron et vodka' },
+          crepe_sucre: { name: 'Crêpe sucre', subtitle: 'crêpe au sucre cristalisé' },
+          crepe_mikado: { name: 'Crêpe Mikado', subtitle: 'crêpe, chocolat, glace vanille' },
+          crepe_grand_marnier: { name: 'Crêpe Grand Marnier', subtitle: 'crêpe flambée, liqueur Grand Marnier' },
+          plat_du_jour: { name: 'Plat du jour', subtitle: 'nos suggestions quotidiennes' },
+          menu_3_services: { name: 'Menu du jour 3 services', subtitle: 'entrée, plat, dessert' },
+          demandez_suggestions: { name: 'Demandez nos suggestions', subtitle: '' },
+          pain: { name: 'Pain', subtitle: '' },
+          sauce: { name: 'Sauces', subtitle: 'mayonnaise belge<br>ketchup<br>moutarde<br>vinaigre<br>andalouse spécialité belge' }
+        }
+      },
+
+      es: {
+        snacks: 'Snacks',
+        entrees: 'Entrantes',
+        plats: 'Platos',
+        moules: 'Mejillones',
+        desserts: 'Postres',
+        crepes: 'Crepes',
+        suggestions: 'Menú y Sugerencias',
+        supplements: 'Suplementos',
+        boissons: 'Bebidas',
+        ourMenu: 'Nuestro Menú',
+        allergenes: 'Alérgenos',
+        call: 'Llamar',
+        whatsapp: 'WhatsApp',
+        directions: 'Indicaciones',
+        address: 'Dirección',
+        addressButton: 'Dirección',
+        hours: 'Horarios',
+        tueFri: 'Mar – Vie',
+        satSun: 'Sáb – Dom',
+        monday: 'Lunes',
+        closed: 'Cerrado',
+        tueFriHours: '11:30 – 22:00',
+        satSunHours: '10:00 – 23:00',
+        copyright: '© 2026 La Bonne Fourchette',
+        logoPlaceholder: 'Inserte su logotipo completo aquí',
+        noticeAllFries: 'Todos nuestros platos se sirven con patatas fritas.',
+        noticeTakeaway: 'Todos nuestros platos están disponibles para llevar.',
+        friesInfo: 'Nuestras patatas fritas se cocinan en grasa de ternera siguiendo la tradición belga.',
+        priceDay: 'Precio del día',
+        comingSoon: 'Próximamente',
+        allergenTitle: 'Información sobre alérgenos',
+        allergenInfo: 'Algunos platos pueden contener alérgenos.\nSi tiene alguna alergia o intolerancia alimentaria, informe a nuestro personal.',
+        allergensPresent: 'Alérgenos presentes según los platos',
+        allergenPictosTitle: 'Principales alérgenos',
+        allergenLegalText: 'De conformidad con el Reglamento (UE) n.º 1169/2011, algunas sustancias o productos que pueden causar alergias o intolerancias pueden estar presentes en ciertos platos. Informe a nuestro equipo en caso de alergia o intolerancia alimentaria.',
+        reviewCtaTitle: '¿Ha disfrutado de su experiencia?',
+        reviewCtaText: 'Una reseña en Google nos ayuda muchísimo. Gracias ❤️',
+        reviewButton: 'Dejar una reseña en Google',
+        installApp: 'Instalar el menú',
+        iosInstallHelp: 'En iPhone: pulse <strong>Compartir</strong> y luego <strong>Añadir a la pantalla de inicio</strong>.',
+        samsungInstallHelp: '<div class="install-help-box"><div class="install-help-title">Instalar el menú en su teléfono</div><div class="install-help-step"><span class="install-help-num">1</span><span>Pulse <strong>☰ las 3 líneas abajo a la derecha</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Pulse <strong>+ Añadir a</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Pulse <strong>Pantalla de inicio</strong></span></div><div class="install-help-note">Después, el menú aparecerá como una aplicación en su teléfono.</div></div>',
+        installToastTitle: 'Menú añadido al teléfono',
+        installToastText: 'Ya puede encontrarlo en sus aplicaciones.',
+        versionLabel: 'Versión',
+        discoverTapCarta: 'Haz clic para descubrir TapCarta',
+        storyKicker: 'Presentación del restaurante',
+        storyTitle: 'Una mesa belga acogedora en el corazón de Lieja',
+        storySignature: 'Cocina belga auténtica · ambiente acogedor',
+        storyP1: 'La Bonne Fourchette pone en valor la tradición belga en un entorno acogedor y elegante. La idea es simple: ofrecer una cocina generosa, auténtica y reconfortante, con el espíritu de las buenas mesas de Lieja.',
+        storyP2: 'Aquí se encuentran los grandes clásicos que de verdad apetece volver a probar: carbonnade flamande cocinada con cerveza, boulets liégeois, mejillones marinière, croquetas, postres generosos y patatas fritas crujientes cocinadas en grasa de ternera según la tradición.',
+        storyP3: 'Ya sea para un almuerzo sabroso, una cena relajada o un descubrimiento real de la gastronomía belga, La Bonne Fourchette invita a disfrutar del momento en un ambiente cálido y elegante.',
+        seeMenu: 'Ver el menú',
+        allergens: ['Gluten', 'Crustáceos', 'Huevos', 'Pescado', 'Leche / lactosa', 'Frutos secos', 'Apio', 'Mostaza', 'Sésamo', 'Sulfitos', 'Moluscos'],
+        items: {
+          ailes_poulet: { name: 'Alitas de pollo', subtitle: 'crujientes y tiernas' },
+          nuggets: { name: 'Nuggets', subtitle: 'pollo empanado y frito' },
+          bitterballs: { name: 'Bitterballs', subtitle: 'albóndigas de carne - queso, empanadas y fritas' },
+          fricadelle: { name: 'Fricadelle', subtitle: 'especialidad belga de freiduría' },
+          fricadelle_speciale: { name: 'Fricadelle especial', subtitle: 'servida con salsas y cebolla' },
+          cervelas: { name: 'Cervelas', subtitle: 'salchicha de cerdo, especialidad de freiduría belga' },
+          frites: { name: 'Patatas fritas', subtitle: 'cortadas a mano, doble cocción' },
+          patatas_bravas: { name: 'Patatas bravas', subtitle: 'patata, salsa de tomate picante' },
+          croquettes_fromage: { name: 'Croquetas de queso', subtitle: 'queso fundido, rebozado dorado' },
+          camembert_frit: { name: 'Camembert frito', subtitle: 'corazón fundido, rebozado crujiente' },
+  croquettes_crevettes: { name: 'Croquetas de gambas grises', subtitle: 'Especialidad de la costa belga' },
+          escargots_bourgogne: { name: 'Escargots de Bourgogne', subtitle: 'caracoles de Borgoña, mantequilla, perejil y ajo' },
+          moule_escargot: { name: 'Mejillones à l’escargot', subtitle: 'mantequilla, ajo y perejil' },
+          gambas_pil_pil: { name: 'Gambas pil-pil', subtitle: 'gambas picantes, aceite de ajo' },
+          salade_mixte: { name: 'Ensalada mixta', subtitle: 'ensalada fresca, vinagreta casera' },
+          vol_auvent: { name: 'Vol-au-vent', subtitle: 'pollo, albóndigas y salsa cremosa' },
+carbonnade: { name: 'Estufado al estilo flamenco', subtitle: 'Cocinada a fuego lento con cerveza belga' },
+boulets_tomate: { name: 'Albóndigas en salsa de tomate', subtitle: 'Con la receta típica de Bruselas' },
+          boulets_liegeois: { name: 'Albóndigas grandes de Lieja', subtitle: 'albóndigas con salsa agridulce' },
+          americain_frites: { name: 'Américain frites', subtitle: 'tartar picado al momento' },
+          spaghetti_bolos: { name: 'Espagueti a la boloñesa', subtitle: 'carne de ternera cocinada en salsa de tomate, vino y verduras' },
+          tomate_crevettes: { name: 'Tomate con gambas', subtitle: 'tomate fresco y gambas' },
+mariniere: { name: 'Mejillones a la marinera', subtitle: 'El clásico de mejillones con patatas fritas' },
+
+          vin_blanc: { name: 'Mejillones al vino blanco', subtitle: 'vino blanco seco' },
+          flambee_ricard: { name: 'Mejillones flambeados al Ricard', subtitle: 'toque anisado' },
+          banana_split: { name: 'Banana split', subtitle: 'plátano, helado, chocolate caliente' },
+          dame_blanche: { name: 'Dame blanche', subtitle: 'helado de vainilla, chocolate caliente, nata' },
+          coupe_brasilienne: { name: 'Coupe brésilienne', subtitle: 'helados moka y vainilla, caramelo y toppings' },
+          coupe_avocat: { name: 'Coupe avocat', subtitle: 'helado de vainilla, licor de aguacate' },
+          fraise_melba: { name: 'Fraise Melba', subtitle: 'helado de vainilla, fresas, coulis de fresa' },
+          colonel: { name: 'Colonel', subtitle: 'sorbete de limón y vodka' },
+          crepe_sucre: { name: 'Crepe con azúcar', subtitle: 'crepe con azúcar cristalizado' },
+          crepe_mikado: { name: 'Crepe Mikado', subtitle: 'crepe, chocolate, helado de vainilla' },
+          crepe_grand_marnier: { name: 'Crepe Grand Marnier', subtitle: 'crepe flambeada, licor Grand Marnier' },
+          plat_du_jour: { name: 'Plato del día', subtitle: 'nuestras sugerencias diarias' },
+          menu_3_services: { name: 'Menú del día 3 servicios', subtitle: 'entrante, plato, postre' },
+          demandez_suggestions: { name: 'Pida nuestras sugerencias', subtitle: '' },
+          pain: { name: 'Pan', subtitle: '' },
+          sauce: { name: 'Salsas', subtitle: 'mayonesa belga<br>ketchup<br>mostaza<br>vinagre<br>andaluza especialidad belga' }
+        }
+      },
+
+      en: {
+        snacks: 'Snacks',
+        entrees: 'Starters',
+        plats: 'Main Dishes',
+        moules: 'Mussels',
+        desserts: 'Desserts',
+        crepes: 'Crêpes',
+        suggestions: 'Menu & Suggestions',
+        supplements: 'Extras',
+        boissons: 'Drinks',
+        ourMenu: 'Our Menu',
+        allergenes: 'Allergens',
+        call: 'Call',
+        whatsapp: 'WhatsApp',
+        directions: 'Directions',
+        address: 'Address',
+        addressButton: 'Address',
+        hours: 'Hours',
+        tueFri: 'Tue – Fri',
+        satSun: 'Sat – Sun',
+        monday: 'Monday',
+        closed: 'Closed',
+        tueFriHours: '11:30 AM – 10:00 PM',
+        satSunHours: '10:00 AM – 11:00 PM',
+        copyright: '© 2026 La Bonne Fourchette',
+        logoPlaceholder: 'Insert your full logo here',
+        noticeAllFries: 'All our dishes are served with fries.',
+        noticeTakeaway: 'All our dishes are available for takeaway.',
+        friesInfo: 'Our fries are cooked in beef fat following Belgian tradition.',
+        priceDay: 'Price of the day',
+        comingSoon: 'Coming soon',
+        allergenTitle: 'Allergen Information',
+        allergenInfo: 'Some dishes may contain allergens.\nIf you have a food allergy or intolerance, please inform our staff.',
+        allergensPresent: 'Allergens present depending on the dishes',
+        allergenPictosTitle: 'Main allergens',
+        allergenLegalText: 'In accordance with Regulation (EU) No 1169/2011, substances or products causing allergies or intolerances may be present in certain dishes. Please inform our staff in case of any food allergy or intolerance.',
+        reviewCtaTitle: 'Did you enjoy your experience?',
+        reviewCtaText: 'A Google review helps us tremendously. Thank you ❤️',
+        reviewButton: 'Leave a Google review',
+        installApp: 'Install the menu',
+        iosInstallHelp: 'On iPhone: tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.',
+        samsungInstallHelp: '<div class="install-help-box"><div class="install-help-title">Install the menu on your phone</div><div class="install-help-step"><span class="install-help-num">1</span><span>Tap <strong>☰ the 3 lines at the bottom right</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tap <strong>+ Add to</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Tap <strong>Home screen</strong></span></div><div class="install-help-note">The menu will then appear like an app on your phone.</div></div>',
+        installToastTitle: 'Menu added to your phone',
+        installToastText: 'You can now find it in your apps.',
+        versionLabel: 'Version',
+        discoverTapCarta: 'Click to discover TapCarta',
+        storyKicker: 'Restaurant presentation',
+        storyTitle: 'A warm Belgian table in the heart of Liège',
+        storySignature: 'Authentic Belgian cuisine · warm atmosphere',
+        storyP1: 'La Bonne Fourchette celebrates Belgian tradition in an elegant and welcoming setting. The idea is simple: serve generous, authentic and comforting cuisine in the spirit of the great tables of Liège.',
+        storyP2: 'You will find the classics people truly love to come back for: beer-braised carbonnade flamande, boulets liégeois, mussels marinière, croquettes, generous desserts and crispy fries cooked in beef fat according to tradition.',
+        storyP3: 'Whether for a hearty lunch, a relaxed dinner or a true discovery of Belgian cuisine, La Bonne Fourchette invites guests to slow down, eat well and enjoy a warm atmosphere.',
+        seeMenu: 'See the menu',
+        allergens: ['Gluten', 'Crustaceans', 'Eggs', 'Fish', 'Milk / lactose', 'Nuts', 'Celery', 'Mustard', 'Sesame', 'Sulfites', 'Molluscs'],
+        items: {
+          ailes_poulet: { name: 'Chicken wings', subtitle: 'crispy and tender' },
+          nuggets: { name: 'Nuggets', subtitle: 'breaded and fried chicken' },
+          bitterballs: { name: 'Bitterballs', subtitle: 'meat and cheese balls, breaded and fried' },
+          fricadelle: { name: 'Fricadelle', subtitle: 'Belgian fry-shop specialty' },
+          fricadelle_speciale: { name: 'Special fricadelle', subtitle: 'served with sauces and onions' },
+          cervelas: { name: 'Cervelas', subtitle: 'pork sausage, Belgian fry-shop specialty' },
+          frites: { name: 'Fries', subtitle: 'hand-cut, double fried' },
+          patatas_bravas: { name: 'Patatas bravas', subtitle: 'potatoes, spicy tomato sauce' },
+          croquettes_fromage: { name: 'Cheese croquettes', subtitle: 'melted cheese, golden coating' },
+          camembert_frit: { name: 'Fried Camembert', subtitle: 'melting center, crispy coating' },
+croquettes_crevettes: { name: 'Grey shrimp croquettes', subtitle: 'A specialty from the Belgian coast' },
+          escargots_bourgogne: { name: 'Escargots de Bourgogne', subtitle: 'Burgundy snails, garlic parsley butter' },
+          moule_escargot: { name: 'Mussels à l’escargot', subtitle: 'butter, garlic and parsley' },
+          gambas_pil_pil: { name: 'Spicy prawns', subtitle: 'garlic oil, spicy prawns' },
+          salade_mixte: { name: 'Mixed salad', subtitle: 'fresh salad, homemade vinaigrette' },
+          vol_auvent: { name: 'Vol-au-vent', subtitle: 'chicken, meatballs and creamy sauce' },
+  carbonnade: { name: 'Belgian beef stew', subtitle: 'Slow-cooked with Belgian beer' },
+boulets_tomate: { name: 'Meatballs in tomato sauce', subtitle: 'With the typical Brussels recipe' },
+          boulets_liegeois: { name: 'Large Liège-style meatballs', subtitle: 'meatballs with sweet-savoury sauce' },
+          americain_frites: { name: 'Américain frites', subtitle: 'freshly minced tartare' },
+          spaghetti_bolos: { name: 'Spaghetti Bolognese', subtitle: 'beef slow-cooked in tomato sauce, wine and vegetables' },
+          tomate_crevettes: { name: 'Tomato with shrimp', subtitle: 'fresh tomato and shrimp' },
+mariniere: { name: 'Mussels marinière', subtitle: 'The classic mussels and fries' },
+
+          vin_blanc: { name: 'Mussels in white wine', subtitle: 'dry white wine' },
+          flambee_ricard: { name: 'Mussels flambéed with Ricard', subtitle: 'aniseed note' },
+          banana_split: { name: 'Banana split', subtitle: 'banana, ice cream, hot chocolate' },
+          dame_blanche: { name: 'Dame blanche', subtitle: 'vanilla ice cream, hot chocolate, whipped cream' },
+          coupe_brasilienne: { name: 'Coupe brésilienne', subtitle: 'mocha and vanilla ice cream, caramel and toppings' },
+          coupe_avocat: { name: 'Coupe avocat', subtitle: 'vanilla ice cream, avocado liqueur' },
+          fraise_melba: { name: 'Fraise Melba', subtitle: 'vanilla ice cream, strawberries, strawberry coulis' },
+          colonel: { name: 'Colonel', subtitle: 'lemon sorbet and vodka' },
+          crepe_sucre: { name: 'Sugar crêpe', subtitle: 'crêpe with crystallized sugar' },
+          crepe_mikado: { name: 'Mikado crêpe', subtitle: 'crêpe, chocolate, vanilla ice cream' },
+          crepe_grand_marnier: { name: 'Grand Marnier crêpe', subtitle: 'flambéed crêpe, Grand Marnier liqueur' },
+          plat_du_jour: { name: 'Dish of the day', subtitle: 'our daily suggestions' },
+          menu_3_services: { name: '3-course daily menu', subtitle: 'starter, main, dessert' },
+          demandez_suggestions: { name: 'Ask for our suggestions', subtitle: '' },
+          pain: { name: 'Bread', subtitle: '' },
+          sauce: { name: 'Sauces', subtitle: 'Belgian mayonnaise<br>ketchup<br>mustard<br>vinegar<br>andalouse Belgian specialty' }
+        }
+      },
+
+      nl: {
+        snacks: 'Snacks',
+        entrees: 'Voorgerechten',
+        plats: 'Hoofdgerechten',
+        moules: 'Mosselen',
+        desserts: 'Desserts',
+        crepes: 'Pannenkoeken',
+        suggestions: 'Menu & Suggesties',
+        supplements: 'Supplementen',
+        boissons: 'Dranken',
+        ourMenu: 'Ons Menu',
+        allergenes: 'Allergenen',
+        call: 'Bellen',
+        whatsapp: 'WhatsApp',
+        directions: 'Route',
+        address: 'Adres',
+        addressButton: 'Adres',
+        hours: 'Openingstijden',
+        tueFri: 'Din – Vri',
+        satSun: 'Zat – Zon',
+        monday: 'Maandag',
+        closed: 'Gesloten',
+        tueFriHours: '11:30 – 22:00',
+        satSunHours: '10:00 – 23:00',
+        copyright: '© 2026 La Bonne Fourchette',
+        logoPlaceholder: 'Voeg uw volledige logo hier in',
+        noticeAllFries: 'Al onze gerechten worden geserveerd met friet.',
+        noticeTakeaway: 'Al onze gerechten zijn beschikbaar om mee te nemen.',
+        friesInfo: 'Onze frieten worden gebakken in rundvet volgens de Belgische traditie.',
+        priceDay: 'Prijs van de dag',
+        comingSoon: 'Binnenkort',
+        allergenTitle: 'Allergeneninformatie',
+        allergenInfo: 'Sommige gerechten kunnen allergenen bevatten.\nMeld het ons als u een allergie of voedselintolerantie heeft.',
+        allergensPresent: 'Aanwezige allergenen volgens de gerechten',
+        allergenPictosTitle: 'Belangrijkste allergenen',
+        allergenLegalText: 'Overeenkomstig Verordening (EU) nr. 1169/2011 kunnen stoffen of producten die allergieën of intoleranties veroorzaken aanwezig zijn in bepaalde gerechten. Meld het ons bij een voedselallergie of intolerantie.',
+        reviewCtaTitle: 'Hebt u genoten van uw ervaring?',
+        reviewCtaText: 'Een Google-review helpt ons enorm. Dank u ❤️',
+        reviewButton: 'Laat een Google-review achter',
+        installApp: 'Menu installeren',
+        iosInstallHelp: 'Op iPhone: tik op <strong>Deel</strong> en daarna op <strong>Zet op beginscherm</strong>.',
+        samsungInstallHelp: '<div class="install-help-box"><div class="install-help-title">Installeer het menu op uw telefoon</div><div class="install-help-step"><span class="install-help-num">1</span><span>Tik op <strong>☰ de 3 lijnen rechtsonder</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tik op <strong>+ Toevoegen aan</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Tik op <strong>Startscherm</strong></span></div><div class="install-help-note">Daarna verschijnt het menu als een app op uw telefoon.</div></div>',
+        installToastTitle: 'Menu toegevoegd aan uw telefoon',
+        installToastText: 'U vindt het nu terug bij uw apps.',
+        versionLabel: 'Versie',
+        discoverTapCarta: 'Klik om TapCarta te ontdekken',
+        storyKicker: 'Restaurantpresentatie',
+        storyTitle: 'Een warme Belgische tafel in het hart van Luik',
+        storySignature: 'Authentieke Belgische keuken · warme sfeer',
+        storyP1: 'La Bonne Fourchette zet de Belgische traditie in de kijker in een elegant en gezellig kader. Het idee is eenvoudig: royale, authentieke en troostrijke keuken aanbieden in de geest van de mooie tafels van Luik.',
+        storyP2: 'Hier vindt men de klassiekers waar men echt voor terugkomt: carbonnade flamande met bier, boulets liégeois, mosselen marinière, kroketten, royale desserts en krokante frieten gebakken in rundvet volgens de traditie.',
+        storyP3: 'Of het nu gaat om een smakelijke lunch, een ontspannen diner of een echte ontdekking van de Belgische keuken, La Bonne Fourchette nodigt uit om de tijd te nemen, goed te eten en te genieten van een warme sfeer.',
+        seeMenu: 'Bekijk het menu',
+        allergens: ['Gluten', 'Schaaldieren', 'Eieren', 'Vis', 'Melk / lactose', 'Noten', 'Selderij', 'Mosterd', 'Sesam', 'Sulfieten', 'Weekdieren'],
+        items: {
+          ailes_poulet: { name: 'Kipvleugels', subtitle: 'knapperig en mals' },
+          nuggets: { name: 'Nuggets', subtitle: 'gepaneerde en gefrituurde kip' },
+          bitterballs: { name: 'Bitterballen', subtitle: 'vlees- en kaasballetjes, gepaneerd en gefrituurd' },
+          fricadelle: { name: 'Frikandel', subtitle: 'Belgische frituurspecialiteit' },
+          fricadelle_speciale: { name: 'Frikandel speciaal', subtitle: 'geserveerd met sauzen en uitjes' },
+          cervelas: { name: 'Cervelas', subtitle: 'varkensworst, Belgische frituurspecialiteit' },
+          frites: { name: 'Friet', subtitle: 'handgesneden, dubbel gebakken' },
+          patatas_bravas: { name: 'Patatas bravas', subtitle: 'aardappel, pikante tomatensaus' },
+          croquettes_fromage: { name: 'Kaaskroketten', subtitle: 'gesmolten kaas, goudbruin korstje' },
+          camembert_frit: { name: 'Gebakken Camembert', subtitle: 'smeltende kern, krokant korstje' },
+croquettes_crevettes: { name: 'Grijze garnalenkroketten', subtitle: 'Specialiteit van de Belgische kust' },
+          escargots_bourgogne: { name: 'Escargots de Bourgogne', subtitle: 'Bourgondische slakken, look-peterselieboter' },
+          moule_escargot: { name: 'Mosselen à l’escargot', subtitle: 'boter, look en peterselie' },
+          gambas_pil_pil: { name: 'Pikante garnalen', subtitle: 'garnalen in lookolie' },
+          salade_mixte: { name: 'Gemengde salade', subtitle: 'verse salade, huisvinaigrette' },
+          vol_auvent: { name: 'Vol-au-vent', subtitle: 'kip, gehaktballetjes en romige saus' },
+carbonnade: { name: 'Stoofvlees', subtitle: 'Gestoofd met Belgisch bier' },
+boulets_tomate: { name: 'Balletjes in tomatensaus', subtitle: 'Met het typische Brusselse recept' },
+          boulets_liegeois: { name: 'Grote Luikse gehaktballen', subtitle: 'gehaktballen met zoet-hartige saus' },
+          americain_frites: { name: 'Américain frites', subtitle: 'vers gehakte tartaar' },
+          spaghetti_bolos: { name: 'Spaghetti bolognaise', subtitle: 'rundvlees gestoofd in tomatensaus, wijn en groenten' },
+          tomate_crevettes: { name: 'Tomaat met garnalen', subtitle: 'verse tomaat en garnalen' },
+mariniere: { name: 'Mosselen marinière', subtitle: 'De klassieke mosselen met friet' },
+
+          vin_blanc: { name: 'Mosselen in witte wijn', subtitle: 'droge witte wijn' },
+          flambee_ricard: { name: 'Mosselen geflambeerd met Ricard', subtitle: 'anijstoets' },
+          banana_split: { name: 'Banana split', subtitle: 'banaan, ijs, warme chocolade' },
+          dame_blanche: { name: 'Dame blanche', subtitle: 'vanille-ijs, warme chocolade, slagroom' },
+          coupe_brasilienne: { name: 'Coupe brésilienne', subtitle: 'mokka- en vanille-ijs, karamel en toppings' },
+          coupe_avocat: { name: 'Coupe avocat', subtitle: 'vanille-ijs, avocaatlikeur' },
+          fraise_melba: { name: 'Fraise Melba', subtitle: 'vanille-ijs, aardbeien, aardbeicoulis' },
+          colonel: { name: 'Colonel', subtitle: 'citroensorbet en wodka' },
+          crepe_sucre: { name: 'Suikerpannenkoek', subtitle: 'pannenkoek met gekristalliseerde suiker' },
+          crepe_mikado: { name: 'Mikado pannenkoek', subtitle: 'pannenkoek, chocolade, vanille-ijs' },
+          crepe_grand_marnier: { name: 'Grand Marnier pannenkoek', subtitle: 'geflambeerde pannenkoek, Grand Marnier' },
+          plat_du_jour: { name: 'Schotel van de dag', subtitle: 'onze dagelijkse suggesties' },
+          menu_3_services: { name: 'Dagmenu 3 gangen', subtitle: 'voorgerecht, hoofdgerecht, dessert' },
+          demandez_suggestions: { name: 'Vraag onze suggesties', subtitle: '' },
+          pain: { name: 'Brood', subtitle: '' },
+          sauce: { name: 'Sauzen', subtitle: 'Belgische mayonaise<br>ketchup<br>mosterd<br>azijn<br>andalouse Belgische specialiteit' }
+        }
+      }
+    };
+
+    const supportedLangs = ['fr', 'es', 'en', 'nl'];
+
+    function detectLanguage() {
+      const browserLang = (navigator.language || navigator.userLanguage || 'es').substring(0, 2).toLowerCase();
+      return supportedLangs.includes(browserLang) ? browserLang : 'es';
+    }
+
+let currentLang = detectLanguage();
+let deferredInstallPrompt = null;
+let installToastTimeout = null;
+let installFallbackTimeout = null;
+let installToastAlreadyShown = false;
+let installHelpTimeout = null;
+
+const VERSION_STORAGE_KEY = 'tapcarta-last-loaded-version';
+const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
+
+    function isIos() {
+      return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    }
+
+    function isSamsungInternet() {
+      return /SamsungBrowser/i.test(window.navigator.userAgent || '');
+    }
+
+    function isInStandaloneMode() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function updateLangButtons() {
+      document.querySelectorAll('.lang-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.lang === currentLang);
+      });
+    }
+
+    function updateInstallUI() {
+      const installBtn = document.getElementById('install-app-btn');
+      const iosHelp = document.getElementById('ios-install-help');
+      const t = translations[currentLang];
+
+      if (!installBtn) return;
+
+      if (isInStandaloneMode()) {
+        installBtn.hidden = true;
+        if (iosHelp) iosHelp.hidden = true;
+        return;
+      }
+
+      if (isSamsungInternet()) {
+        installBtn.hidden = false;
+        installBtn.querySelector('span').textContent = t.installApp;
+
+        if (iosHelp) {
+          iosHelp.hidden = true;
+          iosHelp.innerHTML = t.samsungInstallHelp;
+        }
+        return;
+      }
+
+      if (deferredInstallPrompt || isIos()) {
+        installBtn.hidden = false;
+        installBtn.querySelector('span').textContent = t.installApp;
+      } else {
+        installBtn.hidden = true;
+      }
+
+      if (iosHelp) {
+        iosHelp.hidden = true;
+      }
+    }
+
+    function showInstallToast() {
+      if (installToastAlreadyShown) return;
+
+      const toast = document.getElementById('install-toast');
+      const title = document.getElementById('install-toast-title');
+      const text = document.getElementById('install-toast-text');
+      const t = translations[currentLang];
+
+      if (!toast || !title || !text) return;
+
+      installToastAlreadyShown = true;
+      title.textContent = t.installToastTitle;
+      text.textContent = t.installToastText;
+      toast.classList.add('show');
+
+      if (window.lucide) {
+        requestAnimationFrame(() => {
+          lucide.createIcons();
+        });
+      }
+
+      clearTimeout(installToastTimeout);
+      installToastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        installToastAlreadyShown = false;
+      }, 3200);
+    }
+
+    async function handleInstallClick() {
+      const iosHelp = document.getElementById('ios-install-help');
+      const t = translations[currentLang];
+
+      if (isSamsungInternet()) {
+        if (iosHelp) {
+          if (!iosHelp.hidden) {
+            clearTimeout(installHelpTimeout);
+            iosHelp.hidden = true;
+            return;
+          }
+
+          clearTimeout(installHelpTimeout);
+          iosHelp.hidden = false;
+          iosHelp.innerHTML = t.samsungInstallHelp;
+          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          installHelpTimeout = setTimeout(() => {
+            iosHelp.hidden = true;
+          }, 15000);
+        }
+        return;
+      }
+
+      if (deferredInstallPrompt) {
+        installToastAlreadyShown = false;
+        deferredInstallPrompt.prompt();
+
+        try {
+          const choiceResult = await deferredInstallPrompt.userChoice;
+
+          if (choiceResult && choiceResult.outcome === 'accepted') {
+            clearTimeout(installFallbackTimeout);
+            installFallbackTimeout = setTimeout(() => {
+              if (isInStandaloneMode()) {
+                showInstallToast();
+              }
+            }, 1200);
+          }
+        } catch (_) {}
+
+        deferredInstallPrompt = null;
+        updateInstallUI();
+        return;
+      }
+
+      if (isIos() && !isInStandaloneMode()) {
+        if (iosHelp) {
+          if (!iosHelp.hidden) {
+            clearTimeout(installHelpTimeout);
+            iosHelp.hidden = true;
+            return;
+          }
+
+          clearTimeout(installHelpTimeout);
+          iosHelp.hidden = false;
+          iosHelp.innerHTML = t.iosInstallHelp;
+          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          installHelpTimeout = setTimeout(() => {
+            iosHelp.hidden = true;
+          }, 15000);
+        }
+      }
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+
+      if (!isSamsungInternet()) {
+        updateInstallUI();
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      clearTimeout(installFallbackTimeout);
+      deferredInstallPrompt = null;
+      updateInstallUI();
+      showInstallToast();
+    });
+
+    const categoryIcons = {
+      snacks: 'utensils-crossed',
+      entrees: 'soup',
+      plats: 'chef-hat',
+      moules: 'fish',
+      desserts: 'cake',
+      crepes: 'circle',
+      suggestions: 'star',
+      supplements: 'plus-circle',
+      boissons: 'glass-water',
+      allergenes: 'alert-triangle'
+    };
+
+    const allergenVisuals = [
+      { key: 'gluten', color: '#B08A22' },
+      { key: 'crustaceans', color: '#D81F26' },
+      { key: 'eggs', color: '#D9B2A3' },
+      { key: 'fish', color: '#1C86E5' },
+      { key: 'milk', color: '#BFBFBF' },
+      { key: 'nuts', color: '#7C4A14' },
+      { key: 'celery', color: '#68BE42' },
+      { key: 'mustard', color: '#F2B614' },
+      { key: 'sesame', color: '#A62AC8' },
+      { key: 'sulfites', color: '#93A8B5' },
+      { key: 'molluscs', color: '#CBBCC8' }
+    ];
+
+    function scrollToMenuStart() {
+      const target = document.getElementById('menu-start');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function scrollToAddress() {
+      const target = document.getElementById('address-section');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function getAllergenIconSVG(key, color) {
+      const baseStyle = `style="color:${color}" aria-hidden="true"`;
+
+      const icons = {
+        gluten: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 5v22"/>
+              <path d="M16 8c-3 0-4 2-4 4 2 0 4-1 4-4Z"/>
+              <path d="M16 12c3 0 4 2 4 4-2 0-4-1-4-4Z"/>
+              <path d="M16 14c-3 0-4 2-4 4 2 0 4-1 4-4Z"/>
+              <path d="M16 18c3 0 4 2 4 4-2 0-4-1-4-4Z"/>
+              <path d="M16 20c-3 0-4 2-4 4 2 0 4-1 4-4Z"/>
+            </g>
+          </svg>
+        `,
+        crustaceans: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 18c0-5 3-8 6-8s6 3 6 8"/>
+              <path d="M12 18h8"/>
+              <path d="M9 20l-4 3"/>
+              <path d="M9 16l-4-2"/>
+              <path d="M23 20l4 3"/>
+              <path d="M23 16l4-2"/>
+              <path d="M13 10 10 6"/>
+              <path d="M19 10l3-4"/>
+              <path d="M14 18v6"/>
+              <path d="M18 18v6"/>
+            </g>
+          </svg>
+        `,
+        eggs: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <g fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 24c-3 0-5-2-5-6 0-5 3-10 5-10s5 5 5 10c0 4-2 6-5 6Z"/>
+              <path d="M21 24c-3 0-5-2-5-6 0-5 3-10 5-10s5 5 5 10c0 4-2 6-5 6Z"/>
+            </g>
+          </svg>
+        `,
+        fish: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 16c4-5 10-7 16-5-1 2-1 4 0 5-1 1-1 3 0 5-6 2-12 0-16-5Z"/>
+              <path d="M8 16 4 12v8l4-4Z"/>
+              <circle cx="20.5" cy="14.5" r="1"/>
+            </g>
+          </svg>
+        `,
+        milk: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+              <path d="M11 8h8l-1 4v12H10V12l1-4Z"/>
+              <path d="M12 8V5h6v3"/>
+              <path d="M10 14h8"/>
+            </g>
+          </svg>
+        `,
+        nuts: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 24c-3 0-5-2-5-5 0-4 3-7 6-8 1-3 4-4 6-4 3 0 5 2 5 5 0 5-4 12-12 12Z"/>
+              <path d="M17 12c1 1 2 3 2 5"/>
+              <path d="M15 14c-1 1-2 3-2 5"/>
+            </g>
+          </svg>
+        `,
+        celery: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 25V13"/>
+              <path d="M16 25V11"/>
+              <path d="M22 25V13"/>
+              <path d="M10 13c-3-1-4-4-2-7 3 0 5 2 5 5"/>
+              <path d="M16 11c0-4 3-7 7-7 0 4-2 7-6 8"/>
+              <path d="M22 13c3-1 4-4 2-7-3 0-5 2-5 5"/>
+            </g>
+          </svg>
+        `,
+        mustard: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+              <path d="M13 7h6v3h-6Z"/>
+              <path d="M12 10h8v3h-8Z"/>
+              <path d="M11 13h10v12H11Z"/>
+            </g>
+          </svg>
+        `,
+        sesame: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <g fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18c-2 0-3-2-2-4 2 0 4 1 4 3 0 1-1 1-2 1Z"/>
+              <path d="M16 13c-2 0-3-2-2-4 2 0 4 1 4 3 0 1-1 1-2 1Z"/>
+              <path d="M22 18c-2 0-3-2-2-4 2 0 4 1 4 3 0 1-1 1-2 1Z"/>
+              <path d="M13 24c-2 0-3-2-2-4 2 0 4 1 4 3 0 1-1 1-2 1Z"/>
+              <path d="M20 24c-2 0-3-2-2-4 2 0 4 1 4 3 0 1-1 1-2 1Z"/>
+            </g>
+          </svg>
+        `,
+        sulfites: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <text x="16" y="20" text-anchor="middle" font-size="11" font-family="Arial, sans-serif" font-weight="700" fill="currentColor">SO₂</text>
+          </svg>
+        `,
+        molluscs: `
+          <svg viewBox="0 0 32 32" ${baseStyle}>
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 8c5 0 9 4 9 9H7c0-5 4-9 9-9Z"/>
+              <path d="M16 9v8"/>
+              <path d="M12 10.5l2 6.5"/>
+              <path d="M20 10.5 18 17"/>
+              <path d="M9 14h14"/>
+            </g>
+          </svg>
+        `
+      };
+
+      return icons[key] || '';
+    }
+
+    function renderMenuItem(item, t) {
+      const itemData = t.items[item.id];
+      if (!itemData) return '';
+
+      let priceDisplay = '';
+
+      if (item.noPrice) {
+        priceDisplay = '';
+      } else if (item.price) {
+        priceDisplay = `<span class="text-sm font-semibold text-gold ml-4 whitespace-nowrap">${item.price}</span>`;
+      } else {
+        priceDisplay = `<span class="text-sm font-semibold text-gold ml-4 whitespace-nowrap">${t[item.specialPriceText]}</span>`;
+      }
+
+      return `
+        <div class="menu-item-row flex justify-between items-baseline py-2.5 px-3 rounded-lg">
+          <div class="flex-1">
+            <span class="text-sm text-cream/90">${itemData.name}</span>
+            ${itemData.subtitle ? `<div class="menu-item-subtitle">${itemData.subtitle}</div>` : ''}
+          </div>
+          ${priceDisplay}
+        </div>
+      `;
+    }
+
+    function getCategoryIconClass(categoryKey) {
+      return categoryKey === 'allergenes' ? 'icon-gold' : 'icon-red';
+    }
+
+    function renderCategory(categoryKey, categoryLabel, t) {
+      const items = menuData[categoryKey];
+      if (!items) return '';
+
+      const icon = categoryIcons[categoryKey] || 'utensils-crossed';
+      const iconClass = getCategoryIconClass(categoryKey);
+
+      if (items.length === 0) {
+        return `
+          <div class="menu-category mb-8" id="menu-${categoryKey}">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="${icon}" class="w-4 h-4 ${iconClass}"></i>
+              </div>
+              <h3 class="font-display text-lg font-bold text-cream tracking-wide uppercase">${categoryLabel}</h3>
+              <div class="flex-1 h-px bg-gold/20"></div>
+            </div>
+            <div class="text-center py-8">
+              <p class="text-sm text-cream/50 italic">${t.comingSoon}</p>
+            </div>
+          </div>
+        `;
+      }
+
+      const itemsHTML = items.map(item => renderMenuItem(item, t)).join('');
+
+      return `
+        <div class="menu-category mb-8" id="menu-${categoryKey}">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="${icon}" class="w-4 h-4 ${iconClass}"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold text-cream tracking-wide uppercase">${categoryLabel}</h3>
+            <div class="flex-1 h-px bg-gold/20"></div>
+          </div>
+          <div class="space-y-1">
+            ${itemsHTML}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAllergenSection(t) {
+      const cards = allergenVisuals.map((item, index) => `
+        <div class="allergen-card">
+          <div class="allergen-icon-wrap" style="color:${item.color}">
+            ${getAllergenIconSVG(item.key, item.color)}
+          </div>
+          <div class="allergen-label">${t.allergens[index]}</div>
+        </div>
+      `).join('');
+
+      return `
+        <div class="menu-category mb-8" id="menu-allergenes">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="${categoryIcons.allergenes}" class="w-4 h-4 icon-gold"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold text-cream tracking-wide uppercase">${t.allergenTitle}</h3>
+            <div class="flex-1 h-px bg-gold/20"></div>
+          </div>
+
+          <div class="space-y-4 mb-6">
+            <div class="flex items-start gap-3 p-4 rounded-lg bg-darkCard border border-gold/20">
+              <i data-lucide="info" class="w-5 h-5 text-gold flex-shrink-0 mt-0.5"></i>
+              <p class="text-sm text-cream/80 whitespace-pre-line">${t.allergenInfo}</p>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-[20px] bg-darkCard border border-gold/20">
+            <div class="allergen-subtitle">${t.allergenPictosTitle}</div>
+            <div class="allergen-grid">
+              ${cards}
+            </div>
+
+            <div class="allergen-legal-box">
+              <p class="allergen-legal-text">${t.allergenLegalText}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderReviewCTA(t) {
+      return `
+        <section class="px-6 py-6 animate-fade-up delay-2">
+          <a href="${siteConfig.reviewUrl}"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="btn-action group flex items-start gap-4 w-full p-4 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
+            <div class="w-10 h-10 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="star" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
+            </div>
+            <div class="flex-1 text-left">
+              <div class="text-sm font-semibold text-cream tracking-wide">${t.reviewCtaTitle}</div>
+              <div class="text-sm text-cream/75 mt-1">${t.reviewCtaText}</div>
+              <div class="inline-flex items-center gap-2 mt-3 text-sm font-semibold text-gold tracking-wide">
+                <span>${t.reviewButton}</span>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-gold group-hover:translate-x-0.5 transition-transform"></i>
+              </div>
+            </div>
+          </a>
+        </section>
+      `;
+    }
+
+    function renderDesktopStorySection(t) {
+      return `
+        <section class="hidden lg:block px-6 pt-3 pb-10 animate-fade-up delay-1">
+          <div class="desktop-story-wrap">
+            <div class="desktop-story-card rounded-[30px] overflow-hidden">
+              <div class="grid lg:grid-cols-[1.02fr_.98fr] items-stretch">
+                <div class="p-12 xl:p-16 2xl:p-[4.5rem]">
+                  <div class="desktop-story-kicker mb-4">${t.storyKicker}</div>
+
+                  <h2 class="font-display text-[3.05rem] xl:text-[3.55rem] leading-[1.03] text-gold mb-3 max-w-[12ch]">
+                    ${t.storyTitle}
+                  </h2>
+
+                  <div class="desktop-story-signature">
+                    <span>${t.storySignature}</span>
+                  </div>
+
+                  <p class="desktop-story-text mb-5">${t.storyP1}</p>
+                  <p class="desktop-story-text mb-5">${t.storyP2}</p>
+                  <p class="desktop-story-text mb-8">${t.storyP3}</p>
+
+                  <button class="desktop-story-cta" onclick="scrollToMenuStart()">
+                    <i data-lucide="book-open" class="w-5 h-5 text-gold"></i>
+                    <span>${t.seeMenu}</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-gold"></i>
+                  </button>
+                </div>
+
+                <div class="desktop-story-image-wrap">
+                  <img
+                    src="${siteConfig.desktopCollageUrl}"
+                    alt="La Bonne Fourchette"
+                    class="desktop-story-image"
+                    loading="lazy"
+                    decoding="async"
+                  >
+                  <div class="desktop-story-image-overlay"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderMenu() {
+      const t = translations[currentLang];
+      const wrapper = document.getElementById('app-wrapper');
+
+      const menuHTML = `
+        ${renderCategory('snacks', t.snacks, t)}
+        ${renderCategory('entrees', t.entrees, t)}
+        ${renderCategory('plats', t.plats, t)}
+        ${renderCategory('moules', t.moules, t)}
+        ${renderCategory('desserts', t.desserts, t)}
+        ${renderCategory('crepes', t.crepes, t)}
+        ${renderCategory('suggestions', t.suggestions, t)}
+        ${renderCategory('supplements', t.supplements, t)}
+        ${renderCategory('boissons', t.boissons, t)}
+      `;
+
+      wrapper.innerHTML = `
+        <header class="relative overflow-hidden pt-28 pb-16 px-4 text-center animate-fade-up">
+          <div id="logo-container" class="mx-auto w-full max-w-4xl flex items-center justify-center">
+            ${siteConfig.logoUrl
+              ? `<img src="${siteConfig.logoUrl}" alt="La Bonne Fourchette" class="w-auto h-auto max-w-md mx-auto" loading="eager" fetchpriority="high" decoding="async" style="object-fit:contain; max-height:260px; display:block;">`
+              : `<div class="text-center px-6">
+                  <p class="font-display text-3xl md:text-4xl font-bold text-gold mb-2">La Bonne Fourchette</p>
+                  <p class="text-xs text-cream/40">${t.logoPlaceholder}</p>
+                </div>`
+            }
+          </div>
+        </header>
+
+        ${renderDesktopStorySection(t)}
+
+        <div class="desktop-lux-divider">
+          <div class="desktop-lux-divider-line"></div>
+          <div class="desktop-lux-divider-dots"><span></span><span></span><span></span></div>
+          <div class="desktop-lux-divider-line"></div>
+        </div>
+
+        <div class="diamond-divider lg:hidden">
+          <span></span><span></span><span></span>
+        </div>
+
+        <section class="px-6 py-6 animate-fade-up delay-1">
+          <div class="flex justify-center gap-4 flex-wrap">
+            <a href="tel:0034672486699" class="btn-action group flex lg:hidden items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
+              <i data-lucide="phone" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
+              <span class="text-sm font-semibold text-cream tracking-wide">${t.call}</span>
+            </a>
+
+            <button onclick="scrollToAddress()" class="btn-action group hidden lg:flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
+              <i data-lucide="map" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
+              <span class="text-sm font-semibold text-cream tracking-wide">${t.addressButton}</span>
+            </button>
+
+            <a href="https://wa.me/34672486699" target="_blank" rel="noopener noreferrer" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
+              <i data-lucide="message-circle" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
+              <span class="text-sm font-semibold text-cream tracking-wide">${t.whatsapp}</span>
+            </a>
+
+            <a href="https://maps.app.goo.gl/w1YhWUqoJ6qp8KDF9" target="_blank" rel="noopener noreferrer" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
+              <i data-lucide="map-pin" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
+              <span class="text-sm font-semibold text-cream tracking-wide">${t.directions}</span>
+            </a>
+          </div>
+
+          <div class="mt-4 flex justify-center">
+            <button id="install-app-btn" hidden onclick="handleInstallClick()" class="btn-action group flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-darkCard/90 border border-gold/25 text-cream/85 hover:border-gold/45 hover:bg-darkCard transition-all shadow-sm">
+              <i data-lucide="download" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
+              <span class="text-xs font-medium tracking-wide">${t.installApp}</span>
+            </button>
+          </div>
+
+          <div id="ios-install-help" hidden class="mt-3 p-4 rounded-lg bg-darkCard border border-gold/20 text-sm text-cream/80">
+            ${t.iosInstallHelp}
+          </div>
+        </section>
+
+        ${renderReviewCTA(t)}
+
+        <section class="px-6 py-6 animate-fade-up delay-2">
+          <div class="space-y-3">
+            <div class="flex items-start gap-3 p-4 rounded-lg bg-darkCard border border-gold/20">
+              <i data-lucide="info" class="w-5 h-5 text-gold flex-shrink-0 mt-0.5"></i>
+              <p class="text-sm text-cream/80">${t.noticeAllFries}</p>
+            </div>
+            <div class="flex items-start gap-3 p-4 rounded-lg bg-darkCard border border-gold/20">
+              <i data-lucide="shopping-bag" class="w-5 h-5 text-gold flex-shrink-0 mt-0.5"></i>
+              <p class="text-sm text-cream/80">${t.noticeTakeaway}</p>
+            </div>
+            <div class="flex items-start gap-3 p-4 rounded-lg bg-darkCard border border-gold/20">
+              <i data-lucide="flame" class="w-5 h-5 text-gold flex-shrink-0 mt-0.5"></i>
+              <p class="text-sm text-cream/80">${t.friesInfo}</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="px-6 py-4 animate-fade-up delay-2 flex justify-center">
+          <button class="group flex items-center justify-center gap-3 px-5 py-2.5 rounded-lg border-2 border-gold/40 text-sm font-medium text-gold hover:border-gold hover:bg-gold/5 transition-all" onclick="document.getElementById('menu-allergenes').scrollIntoView({behavior:'smooth', block:'start'})">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
+            <span class="tracking-wide">${t.allergenes}</span>
+          </button>
+        </section>
+
+        <section class="px-6 py-6 animate-fade-up delay-3" id="menu-start">
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-snacks').scrollIntoView({behavior:'smooth', block:'start'})">${t.snacks}</button>
+            <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-entrees').scrollIntoView({behavior:'smooth', block:'start'})">${t.entrees}</button>
+            <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-plats').scrollIntoView({behavior:'smooth', block:'start'})">${t.plats}</button>
+            <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-moules').scrollIntoView({behavior:'smooth', block:'start'})">${t.moules}</button>
+            <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-desserts').scrollIntoView({behavior:'smooth', block:'start'})">${t.desserts}</button>
+            <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-crepes').scrollIntoView({behavior:'smooth', block:'start'})">${t.crepes}</button>
+            <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-suggestions').scrollIntoView({behavior:'smooth', block:'start'})">${t.suggestions}</button>
+            <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-supplements').scrollIntoView({behavior:'smooth', block:'start'})">${t.supplements}</button>
+            <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-boissons').scrollIntoView({behavior:'smooth', block:'start'})">${t.boissons}</button>
+          </div>
+        </section>
+
+        <div class="diamond-divider">
+          <span></span><span></span><span></span>
+        </div>
+
+        <section class="px-6 pb-6 animate-fade-up delay-4">
+          <h2 class="font-display text-2xl font-bold text-gold text-center mb-6">${t.ourMenu}</h2>
+          ${menuHTML}
+        </section>
+
+        <div class="diamond-divider">
+          <span></span><span></span><span></span>
+        </div>
+
+        <section class="px-6 pb-6 animate-fade-up delay-5">
+          ${renderAllergenSection(t)}
+        </section>
+
+        <div class="diamond-divider">
+          <span></span><span></span><span></span>
+        </div>
+
+        <footer class="px-6 pt-4 pb-10 text-center animate-fade-up delay-5">
+          <div class="space-y-6">
+            <div id="address-section">
+              <div class="flex items-center justify-center gap-2 mb-2">
+                <i data-lucide="map-pin" class="w-4 h-4 text-gold"></i>
+                <h4 class="font-display text-sm font-bold text-gold uppercase tracking-wider">${t.address}</h4>
+              </div>
+              <p class="text-sm text-cream/60 leading-relaxed">Rue de la Croix Jurlet 291<br>4040 Herstal</p>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-center gap-2 mb-3">
+                <i data-lucide="clock" class="w-4 h-4 text-gold"></i>
+                <h4 class="font-display text-sm font-bold text-gold uppercase tracking-wider">${t.hours}</h4>
+              </div>
+              <div class="inline-block text-left">
+                <div class="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                  <span class="text-cream/50">${t.tueFri}</span>
+                  <span class="text-cream/80 font-medium">${t.tueFriHours}</span>
+                  <span class="text-cream/50">${t.satSun}</span>
+                  <span class="text-cream/80 font-medium">${t.satSunHours}</span>
+                  <span class="text-cream/50">${t.monday}</span>
+                  <span class="text-cream/40 italic">${t.closed}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-center gap-1 pt-4">
+              <div class="w-8 h-0.5 rounded-full bg-dark border border-gray-700"></div>
+              <div class="w-8 h-0.5 rounded-full bg-gold"></div>
+              <div class="w-8 h-0.5 rounded-full" style="background:#EF3340;"></div>
+            </div>
+
+   <div class="pt-5 flex justify-center">
+  <a
+    href="https://tapcarta.com?lang=${currentLang}"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="brand-card flex items-center gap-4 px-5 py-4 rounded-2xl bg-white/5 border-2 border-gold/40 shadow-lg hover:bg-white/10 hover:border-gold/60 transition-all duration-300 cursor-pointer"
+    title="Découvrir TapCarta"
+    aria-label="Découvrir TapCarta"
+  >
+    <div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-gold/30 bg-white">
+      <img
+        src="${siteConfig.brandLogoUrl}"
+        alt="FJ"
+        class="w-full h-full object-contain"
+        loading="lazy"
+        decoding="async"
+      >
+    </div>
+
+    <div class="leading-tight text-left min-w-0">
+      <div class="text-base font-semibold text-cream tracking-wide break-words">
+        ${siteConfig.productName}
+      </div>
+
+      <div class="text-sm text-gold/80 mt-1 break-words">
+        ${siteConfig.productSignature}
+      </div>
+
+      <div class="text-xs text-cream/60 mt-2">
+        ${t.discoverTapCarta}
+      </div>
+
+      <div class="text-xs text-cream/40 mt-2">
+        ${t.versionLabel} ${APP_VERSION}
+      </div>
+    </div>
+  </a>
+</div>
+
+            <p class="text-xs text-cream/30 mt-4">${t.copyright}</p>
+          </div>
+        </footer>
+      `;
+
+      const toastTitle = document.getElementById('install-toast-title');  
+      const toastText = document.getElementById('install-toast-text');
+      const iosHelp = document.getElementById('ios-install-help');
+
+      if (toastTitle && toastText) {
+        toastTitle.textContent = t.installToastTitle;
+        toastText.textContent = t.installToastText;
+      }
+
+      if (iosHelp) {
+        iosHelp.innerHTML = isSamsungInternet() ? t.samsungInstallHelp : t.iosInstallHelp;
+      }
+
+      if (window.lucide) {
+        requestAnimationFrame(() => {
+          lucide.createIcons();
+        });
+      }
+
+      updateInstallUI();
+      updateLangButtons();
+    }
+
+
+
+let hasReloadedForNewSW = false;
+
+async function registerFreshServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hasReloadedForNewSW) return;
+    hasReloadedForNewSW = true;
+    window.location.reload();
+  });
+
+  try {
+    const registration = await navigator.serviceWorker.register(SW_URL, {
+      scope: `${BASE_PATH}/`,
+      updateViaCache: 'none'
+    });
+
+    if (registration) {
+      await registration.update();
+
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+    }
+  } catch (err) {
+    console.error('SW registration error:', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+
+  await registerFreshServiceWorker();
+
+  renderMenu();
+
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const lang = e.currentTarget.dataset.lang;
+      if (!supportedLangs.includes(lang)) return;
+
+      currentLang = lang;
+      renderMenu();
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    });
+  });
+});
+  </script>
+</body>
+</html>
+
+
+
+
+   
