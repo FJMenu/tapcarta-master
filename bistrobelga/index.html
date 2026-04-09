@@ -6,7 +6,7 @@
 <title>Bistro Belga</title>
 
   <script>
-    const APP_VERSION = '1.2.14';
+    const APP_VERSION = '1.2.15';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -657,7 +657,7 @@ logoUrl: "https://i.postimg.cc/zXvnmw34/logo-bistro-belga-transparent.png",
       productName: "TapCarta",
       productSignature: "Created by FJ",
   reviewUrl: "https://search.google.com/local/writereview?placeid=ChIJj1WQVgDXDA0Rf16IteXyMeE",
-      desktopCollageUrl: "liege-collage.jpg"
+desktopCollageUrl: "7e412bab-4647-4d23-b5d1-886da96e5045.png"
     };
 
     const menuData = {
@@ -1627,16 +1627,16 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
                   </button>
                 </div>
 
-                <div class="desktop-story-image-wrap">
-                  <img
-                    src="${siteConfig.desktopCollageUrl}"
-                       alt="Bistro Belga"
-                    class="desktop-story-image"
-                    loading="lazy"
-                    decoding="async"
-                  >
-                  <div class="desktop-story-image-overlay"></div>
-                </div>
+                <div class="desktop-story-image-wrap flex items-center justify-center p-10">
+  <img
+    src="${siteConfig.desktopCollageUrl}"
+    alt="Bistro Belga"
+    class="w-full h-full max-w-[420px] max-h-[420px] object-contain"
+    loading="lazy"
+    decoding="async"
+  >
+  <div class="desktop-story-image-overlay"></div>
+</div>
               </div>
             </div>
           </div>
