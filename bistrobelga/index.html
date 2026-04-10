@@ -6,7 +6,7 @@
 <title>Bistro Belga</title>
 
   <script>
-    const APP_VERSION = '1.2.16';
+    const APP_VERSION = '1.2.17';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -27,10 +27,15 @@
   <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script>
-    document.write(`<link rel="manifest" href="${MANIFEST_URL}">`);
-    document.write(`<link rel="apple-touch-icon" href="${ICON_192_URL}">`);
-  </script>
+<script>
+  const FAVICON_URL = `${BASE_PATH}/favicon.png?v=${APP_VERSION}`;
+
+  document.write(`<link rel="manifest" href="${MANIFEST_URL}">`);
+  document.write(`<link rel="apple-touch-icon" href="${ICON_192_URL}">`);
+  document.write(`<link rel="icon" type="image/png" sizes="32x32" href="${FAVICON_URL}">`);
+  document.write(`<link rel="icon" type="image/png" sizes="192x192" href="${FAVICON_URL}">`);
+  document.write(`<link rel="shortcut icon" href="${FAVICON_URL}">`);
+</script>
 
    <meta name="theme-color" content="#0F0F0F">
   <meta name="apple-mobile-web-app-capable" content="yes">
