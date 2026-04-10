@@ -1169,24 +1169,17 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
 
   if (!installBtn) return;
 
+  if (iosHelp) {
+    iosHelp.hidden = true;
+  }
+
   if (isInStandaloneMode()) {
     installBtn.hidden = true;
-    if (iosHelp) iosHelp.hidden = true;
     return;
   }
 
-  installBtn.hidden = false;
   installBtn.querySelector('span').textContent = t.installApp;
-
-  if (iosHelp) {
-    iosHelp.hidden = true;
-
-    if (isSamsungInternet()) {
-      iosHelp.innerHTML = t.samsungInstallHelp;
-    } else {
-      iosHelp.innerHTML = t.iosInstallHelp;
-    }
-  }
+  installBtn.hidden = !deferredInstallPrompt;
 }
 
     function showInstallToast() {
