@@ -6,7 +6,7 @@
 <title>Bistro Belga</title>
 
   <script>
-    const APP_VERSION = '1.2.15';
+    const APP_VERSION = '1.2.16';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1221,71 +1221,96 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
       }, 3200);
     }
 
-    async function handleInstallClick() {
-      const iosHelp = document.getElementById('ios-install-help');
-      const t = translations[currentLang];
+  async function handleInstallClick() {
+  const iosHelp = document.getElementById('ios-install-help');
+  const t = translations[currentLang];
 
-      if (isSamsungInternet()) {
-        if (iosHelp) {
-          if (!iosHelp.hidden) {
-            clearTimeout(installHelpTimeout);
-            iosHelp.hidden = true;
-            return;
-          }
-
-          clearTimeout(installHelpTimeout);
-          iosHelp.hidden = false;
-          iosHelp.innerHTML = t.samsungInstallHelp;
-          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-          installHelpTimeout = setTimeout(() => {
-            iosHelp.hidden = true;
-          }, 15000);
-        }
+  if (isSamsungInternet()) {
+    if (iosHelp) {
+      if (!iosHelp.hidden) {
+        clearTimeout(installHelpTimeout);
+        iosHelp.hidden = true;
         return;
       }
 
-      if (deferredInstallPrompt) {
-        installToastAlreadyShown = false;
-        deferredInstallPrompt.prompt();
+      clearTimeout(installHelpTimeout);
+      iosHelp.hidden = false;
+      iosHelp.innerHTML = t.samsungInstallHelp;
+      iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        try {
-          const choiceResult = await deferredInstallPrompt.userChoice;
-
-          if (choiceResult && choiceResult.outcome === 'accepted') {
-            clearTimeout(installFallbackTimeout);
-            installFallbackTimeout = setTimeout(() => {
-              if (isInStandaloneMode()) {
-                showInstallToast();
-              }
-            }, 1200);
-          }
-        } catch (_) {}
-
-        deferredInstallPrompt = null;
-        updateInstallUI();
-        return;
-      }
-
-      if (isIos() && !isInStandaloneMode()) {
-        if (iosHelp) {
-          if (!iosHelp.hidden) {
-            clearTimeout(installHelpTimeout);
-            iosHelp.hidden = true;
-            return;
-          }
-
-          clearTimeout(installHelpTimeout);
-          iosHelp.hidden = false;
-          iosHelp.innerHTML = t.iosInstallHelp;
-          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-          installHelpTimeout = setTimeout(() => {
-            iosHelp.hidden = true;
-          }, 15000);
-        }
-      }
+      installHelpTimeout = setTimeout(() => {
+        iosHelp.hidden = true;
+      }, 15000);
     }
+    return;
+  }
+
+  if (deferredInstallPrompt) {
+    installToastAlreadyShown = false;
+    deferredInstallPrompt.prompt();
+
+    try {
+      const choiceResult = await deferredInstallPrompt.userChoice;
+
+      if (choiceResult && choiceResult.outcome === 'accepted') {
+        clearTimeout(installFallbackTimeout);
+        installFallbackTimeout = setTimeout(() => {
+          if (isInStandaloneMode()) {
+            showInstallToast();
+          }
+        }, 1200);
+      }
+    } catch (_) {}
+
+    deferredInstallPrompt = null;
+    updateInstallUI();
+    return;
+  }
+
+  if (isIos() && !isInStandaloneMode()) {
+    if (iosHelp) {
+      if (!iosHelp.hidden) {
+        clearTimeout(installHelpTimeout);
+        iosHelp.hidden = true;
+        return;
+      }
+
+      clearTimeout(installHelpTimeout);
+      iosHelp.hidden = false;
+      iosHelp.innerHTML = t.iosInstallHelp;
+      iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      installHelpTimeout = setTimeout(() => {
+        iosHelp.hidden = true;
+      }, 15000);
+    }
+    return;
+  }
+
+  if (!isIos() && !isInStandaloneMode() && iosHelp) {
+    const androidFallbackHelpByLang = {
+      fr: '<div class="install-help-box"><div class="install-help-title">Installation non proposée automatiquement</div><div class="install-help-step"><span class="install-help-num">1</span><span>Ouvrez le <strong>menu du navigateur</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Choisissez <strong>Ajouter à l’écran d’accueil</strong> ou <strong>Installer l’application</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Validez l’ajout sur votre téléphone</span></div><div class="install-help-note">Si rien ne s’ouvre automatiquement, le navigateur n’a pas encore proposé l’installation native.</div></div>',
+      es: '<div class="install-help-box"><div class="install-help-title">La instalación no se ha mostrado automáticamente</div><div class="install-help-step"><span class="install-help-num">1</span><span>Abra el <strong>menú del navegador</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Elija <strong>Añadir a la pantalla de inicio</strong> o <strong>Instalar aplicación</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirme la instalación en su teléfono</span></div><div class="install-help-note">Si no aparece nada automáticamente, el navegador todavía no ha activado la instalación nativa.</div></div>',
+      en: '<div class="install-help-box"><div class="install-help-title">Install prompt not shown automatically</div><div class="install-help-step"><span class="install-help-num">1</span><span>Open the <strong>browser menu</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Choose <strong>Add to Home screen</strong> or <strong>Install app</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirm the installation on your phone</span></div><div class="install-help-note">If nothing opens automatically, the browser has not yet exposed the native install prompt.</div></div>',
+      nl: '<div class="install-help-box"><div class="install-help-title">Installatie werd niet automatisch getoond</div><div class="install-help-step"><span class="install-help-num">1</span><span>Open het <strong>browsermenu</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Kies <strong>Toevoegen aan startscherm</strong> of <strong>App installeren</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Bevestig de installatie op uw telefoon</span></div><div class="install-help-note">Als er niets automatisch opent, heeft de browser de native installatie nog niet aangeboden.</div></div>'
+    };
+
+    if (!iosHelp.hidden) {
+      clearTimeout(installHelpTimeout);
+      iosHelp.hidden = true;
+      return;
+    }
+
+    clearTimeout(installHelpTimeout);
+    iosHelp.hidden = false;
+    iosHelp.innerHTML = androidFallbackHelpByLang[currentLang] || androidFallbackHelpByLang.es;
+    iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    installHelpTimeout = setTimeout(() => {
+      iosHelp.hidden = true;
+    }, 15000);
+  }
+}
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
