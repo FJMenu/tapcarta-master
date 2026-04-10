@@ -1162,41 +1162,32 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
       });
     }
 
-    function updateInstallUI() {
-      const installBtn = document.getElementById('install-app-btn');
-      const iosHelp = document.getElementById('ios-install-help');
-      const t = translations[currentLang];
+   function updateInstallUI() {
+  const installBtn = document.getElementById('install-app-btn');
+  const iosHelp = document.getElementById('ios-install-help');
+  const t = translations[currentLang];
 
-      if (!installBtn) return;
+  if (!installBtn) return;
 
-      if (isInStandaloneMode()) {
-        installBtn.hidden = true;
-        if (iosHelp) iosHelp.hidden = true;
-        return;
-      }
+  if (isInStandaloneMode()) {
+    installBtn.hidden = true;
+    if (iosHelp) iosHelp.hidden = true;
+    return;
+  }
 
-      if (isSamsungInternet()) {
-        installBtn.hidden = false;
-        installBtn.querySelector('span').textContent = t.installApp;
+  installBtn.hidden = false;
+  installBtn.querySelector('span').textContent = t.installApp;
 
-        if (iosHelp) {
-          iosHelp.hidden = true;
-          iosHelp.innerHTML = t.samsungInstallHelp;
-        }
-        return;
-      }
+  if (iosHelp) {
+    iosHelp.hidden = true;
 
-      if (deferredInstallPrompt || isIos()) {
-        installBtn.hidden = false;
-        installBtn.querySelector('span').textContent = t.installApp;
-      } else {
-        installBtn.hidden = true;
-      }
-
-      if (iosHelp) {
-        iosHelp.hidden = true;
-      }
+    if (isSamsungInternet()) {
+      iosHelp.innerHTML = t.samsungInstallHelp;
+    } else {
+      iosHelp.innerHTML = t.iosInstallHelp;
     }
+  }
+}
 
     function showInstallToast() {
       if (installToastAlreadyShown) return;
