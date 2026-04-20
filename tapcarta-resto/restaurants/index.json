@@ -1,1 +1,13 @@
-
+{
+  "restaurants": [
+    {
+      "id": "tapcarta-demo",
+      "slug": "tapcarta-demo",
+      "name": "TapCarta Demo",
+      "file": "restaurants/tapcarta-demo.json",
+      "status": "active",
+      "publicListingEnabled": false,
+      "clientAccessEnabled": true
+    }
+  ]
+}
