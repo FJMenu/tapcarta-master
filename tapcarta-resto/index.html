@@ -4171,7 +4171,6 @@ function markMenuTranslationWarningNeeded() {
     editorList.addEventListener('click', (e) => {
       const actionButton = e.target.closest('[data-action]');
       if (!actionButton) return;
-      setMenuSavePending(true);
 
       const categoryIndex = Number(actionButton.dataset.categoryIndex);
       const itemIndex = Number(actionButton.dataset.itemIndex);
