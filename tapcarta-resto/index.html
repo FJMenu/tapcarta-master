@@ -3184,15 +3184,19 @@ ${!item.treated ? `
                 <span>Actualiser la page</span>
               </button>
 
-              <div class="inline-flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 shadow-lg min-h-[58px]">
+              <button
+                type="button"
+                onclick="document.getElementById('restaurant-menu-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });"
+                class="inline-flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 shadow-lg min-h-[58px] hover:bg-gold/10 transition-all"
+              >
                 <div class="w-10 h-10 rounded-xl border border-gold/20 bg-gold/10 flex items-center justify-center flex-shrink-0">
                   <i data-lucide="store" class="w-5 h-5 text-gold"></i>
                 </div>
                 <div class="text-left">
                   <div class="text-sm font-semibold text-cream leading-tight">TapCarta Resto</div>
-                  <div class="text-xs text-gold/85 mt-1 leading-tight">Gestion restaurant</div>
+                  <div class="text-xs text-gold/85 mt-1 leading-tight">Consulter mon menu</div>
                 </div>
-              </div>
+              </button>
 
               <button
                 id="install-app-btn"
@@ -3249,7 +3253,7 @@ ${!item.treated ? `
           </article>
    ` : ''}
 
-     <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
+     <article id="restaurant-menu-card" class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
             <div class="flex items-center gap-3 mb-5">
               <div class="w-10 h-10 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center">
                 <i data-lucide="layout-dashboard" class="w-5 h-5 text-gold"></i>
