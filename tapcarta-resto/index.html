@@ -3369,38 +3369,36 @@ ${!item.treated ? `
                       : 'Modifiez rapidement les catégories, plats, visibilités et disponibilités.'}</p>
               </div>
 
-              <div class="sticky top-3 z-30 -mx-1 px-1 py-2">
-                <div class="flex flex-wrap gap-3 rounded-2xl border border-gold/20 bg-[#0F0F0F]/92 backdrop-blur-sm shadow-[0_12px_30px_rgba(0,0,0,0.28)] p-3">
-                  <button
-                    id="restaurant-add-category-btn"
-                    type="button"
-                    class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
-                  >
-                    <i data-lucide="folder-plus" class="w-4 h-4 text-gold"></i>
-                    <span>${currentLang === 'es'
-                      ? 'Añadir una categoría'
-                      : currentLang === 'en'
-                        ? 'Add a category'
-                        : currentLang === 'nl'
-                          ? 'Categorie toevoegen'
-                          : 'Ajouter une catégorie'}</span>
-                  </button>
+              <div class="flex flex-wrap gap-3">
+                <button
+                  id="restaurant-add-category-btn"
+                  type="button"
+                  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
+                >
+                  <i data-lucide="folder-plus" class="w-4 h-4 text-gold"></i>
+                  <span>${currentLang === 'es'
+                    ? 'Añadir una categoría'
+                    : currentLang === 'en'
+                      ? 'Add a category'
+                      : currentLang === 'nl'
+                        ? 'Categorie toevoegen'
+                        : 'Ajouter une catégorie'}</span>
+                </button>
 
-                  <button
-                    id="restaurant-save-menu-json-btn"
-                    type="button"
-                    class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/45 bg-gold/12 text-cream text-sm font-semibold hover:bg-gold/18 transition-all shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
-                  >
-                    <i data-lucide="check" class="w-4 h-4 text-gold"></i>
-                    <span>${currentLang === 'es'
-                      ? 'Validar los cambios'
-                      : currentLang === 'en'
-                        ? 'Apply changes'
-                        : currentLang === 'nl'
-                          ? 'Wijzigingen bevestigen'
-                          : 'Valider les modifications'}</span>
-                  </button>
-                </div>
+                <button
+                  id="restaurant-save-menu-json-btn"
+                  type="button"
+                  class="btn-action fixed bottom-4 right-4 z-[80] inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl border border-gold/45 bg-[#0F0F0F]/96 text-cream text-sm font-semibold shadow-[0_16px_40px_rgba(0,0,0,0.35)] hover:bg-gold/14 transition-all"
+                >
+                  <i data-lucide="check" class="w-4 h-4 text-gold"></i>
+                  <span>${currentLang === 'es'
+                    ? 'Validar los cambios'
+                    : currentLang === 'en'
+                      ? 'Apply changes'
+                      : currentLang === 'nl'
+                        ? 'Wijzigingen bevestigen'
+                        : 'Valider les modifications'}</span>
+                </button>
               </div>
             </div>
 
