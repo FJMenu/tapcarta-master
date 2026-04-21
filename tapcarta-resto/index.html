@@ -3385,20 +3385,20 @@ ${!item.treated ? `
                         : 'Ajouter une catégorie'}</span>
                 </button>
 
-                <button
-                  id="restaurant-save-menu-json-btn"
-                  type="button"
-                  class="btn-action fixed top-24 right-6 z-[90] inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl border border-gold/50 bg-[#111111] text-cream text-sm font-semibold shadow-[0_18px_40px_rgba(0,0,0,0.45)] hover:bg-[#1a1a1a] transition-all"
-                >
-                  <i data-lucide="check" class="w-4 h-4 text-gold"></i>
-                  <span>${currentLang === 'es'
-                    ? 'Validar los cambios'
-                    : currentLang === 'en'
-                      ? 'Apply changes'
-                      : currentLang === 'nl'
-                        ? 'Wijzigingen bevestigen'
-                        : 'Valider les modifications'}</span>
-                </button>
+               <button
+  id="restaurant-save-menu-json-btn"
+  type="button"
+  class="btn-action fixed left-4 right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-[110] inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-gold bg-[#151515] text-cream text-base font-extrabold shadow-[0_20px_45px_rgba(0,0,0,0.55)] hover:bg-[#1f1f1f] transition-all"
+>
+  <i data-lucide="check" class="w-4 h-4 text-gold"></i>
+  <span>${currentLang === 'es'
+    ? 'Validar los cambios'
+    : currentLang === 'en'
+      ? 'Apply changes'
+      : currentLang === 'nl'
+        ? 'Wijzigingen bevestigen'
+        : 'Valider les modifications'}</span>
+</button>
               </div>
             </div>
 
