@@ -3424,6 +3424,7 @@ ${!item.treated ? `
       lucide.createIcons();
     });
   }
+  refreshMenuSaveButtonState();
 
   const refreshAllBtn = document.getElementById('restaurant-refresh-all-btn');
   if (refreshAllBtn) {
@@ -3825,11 +3826,31 @@ ${!item.treated ? `
     }
   }
 
-  let menuTranslationWarningNeeded = false;
+ let menuTranslationWarningNeeded = false;
+let menuSavePending = false;
 
-  function markMenuTranslationWarningNeeded() {
-    menuTranslationWarningNeeded = true;
+function refreshMenuSaveButtonState() {
+  const saveButton = document.getElementById('restaurant-save-menu-json-btn');
+  if (!saveButton) return;
+
+  if (menuSavePending) {
+    saveButton.classList.add('ring-4', 'ring-gold/70', 'animate-pulse', 'scale-[1.02]');
+    saveButton.classList.remove('opacity-90');
+  } else {
+    saveButton.classList.remove('ring-4', 'ring-gold/70', 'animate-pulse', 'scale-[1.02]');
+    saveButton.classList.add('opacity-90');
   }
+}
+
+function setMenuSavePending(value) {
+  menuSavePending = value;
+  refreshMenuSaveButtonState();
+}
+
+function markMenuTranslationWarningNeeded() {
+  menuTranslationWarningNeeded = true;
+  setMenuSavePending(true);
+}
 
   function addRestaurantItemToCategory(categoryIndex) {
     ensureRestaurantMenuShape();
@@ -4023,6 +4044,7 @@ ${!item.treated ? `
       }
 
       menuTranslationWarningNeeded = false;
+      setMenuSavePending(false);
 
       alert(
         currentLang === 'es'
@@ -4090,6 +4112,7 @@ ${!item.treated ? `
   if (editorList) {
     editorList.addEventListener('input', (e) => {
       if (!activeRestaurantData) return;
+      setMenuSavePending(true);
 
       const categoryIndex = Number(e.target.dataset.categoryIndex);
       const itemIndex = Number(e.target.dataset.itemIndex);
@@ -4125,6 +4148,7 @@ ${!item.treated ? `
 
     editorList.addEventListener('change', (e) => {
       if (!activeRestaurantData) return;
+      setMenuSavePending(true);
 
       const categoryIndex = Number(e.target.dataset.categoryIndex);
       const itemIndex = Number(e.target.dataset.itemIndex);
@@ -4147,6 +4171,7 @@ ${!item.treated ? `
     editorList.addEventListener('click', (e) => {
       const actionButton = e.target.closest('[data-action]');
       if (!actionButton) return;
+      setMenuSavePending(true);
 
       const categoryIndex = Number(actionButton.dataset.categoryIndex);
       const itemIndex = Number(actionButton.dataset.itemIndex);
