@@ -1,0 +1,58 @@
+{
+  "identity": {
+    "id": "tapcarta-demo",
+    "name": "TapCarta Demo",
+    "status": "active",
+    "plan": "standard",
+    "languages": [
+      "fr",
+      "es",
+      "en",
+      "nl"
+    ]
+  },
+  "modules": {
+    "web": false,
+    "ordering": true,
+    "booking": true,
+    "preorderIndicative": false,
+    "googleReviews": true,
+    "whatsapp": true
+  },
+  "menu": {
+    "categories": [
+      {
+        "id": "entrees",
+        "name": "Entrées",
+        "order": 1,
+        "items": [
+          {
+            "id": "croquettes-fromage",
+            "name": "Croquettes de fromage",
+            "subtitle": "Servies chaudes et croustillantes",
+            "price": 12.5,
+            "visible": true
+          },
+          {
+            "id": "camembert-frit",
+            "name": "Camembert frit",
+            "subtitle": "Panure dorée, cœur fondant",
+            "price": 12.5,
+            "visible": true
+          }
+        ]
+      }
+    ]
+  },
+  "billing": {
+    "planPrice": 30,
+    "orderingBookingOption": 10,
+    "extraLanguages": 0,
+    "webOption": 0,
+    "monthlyTotal": 40,
+    "billingStatus": "active"
+  },
+  "links": {
+    "publicPage": ""
+  }
+}
