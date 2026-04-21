@@ -3166,7 +3166,7 @@ ${!item.treated ? `
                   <p class="text-sm md:text-base text-cream/72">
                     ${t.restaurantHeaderStatus}
                   </p>
-                  
+
                 </div>
               </div>
             </div>
@@ -4261,16 +4261,13 @@ ${!item.treated ? `
   try {
     const lastLoadedVersion = localStorage.getItem(VERSION_STORAGE_KEY);
     const reloadDoneForVersion = sessionStorage.getItem(VERSION_RELOAD_FLAG_KEY);
-    const currentUrl = new URL(window.location.href);
-    const urlVersion = currentUrl.searchParams.get('v');
 
     if (lastLoadedVersion !== APP_VERSION) {
       localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION);
 
-      if (reloadDoneForVersion !== APP_VERSION || urlVersion !== APP_VERSION) {
+      if (reloadDoneForVersion !== APP_VERSION) {
         sessionStorage.setItem(VERSION_RELOAD_FLAG_KEY, APP_VERSION);
-        currentUrl.searchParams.set('v', APP_VERSION);
-        window.location.replace(currentUrl.toString());
+        window.location.reload();
         return true;
       }
     } else if (reloadDoneForVersion && reloadDoneForVersion !== APP_VERSION) {
