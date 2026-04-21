@@ -1,7 +1,7 @@
 {
-  "name": "La Bonne Fourchette",
-  "short_name": "Bonne Fourchette",
-  "description": "Menu digital de La Bonne Fourchette",
+  "name": "TapCarta Demo",
+  "short_name": "TapCarta",
+  "description": "TapCarta Demo",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
