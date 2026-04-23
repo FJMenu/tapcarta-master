@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.4';
+            const APP_VERSION = 'V1.1.10';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -23,6 +23,7 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/_sdk/element_sdk.js"></script>
 
   <script>
     const SUPABASE_URL = 'https://uzuejudgccpnuzqefjre.supabase.co';
@@ -180,6 +181,98 @@
       max-width: calc(100vw - 24px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
       pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    body.menu-editor-open .language-selector {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px);
+    }
+
+    .menu-editor-sticky-bar {
+      position: sticky;
+      bottom: 16px;
+      z-index: 35;
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 10px;
+      margin-top: 14px;
+    }
+
+    .menu-editor-sticky-bar::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      background: linear-gradient(to top, rgba(15, 15, 15, 0.96), rgba(15, 15, 15, 0.78));
+      border: 1px solid rgba(242, 199, 68, 0.14);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+      pointer-events: none;
+    }
+
+    .menu-editor-sticky-bar-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      padding: 10px;
+    }
+
+    .menu-editor-sticky-save-btn {
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .menu-editor-sticky-save-btn {
+        width: auto;
+        min-width: 260px;
+      }
+    }
+
+    .menu-editor-floating-save {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: flex-end;
+      pointer-events: none;
+      width: auto;
+      max-width: calc(100vw - 32px);
+    }
+
+    .menu-editor-floating-save.visible {
+      display: flex;
+      pointer-events: auto;
+    }
+
+    .menu-editor-floating-save .menu-editor-floating-save-btn {
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+      border-width: 1px;
+      min-height: 52px;
+      max-width: min(360px, calc(100vw - 32px));
+      padding-left: 18px;
+      padding-right: 18px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 767px) {
+      .menu-editor-floating-save {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        max-width: none;
+      }
+
+      .menu-editor-floating-save .menu-editor-floating-save-btn {
+        width: 100%;
+        max-width: none;
+      }
     }
 
     .lang-btn {
@@ -614,6 +707,7 @@
     }
   </style>
 
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
 </head>
 
 <body class="font-body">
@@ -770,7 +864,7 @@ const resolvedClientMenuUrl =
   restaurantData?.links?.clientMenuUrl ||
   restaurantData?.links?.publicPage ||
   (restaurantData?.identity?.id === 'tapcarta-demo'
-    ? 'https://tapcarta.com/demo/'
+    ? 'https://fjmenu.github.io/TapCarta-Standard-b-ta-test/'
     : siteConfig.clientMenuUrl);
 
 const resolvedQrMenuUrl =
@@ -972,12 +1066,31 @@ restaurantNoOrdersPending: 'Aucune commande en attente.',
 restaurantNoBookingsPending: 'Aucune réservation en attente.',
 restaurantProcessedTitle: 'Demandes traitées',
 restaurantNoProcessed: 'Aucune demande traitée pour le moment.',
-restaurantViewButton: 'Voir',
+restaurantViewButton: 'Voir / gérer',
 restaurantValidateButton: 'Valider',
 restaurantValidatedLabel: 'Validée',
 restaurantStatusNew: 'Nouveau',
 restaurantStatusPending: 'En attente',
 restaurantStatusProcessed: 'Traitée',
+restaurantRequestNotFound: 'Demande introuvable.',
+restaurantRequestDetailsNotFound: 'Détail de demande introuvable.',
+restaurantOrderConfirmedMessage: 'Commande confirmée par le restaurant.',
+restaurantBookingConfirmedMessage: 'Réservation confirmée par le restaurant.',
+restaurantDetailsTitle: 'Détail de la demande',
+restaurantDetailsCloseButton: 'Fermer',
+restaurantDetailsCustomer: 'Client',
+restaurantDetailsPhone: 'Téléphone',
+restaurantDetailsLanguage: 'Langue client',
+restaurantDetailsDate: 'Date',
+restaurantDetailsTime: 'Heure',
+restaurantDetailsPeople: 'Personnes',
+restaurantDetailsItems: 'Articles',
+restaurantDetailsTotal: 'Total',
+restaurantDetailsNote: 'Remarque',
+restaurantDetailsPreorder: 'Précommande indicative',
+restaurantDetailsDisabled: 'Désactivée',
+restaurantDetailsNone: 'Aucune',
+restaurantDetailsNoArticle: 'Aucun article',
 restaurantTypeOrder: 'Commande',
 restaurantTypeBooking: 'Réservation',
 restaurantReceivedNow: 'reçue à l’instant',
@@ -1007,8 +1120,12 @@ restaurantHistoryDeselectAll: 'Tout désélectionner',
 restaurantHistoryDeleteSelected: 'Supprimer la sélection',
 restaurantHistoryConfirmDelete: 'Supprimer les éléments sélectionnés de l’historique ?',
 restaurantHistoryNothingSelected: 'Sélectionnez au moins un élément de l’historique.',
+restaurantActiveNothingSelected: 'Sélectionnez au moins une demande.',
+restaurantActiveConfirmValidateSelected: 'Confirmer {count} demande(s) sélectionnée(s) ?',
 restaurantHistoryViewDetail: 'Voir le détail',
 restaurantHistoryDeleteOne: 'Supprimer',
+restaurantHistoryDeleteOneConfirm: 'Supprimer cette demande de l’historique ?',
+restaurantStandardCategoriesAlreadyCreated: 'Toutes les catégories standard compatibles sont déjà créées.',
 allergens: ['Gluten', 'Crustacés', 'Œufs', 'Poisson', 'Lait / lactose', 'Fruits à coque', 'Céleri', 'Moutarde', 'Sésame', 'Sulfites', 'Mollusques'],
         items: {
           ailes_poulet: { name: 'Ailes de poulet', subtitle: 'croustillantes et moelleuses' },
@@ -1155,12 +1272,31 @@ restaurantNoOrdersPending: 'Ningún pedido pendiente.',
 restaurantNoBookingsPending: 'Ninguna reserva pendiente.',
 restaurantProcessedTitle: 'Solicitudes procesadas',
 restaurantNoProcessed: 'Ninguna solicitud procesada por el momento.',
-restaurantViewButton: 'Ver',
+restaurantViewButton: 'Ver / gestionar',
 restaurantValidateButton: 'Validar',
 restaurantValidatedLabel: 'Validada',
 restaurantStatusNew: 'Nueva',
 restaurantStatusPending: 'En espera',
 restaurantStatusProcessed: 'Procesada',
+restaurantRequestNotFound: 'Solicitud no encontrada.',
+restaurantRequestDetailsNotFound: 'Detalle de la solicitud no encontrado.',
+restaurantOrderConfirmedMessage: 'Pedido confirmado por el restaurante.',
+restaurantBookingConfirmedMessage: 'Reserva confirmada por el restaurante.',
+restaurantDetailsTitle: 'Detalle de la solicitud',
+restaurantDetailsCloseButton: 'Cerrar',
+restaurantDetailsCustomer: 'Cliente',
+restaurantDetailsPhone: 'Teléfono',
+restaurantDetailsLanguage: 'Idioma del cliente',
+restaurantDetailsDate: 'Fecha',
+restaurantDetailsTime: 'Hora',
+restaurantDetailsPeople: 'Personas',
+restaurantDetailsItems: 'Artículos',
+restaurantDetailsTotal: 'Total',
+restaurantDetailsNote: 'Observación',
+restaurantDetailsPreorder: 'Prepedido indicativo',
+restaurantDetailsDisabled: 'Desactivado',
+restaurantDetailsNone: 'Ninguna',
+restaurantDetailsNoArticle: 'Ningún artículo',
 restaurantTypeOrder: 'Pedido',
 restaurantTypeBooking: 'Reserva',
 restaurantReceivedNow: 'recibida ahora mismo',
@@ -1190,8 +1326,12 @@ restaurantHistoryDeselectAll: 'Deseleccionar todo',
 restaurantHistoryDeleteSelected: 'Eliminar selección',
 restaurantHistoryConfirmDelete: '¿Eliminar los elementos seleccionados del historial?',
 restaurantHistoryNothingSelected: 'Seleccione al menos un elemento del historial.',
+restaurantActiveNothingSelected: 'Seleccione al menos una solicitud.',
+restaurantActiveConfirmValidateSelected: '¿Confirmar {count} solicitud(es) seleccionada(s)?',
 restaurantHistoryViewDetail: 'Ver el detalle',
 restaurantHistoryDeleteOne: 'Eliminar',
+restaurantHistoryDeleteOneConfirm: '¿Eliminar esta solicitud del historial?',
+restaurantStandardCategoriesAlreadyCreated: 'Todas las categorías estándar compatibles ya están creadas.',
 allergens: ['Gluten', 'Crustáceos', 'Huevos', 'Pescado', 'Leche / lactosa', 'Frutos secos', 'Apio', 'Mostaza', 'Sésamo', 'Sulfitos', 'Moluscos'],
         items: {
           ailes_poulet: { name: 'Alitas de pollo', subtitle: 'crujientes y tiernas' },
@@ -1339,12 +1479,31 @@ restaurantNoOrdersPending: 'No pending orders.',
 restaurantNoBookingsPending: 'No pending bookings.',
 restaurantProcessedTitle: 'Processed requests',
 restaurantNoProcessed: 'No processed requests for the moment.',
-restaurantViewButton: 'View',
+restaurantViewButton: 'View / manage',
 restaurantValidateButton: 'Validate',
 restaurantValidatedLabel: 'Validated',
 restaurantStatusNew: 'New',
 restaurantStatusPending: 'Pending',
 restaurantStatusProcessed: 'Processed',
+restaurantRequestNotFound: 'Request not found.',
+restaurantRequestDetailsNotFound: 'Request details not found.',
+restaurantOrderConfirmedMessage: 'Order confirmed by the restaurant.',
+restaurantBookingConfirmedMessage: 'Booking confirmed by the restaurant.',
+restaurantDetailsTitle: 'Request details',
+restaurantDetailsCloseButton: 'Close',
+restaurantDetailsCustomer: 'Customer',
+restaurantDetailsPhone: 'Phone',
+restaurantDetailsLanguage: 'Customer language',
+restaurantDetailsDate: 'Date',
+restaurantDetailsTime: 'Time',
+restaurantDetailsPeople: 'People',
+restaurantDetailsItems: 'Items',
+restaurantDetailsTotal: 'Total',
+restaurantDetailsNote: 'Note',
+restaurantDetailsPreorder: 'Indicative preorder',
+restaurantDetailsDisabled: 'Disabled',
+restaurantDetailsNone: 'None',
+restaurantDetailsNoArticle: 'No items',
 restaurantTypeOrder: 'Order',
 restaurantTypeBooking: 'Booking',
 restaurantReceivedNow: 'received just now',
@@ -1374,8 +1533,12 @@ restaurantHistoryDeselectAll: 'Deselect all',
 restaurantHistoryDeleteSelected: 'Delete selection',
 restaurantHistoryConfirmDelete: 'Delete selected items from history?',
 restaurantHistoryNothingSelected: 'Select at least one history item.',
+restaurantActiveNothingSelected: 'Select at least one request.',
+restaurantActiveConfirmValidateSelected: 'Confirm {count} selected request(s)?',
 restaurantHistoryViewDetail: 'View details',
 restaurantHistoryDeleteOne: 'Delete',
+restaurantHistoryDeleteOneConfirm: 'Delete this request from history?',
+restaurantStandardCategoriesAlreadyCreated: 'All compatible standard categories have already been created.',
 allergens: ['Gluten', 'Crustaceans', 'Eggs', 'Fish', 'Milk / lactose', 'Nuts', 'Celery', 'Mustard', 'Sesame', 'Sulfites', 'Molluscs'],
         items: {
           ailes_poulet: { name: 'Chicken wings', subtitle: 'crispy and tender' },
@@ -1523,12 +1686,31 @@ restaurantNoOrdersPending: 'Geen bestellingen in afwachting.',
 restaurantNoBookingsPending: 'Geen reservaties in afwachting.',
 restaurantProcessedTitle: 'Verwerkte aanvragen',
 restaurantNoProcessed: 'Nog geen verwerkte aanvragen.',
-restaurantViewButton: 'Bekijken',
+restaurantViewButton: 'Bekijken / beheren',
 restaurantValidateButton: 'Valideren',
 restaurantValidatedLabel: 'Gevalideerd',
 restaurantStatusNew: 'Nieuw',
 restaurantStatusPending: 'In afwachting',
 restaurantStatusProcessed: 'Verwerkt',
+restaurantRequestNotFound: 'Aanvraag niet gevonden.',
+restaurantRequestDetailsNotFound: 'Aanvraagdetails niet gevonden.',
+restaurantOrderConfirmedMessage: 'Bestelling bevestigd door het restaurant.',
+restaurantBookingConfirmedMessage: 'Reservatie bevestigd door het restaurant.',
+restaurantDetailsTitle: 'Aanvraagdetails',
+restaurantDetailsCloseButton: 'Sluiten',
+restaurantDetailsCustomer: 'Klant',
+restaurantDetailsPhone: 'Telefoon',
+restaurantDetailsLanguage: 'Klanttaal',
+restaurantDetailsDate: 'Datum',
+restaurantDetailsTime: 'Uur',
+restaurantDetailsPeople: 'Personen',
+restaurantDetailsItems: 'Artikelen',
+restaurantDetailsTotal: 'Totaal',
+restaurantDetailsNote: 'Opmerking',
+restaurantDetailsPreorder: 'Indicatieve voorbestelling',
+restaurantDetailsDisabled: 'Uitgeschakeld',
+restaurantDetailsNone: 'Geen',
+restaurantDetailsNoArticle: 'Geen artikelen',
 restaurantTypeOrder: 'Bestelling',
 restaurantTypeBooking: 'Reservatie',
 restaurantReceivedNow: 'zojuist ontvangen',
@@ -1558,8 +1740,12 @@ restaurantHistoryDeselectAll: 'Alles deselecteren',
 restaurantHistoryDeleteSelected: 'Selectie verwijderen',
 restaurantHistoryConfirmDelete: 'Geselecteerde items uit de geschiedenis verwijderen?',
 restaurantHistoryNothingSelected: 'Selecteer minstens één item uit de geschiedenis.',
+restaurantActiveNothingSelected: 'Selecteer minstens één aanvraag.',
+restaurantActiveConfirmValidateSelected: 'Bevestig {count} geselecteerde aanvraag(en)?',
 restaurantHistoryViewDetail: 'Details bekijken',
 restaurantHistoryDeleteOne: 'Verwijderen',
+restaurantHistoryDeleteOneConfirm: 'Deze aanvraag uit de geschiedenis verwijderen?',
+restaurantStandardCategoriesAlreadyCreated: 'Alle compatibele standaardcategorieën zijn al aangemaakt.',
 allergens: ['Gluten', 'Schaaldieren', 'Eieren', 'Vis', 'Melk / lactose', 'Noten', 'Selderij', 'Mosterd', 'Sesam', 'Sulfieten', 'Weekdieren'],
         items: {
           ailes_poulet: { name: 'Kipvleugels', subtitle: 'knapperig en mals' },
@@ -2379,6 +2565,141 @@ function updateOrderFormTimePart(part, value) {
   const wrapper = document.getElementById('app-wrapper');
   document.documentElement.lang = currentLang;
 
+window.tapCartaRestaurantLiveBookingSyncState = window.tapCartaRestaurantLiveBookingSyncState || {
+  isSyncing: false
+};
+
+window.tapCartaRestaurantLiveBookingBootstrapDone = window.tapCartaRestaurantLiveBookingBootstrapDone || false;
+
+async function syncLiveBookingsToLocalStorage() {
+  const bookingStorageKey = 'tapcarta_booking_requests';
+  const activeRestaurantId =
+    activeRestaurantData?.identity?.id ||
+    activeRestaurantData?.id ||
+    siteConfig?.identity?.id ||
+    '';
+
+  if (!activeRestaurantId || window.tapCartaRestaurantLiveBookingSyncState.isSyncing) {
+    return;
+  }
+
+  window.tapCartaRestaurantLiveBookingSyncState.isSyncing = true;
+
+  function mapLiveBookingRowToRequest(row) {
+    if (!row) return null;
+
+    const preorderItems = Array.isArray(row.items)
+      ? row.items.map((item) => ({
+          id: item?.id || '',
+          name: item?.name || '',
+          category: item?.category || '',
+          quantity: Number(item?.quantity || 1),
+          price: Number(item?.price || 0)
+        }))
+      : [];
+
+    return {
+      restaurantId: row.restaurant_id || activeRestaurantId,
+      requestId: row.id,
+      liveRequestId: row.id,
+      requestType: 'booking',
+      createdAt: row.created_at || new Date().toISOString(),
+      updatedAt: row.updated_at || null,
+      status: row.status || 'pending',
+      customer: {
+        name: row.client_name || '',
+        phone: row.client_phone || '',
+        language: row.client_language || 'fr'
+      },
+      booking: {
+        date: row.booking_date || '',
+        time: row.booking_time ? String(row.booking_time).slice(0, 5) : '',
+        people: Number(row.party_size || 1),
+        note: row.note || '',
+        preorderIndicativeEnabled: true,
+        preorderItems
+      },
+      restaurantResponse: {
+        reason: row.status || '',
+        message: row.restaurant_message || '',
+        updatedBy: row.restaurant_message ? 'restaurant' : ''
+      }
+    };
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('requests')
+      .select('*')
+      .eq('restaurant_id', activeRestaurantId)
+      .eq('type', 'booking')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const rawBookings = localStorage.getItem(bookingStorageKey);
+    const parsedBookings = rawBookings ? JSON.parse(rawBookings) : [];
+    const safeBookings = Array.isArray(parsedBookings) ? parsedBookings : [];
+
+    const bookingMap = new Map();
+
+    safeBookings.forEach((item) => {
+      if (
+        item &&
+        item.requestType === 'booking' &&
+        String(item.restaurantId || '') === String(activeRestaurantId) &&
+        item.requestId
+      ) {
+        bookingMap.set(String(item.requestId), item);
+      }
+    });
+
+    const liveBookings = Array.isArray(data)
+      ? data
+          .map(mapLiveBookingRowToRequest)
+          .filter(Boolean)
+          .map((liveItem) => {
+            const existingItem = bookingMap.get(String(liveItem.requestId));
+
+            return {
+              ...(existingItem || {}),
+              ...liveItem,
+              confirmedAt:
+                existingItem?.confirmedAt ||
+                (liveItem.status === 'confirmed' ? liveItem.updatedAt : null),
+              cancelledAt:
+                existingItem?.cancelledAt ||
+                (liveItem.status === 'cancelled' ? liveItem.updatedAt : null),
+              historyDeleted: existingItem?.historyDeleted === true,
+              historyUpdatedAt: existingItem?.historyUpdatedAt || null,
+              restaurantResponse: {
+                ...(existingItem?.restaurantResponse || {}),
+                ...(liveItem.restaurantResponse || {})
+              }
+            };
+          })
+      : [];
+
+    const keptNonLiveBookings = safeBookings.filter(
+      (item) =>
+        !(
+          item &&
+          item.requestType === 'booking' &&
+          String(item.restaurantId || '') === String(activeRestaurantId)
+        )
+    );
+
+    localStorage.setItem(
+      bookingStorageKey,
+      JSON.stringify([...keptNonLiveBookings, ...liveBookings])
+    );
+  } catch (error) {
+    console.warn('TapCarta Restaurant: impossible de synchroniser les réservations live', error);
+  } finally {
+    window.tapCartaRestaurantLiveBookingSyncState.isSyncing = false;
+  }
+}
+
 function loadRestaurantRequests() {
   const bookingStorageKey = 'tapcarta_booking_requests';
   const orderStorageKey = 'tapcarta_order_requests';
@@ -2401,20 +2722,28 @@ function loadRestaurantRequests() {
     return Number.isFinite(parsedValue) ? parsedValue : Date.now();
   }
 
+  function isRequestStillActive(item, pendingStatus) {
+    if (!item) return false;
+
+    return item.status === pendingStatus;
+  }
+
   function shouldAutoDeleteHistory(item, pendingStatus) {
-    if (!item || item.status === pendingStatus) return false;
+    if (!item || isRequestStillActive(item, pendingStatus)) return false;
     if (item.historyDeleted === true) return true;
     return (Date.now() - getHistoryReferenceTimestamp(item)) > historyRetentionMs;
   }
 
   function normalizeRequestItem(item, requestType, pendingStatus, typeLabel) {
+    const isStillActive = isRequestStillActive(item, pendingStatus);
+
     return {
       id: item.requestId || `${requestType}_${Date.now()}`,
       type: typeLabel,
       client: item.customer?.name || 'Client',
       createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
-      status: item.status === pendingStatus ? t.restaurantStatusNew : t.restaurantStatusProcessed,
-      treated: item.status !== pendingStatus,
+      status: isStillActive ? t.restaurantStatusNew : t.restaurantStatusProcessed,
+      treated: !isStillActive,
       sourceRequest: item
     };
   }
@@ -2561,6 +2890,15 @@ function syncRequestsState() {
 
 syncRequestsState();
 
+if (!window.tapCartaRestaurantLiveBookingBootstrapDone) {
+  window.tapCartaRestaurantLiveBookingBootstrapDone = true;
+
+  void syncLiveBookingsToLocalStorage().then(() => {
+    syncRequestsState();
+    renderMenu();
+  });
+}
+
 window.toggleRequestSelection = function(requestId) {
   const normalizedId = String(requestId);
 
@@ -2585,11 +2923,13 @@ window.validateSelectedRequests = function() {
   const selectedItems = activeRequests.filter((item) => window.selectedRequestIds.has(String(item.id)));
 
   if (!selectedItems.length) {
-    alert('Sélectionnez au moins une demande.');
+    alert(t.restaurantActiveNothingSelected);
     return;
   }
 
-  const confirmedBatch = window.confirm(`Confirmer ${selectedItems.length} demande(s) sélectionnée(s) ?`);
+  const confirmedBatch = window.confirm(
+    t.restaurantActiveConfirmValidateSelected.replace('{count}', selectedItems.length)
+  );
 
   if (!confirmedBatch) {
     return;
@@ -2600,8 +2940,8 @@ window.validateSelectedRequests = function() {
   selectedItems.forEach((item) => {
     const isOrder = !!item.sourceRequest?.order;
     const confirmationMessage = isOrder
-      ? 'Commande confirmée par le restaurant.'
-      : 'Réservation confirmée par le restaurant.';
+      ? t.restaurantOrderConfirmedMessage
+      : t.restaurantBookingConfirmedMessage;
 
     item.treated = true;
     item.status = t.restaurantStatusProcessed;
@@ -2616,7 +2956,7 @@ window.validateSelectedRequests = function() {
       updatedBy: 'restaurant'
     };
 
-    persistRestaurantRequestUpdate(item.sourceRequest);
+    void persistRestaurantRequestUpdate(item.sourceRequest);
   });
 
   window.selectedRequestIds = new Set();
@@ -2651,7 +2991,7 @@ window.deleteSelectedHistoryRequests = function() {
     return;
   }
 
-  const confirmedDelete = window.confirm(`${t.restaurantHistoryDeleteSelected} (${selectedItems.length}) ?`);
+  const confirmedDelete = window.confirm(t.restaurantHistoryConfirmDelete);
 
   if (!confirmedDelete) {
     return;
@@ -2666,7 +3006,7 @@ window.deleteSelectedHistoryRequests = function() {
     item.sourceRequest.historyUpdatedAt = nowIso;
     item.sourceRequest.updatedAt = nowIso;
 
-    persistRestaurantRequestUpdate(item.sourceRequest);
+    void persistRestaurantRequestUpdate(item.sourceRequest);
   });
 
   window.selectedHistoryRequestIds = new Set();
@@ -2716,8 +3056,12 @@ function getElapsedLabel(item) {
       : 'bg-sky-500/15 text-sky-200 border-sky-400/30';
   }
 
-function persistRestaurantRequestUpdate(updatedRequest) {
+async function persistRestaurantRequestUpdate(updatedRequest) {
   const isOrderRequest = !!updatedRequest?.order;
+  const isLiveBookingRequest =
+    !isOrderRequest &&
+    (updatedRequest?.requestType === 'booking' || updatedRequest?.liveRequestId);
+
   const storageKey = isOrderRequest ? 'tapcarta_order_requests' : 'tapcarta_booking_requests';
   const lastKey = isOrderRequest ? 'tapcarta_last_order_request' : 'tapcarta_last_booking_request';
 
@@ -2725,29 +3069,29 @@ function persistRestaurantRequestUpdate(updatedRequest) {
     const raw = localStorage.getItem(storageKey);
     const parsed = raw ? JSON.parse(raw) : [];
 
-    if (!Array.isArray(parsed)) return;
-
-    const updatedList = parsed.map((entry) => {
-      if (String(entry?.requestId) !== String(updatedRequest?.requestId)) {
-        return entry;
-      }
-
-      return {
-        ...entry,
-        status: updatedRequest.status || entry.status,
-        updatedAt: updatedRequest.updatedAt || entry.updatedAt || new Date().toISOString(),
-        confirmedAt: updatedRequest.confirmedAt || entry.confirmedAt,
-        cancelledAt: updatedRequest.cancelledAt || entry.cancelledAt,
-        historyDeleted: updatedRequest.historyDeleted === true ? true : entry.historyDeleted === true,
-        historyUpdatedAt: updatedRequest.historyUpdatedAt || entry.historyUpdatedAt,
-        restaurantResponse: {
-          ...(entry.restaurantResponse || {}),
-          ...(updatedRequest.restaurantResponse || {})
+    if (Array.isArray(parsed)) {
+      const updatedList = parsed.map((entry) => {
+        if (String(entry?.requestId) !== String(updatedRequest?.requestId)) {
+          return entry;
         }
-      };
-    });
 
-    localStorage.setItem(storageKey, JSON.stringify(updatedList));
+        return {
+          ...entry,
+          status: updatedRequest.status || entry.status,
+          updatedAt: updatedRequest.updatedAt || entry.updatedAt || new Date().toISOString(),
+          confirmedAt: updatedRequest.confirmedAt || entry.confirmedAt,
+          cancelledAt: updatedRequest.cancelledAt || entry.cancelledAt,
+          historyDeleted: updatedRequest.historyDeleted === true ? true : entry.historyDeleted === true,
+          historyUpdatedAt: updatedRequest.historyUpdatedAt || entry.historyUpdatedAt,
+          restaurantResponse: {
+            ...(entry.restaurantResponse || {}),
+            ...(updatedRequest.restaurantResponse || {})
+          }
+        };
+      });
+
+      localStorage.setItem(storageKey, JSON.stringify(updatedList));
+    }
 
     const lastRaw = localStorage.getItem(lastKey);
     const lastParsed = lastRaw ? JSON.parse(lastRaw) : null;
@@ -2770,79 +3114,223 @@ function persistRestaurantRequestUpdate(updatedRequest) {
         })
       );
     }
+
+    if (isLiveBookingRequest && updatedRequest?.liveRequestId) {
+      const livePayload = {
+        status: updatedRequest.status || 'pending',
+        updated_at: updatedRequest.updatedAt || new Date().toISOString(),
+        restaurant_message: updatedRequest?.restaurantResponse?.message || null
+      };
+
+      const { error } = await supabaseClient
+        .from('requests')
+        .update(livePayload)
+        .eq('id', updatedRequest.liveRequestId);
+
+      if (error) {
+        console.warn('TapCarta Restaurant: impossible de synchroniser la réservation live', error);
+      }
+    }
   } catch (error) {
     console.warn('TapCarta Restaurant: impossible de persister la mise à jour de demande', error);
   }
 }
 
-window.openRequestDetails = function(requestId) {
-  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
-  if (!item || !item.sourceRequest) {
-    alert('Détail de demande introuvable.');
-    return;
+
+function removeRequestDetailsModal() {
+  const existingModal = document.getElementById('restaurant-request-details-modal');
+  if (existingModal) {
+    existingModal.remove();
   }
+}
 
-  const source = item.sourceRequest;
-  const isOrder = item.type === t.restaurantTypeOrder;
+function formatRequestAmount(amount) {
+  return typeof amount === 'number'
+    ? `${amount.toFixed(2).replace('.', ',')} €`
+    : '-';
+}
+
+function escapeRequestDetailsHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function buildRequestDetailsRows(item) {
+  const source = item.sourceRequest || {};
+  const isOrder = !!source?.order;
 
   if (isOrder) {
     const orderItems = Array.isArray(source.order?.items) ? source.order.items : [];
     const itemsLabel = orderItems.length
       ? orderItems.map((entry) => `${entry.name} x${entry.quantity}`).join(', ')
-      : 'Aucun article';
+      : t.restaurantDetailsNoArticle;
 
-    const totalLabel = typeof source.order?.totalAmount === 'number'
-      ? `${source.order.totalAmount.toFixed(2).replace('.', ',')} €`
-      : '-';
-
-    const details = [
-      `Nom : ${source.customer?.name || '-'}`,
-      `Téléphone : ${source.customer?.phone || '-'}`,
-      `Langue client : ${source.customer?.language || '-'}`,
-      `Date : ${source.order?.date || '-'}`,
-      `Heure : ${source.order?.time || '-'}`,
-      `Articles : ${itemsLabel}`,
-      `Total : ${totalLabel}`,
-      `Remarque : ${source.order?.note || 'Aucune'}`
-    ].join('\n');
-
-    alert(details);
-    return;
+    return `
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+          <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsCustomer}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.name || '-')}</div>
+        </div>
+        <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+          <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsPhone}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.phone || '-')}</div>
+        </div>
+        <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+          <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsLanguage}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.language || '-')}</div>
+        </div>
+        <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+          <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsDate}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.order?.date || '-')}</div>
+        </div>
+        <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+          <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsTime}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.order?.time || '-')}</div>
+        </div>
+        <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+          <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsTotal}</div>
+          <div class="text-sm font-semibold text-gold">${formatRequestAmount(source.order?.totalAmount)}</div>
+        </div>
+        <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
+          <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsItems}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(itemsLabel)}</div>
+        </div>
+        <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
+          <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsNote}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.order?.note || t.restaurantDetailsNone)}</div>
+        </div>
+      </div>
+    `;
   }
 
   const preorderItems = Array.isArray(source.booking?.preorderItems) ? source.booking.preorderItems : [];
   const preorderLabel = preorderItems.length
     ? preorderItems.map((entry) => entry.name).join(', ')
-    : 'Aucune';
+    : t.restaurantDetailsNone;
 
-  const details = [
-    `Nom : ${source.customer?.name || '-'}`,
-    `Téléphone : ${source.customer?.phone || '-'}`,
-    `Langue client : ${source.customer?.language || '-'}`,
-    `Date : ${source.booking?.date || '-'}`,
-    `Heure : ${source.booking?.time || '-'}`,
-    `Personnes : ${source.booking?.people ?? '-'}`,
-    `Remarque : ${source.booking?.note || 'Aucune'}`,
-    `Précommande indicative : ${source.booking?.preorderIndicativeEnabled ? preorderLabel : 'Désactivée'}`
-  ].join('\n');
+  return `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsCustomer}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.name || '-')}</div>
+      </div>
+      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsPhone}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.phone || '-')}</div>
+      </div>
+      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsLanguage}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.language || '-')}</div>
+      </div>
+      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsDate}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.booking?.date || '-')}</div>
+      </div>
+      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsTime}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.booking?.time || '-')}</div>
+      </div>
+      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsPeople}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(String(source.booking?.people ?? '-'))}</div>
+      </div>
+      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
+        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsNote}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.booking?.note || t.restaurantDetailsNone)}</div>
+      </div>
+      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
+        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsPreorder}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.booking?.preorderIndicativeEnabled ? preorderLabel : t.restaurantDetailsDisabled)}</div>
+      </div>
+    </div>
+  `;
+}
 
-  alert(details);
+
+
+function buildRequestDetailsModalHtml(item) {
+  return `
+    <div id="restaurant-request-details-modal" class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-gold/20 bg-[#0D0D0D] shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+        <div class="sticky top-0 z-10 bg-[#0D0D0D]/95 backdrop-blur border-b border-white/8 px-5 py-4 flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <div class="text-xs uppercase tracking-[0.18em] text-gold/70 mb-1">${item.type}</div>
+            <h3 class="font-display text-xl font-bold text-cream">${t.restaurantDetailsTitle}</h3>
+          </div>
+
+          <button
+            type="button"
+            onclick="closeRequestDetailsModal()"
+            class="btn-action px-4 py-2 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+          >
+            ${t.restaurantDetailsCloseButton}
+          </button>
+        </div>
+
+        <div class="p-5 md:p-6 space-y-5">
+          ${buildRequestDetailsRows(item)}
+
+          ${!item.treated ? `
+            <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onclick="closeRequestDetailsModal(); validateRequest('${item.id}');"
+                class="btn-action px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
+              >
+                ${t.restaurantValidateButton}
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+window.closeRequestDetailsModal = function() {
+  removeRequestDetailsModal();
 };
+
+window.openRequestDetails = function(requestId) {
+  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
+
+  if (!item || !item.sourceRequest) {
+    alert(t.restaurantRequestDetailsNotFound);
+    return;
+  }
+
+  removeRequestDetailsModal();
+  document.body.insertAdjacentHTML('beforeend', buildRequestDetailsModalHtml(item));
+
+  const modal = document.getElementById('restaurant-request-details-modal');
+  if (modal) {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        closeRequestDetailsModal();
+      }
+    });
+  }
+};
+
 
 window.validateRequest = function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
   if (!item || !item.sourceRequest) {
-    alert('Demande introuvable.');
+    alert(t.restaurantRequestNotFound);
     return;
   }
 
   const nowIso = new Date().toISOString();
   const isOrder = !!item.sourceRequest?.order;
   const confirmationMessage = isOrder
-    ? 'Commande confirmée par le restaurant.'
-    : 'Réservation confirmée par le restaurant.';
+    ? t.restaurantOrderConfirmedMessage
+    : t.restaurantBookingConfirmedMessage;
 
   item.treated = true;
   item.status = t.restaurantStatusProcessed;
@@ -2857,19 +3345,20 @@ window.validateRequest = function(requestId) {
     updatedBy: 'restaurant'
   };
 
-  persistRestaurantRequestUpdate(item.sourceRequest);
+  void persistRestaurantRequestUpdate(item.sourceRequest);
   renderMenu();
 };
+
 
 window.deleteRequestFromHistory = function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
   if (!item || !item.sourceRequest) {
-    alert('Demande introuvable.');
+    alert(t.restaurantRequestNotFound);
     return;
   }
 
-  const confirmedDelete = window.confirm('Supprimer cette demande de l’historique ?');
+  const confirmedDelete = window.confirm(t.restaurantHistoryDeleteOneConfirm);
 
   if (!confirmedDelete) {
     return;
@@ -2881,9 +3370,47 @@ window.deleteRequestFromHistory = function(requestId) {
   item.sourceRequest.historyUpdatedAt = nowIso;
   item.sourceRequest.updatedAt = nowIso;
 
-  persistRestaurantRequestUpdate(item.sourceRequest);
+  void persistRestaurantRequestUpdate(item.sourceRequest);
   renderMenu();
 };
+
+function getRequestDisplayStatusMeta(item) {
+  const sourceStatus = item?.sourceRequest?.status || '';
+  const treated = item?.treated === true;
+
+  if (!treated) {
+    return {
+      label: t.restaurantStatusNew,
+      className: 'bg-red-500/15 text-red-300 border-red-400/30'
+    };
+  }
+
+  if (sourceStatus === 'cancelled') {
+    return {
+      label: currentLang === 'es' ? 'Cancelada' : currentLang === 'en' ? 'Cancelled' : currentLang === 'nl' ? 'Geannuleerd' : 'Annulée',
+      className: 'bg-red-500/15 text-red-200 border-red-400/30'
+    };
+  }
+
+  if (sourceStatus === 'confirmed') {
+    return {
+      label: currentLang === 'es' ? 'Confirmada' : currentLang === 'en' ? 'Confirmed' : currentLang === 'nl' ? 'Bevestigd' : 'Confirmée',
+      className: 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
+    };
+  }
+
+  if (sourceStatus === 'pending') {
+    return {
+      label: t.restaurantStatusPending,
+      className: 'bg-amber-500/15 text-amber-200 border-amber-400/30'
+    };
+  }
+
+  return {
+    label: t.restaurantStatusProcessed,
+    className: 'bg-white/10 text-cream border-white/15'
+  };
+}
 
 function renderRequestRow(item) {
     const isOrder = item.type === t.restaurantTypeOrder;
@@ -2891,6 +3418,7 @@ function renderRequestRow(item) {
     const orderItems = Array.isArray(source.order?.items) ? source.order.items : [];
     const bookingPeople = source.booking?.people ?? null;
     const isHistorySelected = selectedHistoryRequestIds.has(String(item.id));
+    const statusMeta = getRequestDisplayStatusMeta(item);
 
     const previewLabel = isOrder
       ? (orderItems.length
@@ -2919,7 +3447,7 @@ function renderRequestRow(item) {
               <i data-lucide="${typeIcon}" class="w-3.5 h-3.5"></i>
               ${item.type}
             </span>
-            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${getStatusClass(item.status)}">${item.status}</span>
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${statusMeta.className}">${statusMeta.label}</span>
           </div>
 
           <div class="text-sm font-semibold text-cream">${item.client}</div>
@@ -2930,7 +3458,7 @@ function renderRequestRow(item) {
 
         <div class="flex items-center gap-2 flex-wrap justify-end">
 ${!item.treated ? `
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap justify-end">
               <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all">
                 ${t.restaurantViewButton}
               </button>
@@ -2980,18 +3508,18 @@ ${!item.treated ? `
     </div>
 
     <div class="inline-flex items-center gap-3 self-start rounded-2xl border border-gold/25 bg-black/15 px-4 py-3">
-      <div id="restaurant-active-requests-count" class="text-2xl font-bold text-gold">
+      <div class="text-2xl font-bold text-gold">
         ${siteConfig.orderReservationOptionEnabled ? activeRequests.length : '—'}
       </div>
       <div class="text-xs text-cream/70 leading-tight">
         ${siteConfig.orderReservationOptionEnabled
           ? (currentLang === 'es'
-              ? 'Solicitudes<br>activas'
+              ? 'Flux reserva<br>activo'
               : currentLang === 'en'
-                ? 'Active<br>requests'
+                ? 'Booking flow<br>active'
                 : currentLang === 'nl'
-                  ? 'Actieve<br>aanvragen'
-                  : 'Demandes<br>actives')
+                  ? 'Reservatieflow<br>actief'
+                  : 'Flux réservation<br>actif')
           : `${t.optionInactiveCounterLine1}<br>${t.optionInactiveCounterLine2}`}
       </div>
     </div>
@@ -3001,18 +3529,31 @@ ${!item.treated ? `
     <div id="restaurant-requests-panel" class="rounded-[22px] border border-gold/25 bg-gradient-to-br from-gold/10 to-transparent p-4 md:p-5">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
         <div class="min-w-0">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/25 bg-black/15 mb-3">
+            <i data-lucide="inbox" class="w-4 h-4 text-gold"></i>
+            <span class="text-xs font-semibold text-gold">
+              ${currentLang === 'es'
+                ? 'Interface restaurante'
+                : currentLang === 'en'
+                  ? 'Restaurant interface'
+                  : currentLang === 'nl'
+                    ? 'Restaurantinterface'
+                    : 'Interface restaurant'}
+            </span>
+          </div>
+
           <h3 class="font-display text-lg md:text-xl font-bold text-cream mb-2">
             ${t.restaurantOrdersTitle} · ${t.restaurantBookingsTitle}
           </h3>
 
           <p class="text-sm text-cream/75 leading-relaxed max-w-3xl">
             ${currentLang === 'es'
-              ? 'Gestione aquí las solicitudes pendientes de su establecimiento.'
+              ? 'Solicitudes visibles en la interfaz restaurante con suivi de estado de reserva.'
               : currentLang === 'en'
-                ? 'Manage your venue’s pending requests here.'
+                ? 'Requests visible in the restaurant interface with booking status tracking.'
                 : currentLang === 'nl'
-                  ? 'Beheer hier de openstaande aanvragen van uw zaak.'
-                  : 'Gérez ici les demandes en attente de votre établissement.'}
+                  ? 'Aanvragen zichtbaar in de restaurantinterface met opvolging van reservatiestatus.'
+                  : 'Demandes visibles dans l’interface restaurant avec suivi du statut de réservation.'}
           </p>
         </div>
 
@@ -3166,7 +3707,10 @@ ${!item.treated ? `
                   <p class="text-sm md:text-base text-cream/72">
                     ${t.restaurantHeaderStatus}
                   </p>
-
+                  <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/25 bg-black/15">
+                    <span class="text-[11px] uppercase tracking-wide text-cream/50">${t.restaurantVersionLabel}</span>
+                    <span class="text-xs font-semibold text-gold">${APP_VERSION}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3178,22 +3722,30 @@ ${!item.treated ? `
                 class="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 text-sm font-semibold text-gold shadow-lg hover:bg-gold/10 transition-all min-h-[58px]"
               >
                 <i data-lucide="refresh-cw" class="w-5 h-5 text-gold"></i>
-                <span>Actualiser la page</span>
+                <span>${currentLang === 'es'
+                  ? 'Actualizar la página'
+                  : currentLang === 'en'
+                    ? 'Refresh page'
+                    : currentLang === 'nl'
+                      ? 'Pagina vernieuwen'
+                      : 'Actualiser la page'}</span>
               </button>
 
-              <button
-                type="button"
-                onclick="document.getElementById('restaurant-menu-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });"
-                class="inline-flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 shadow-lg min-h-[58px] hover:bg-gold/10 transition-all"
-              >
+              <div class="inline-flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 shadow-lg min-h-[58px]">
                 <div class="w-10 h-10 rounded-xl border border-gold/20 bg-gold/10 flex items-center justify-center flex-shrink-0">
                   <i data-lucide="store" class="w-5 h-5 text-gold"></i>
                 </div>
                 <div class="text-left">
                   <div class="text-sm font-semibold text-cream leading-tight">TapCarta Resto</div>
-                  <div class="text-xs text-gold/85 mt-1 leading-tight">Consulter mon menu</div>
+                  <div class="text-xs text-gold/85 mt-1 leading-tight">${currentLang === 'es'
+                    ? 'Gestión restaurante'
+                    : currentLang === 'en'
+                      ? 'Restaurant management'
+                      : currentLang === 'nl'
+                        ? 'Restaurantbeheer'
+                        : 'Gestion restaurant'}</div>
                 </div>
-              </button>
+              </div>
 
               <button
                 id="install-app-btn"
@@ -3250,7 +3802,7 @@ ${!item.treated ? `
           </article>
    ` : ''}
 
-     <article id="restaurant-menu-card" class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
+     <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
             <div class="flex items-center gap-3 mb-5">
               <div class="w-10 h-10 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center">
                 <i data-lucide="layout-dashboard" class="w-5 h-5 text-gold"></i>
@@ -3367,9 +3919,38 @@ ${!item.treated ? `
                     : currentLang === 'nl'
                       ? 'Pas categorieën, gerechten, zichtbaarheid en beschikbaarheid snel aan.'
                       : 'Modifiez rapidement les catégories, plats, visibilités et disponibilités.'}</p>
+
+                <div
+                  id="restaurant-menu-unsaved-banner"
+                  class="hidden mt-3 inline-flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-200"
+                >
+                  <i data-lucide="triangle-alert" class="w-4 h-4"></i>
+                  <span>${currentLang === 'es'
+                    ? 'Cambios no validados'
+                    : currentLang === 'en'
+                      ? 'Unsaved changes'
+                      : currentLang === 'nl'
+                        ? 'Niet-opgeslagen wijzigingen'
+                        : 'Modifications non validées'}</span>
+                </div>
               </div>
 
               <div class="flex flex-wrap gap-3">
+                <button
+                  id="restaurant-close-menu-editor-btn"
+                  type="button"
+                  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+                >
+                  <i data-lucide="arrow-left" class="w-4 h-4 text-cream"></i>
+                  <span>${currentLang === 'es'
+                    ? 'Volver'
+                    : currentLang === 'en'
+                      ? 'Back'
+                      : currentLang === 'nl'
+                        ? 'Terug'
+                        : 'Retour'}</span>
+                </button>
+
                 <button
                   id="restaurant-add-category-btn"
                   type="button"
@@ -3385,20 +3966,20 @@ ${!item.treated ? `
                         : 'Ajouter une catégorie'}</span>
                 </button>
 
-               <button
-  id="restaurant-save-menu-json-btn"
-  type="button"
-  class="btn-action fixed left-4 right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-[110] inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-gold bg-[#151515] text-cream text-base font-extrabold shadow-[0_20px_45px_rgba(0,0,0,0.55)] hover:bg-[#1f1f1f] transition-all"
->
-  <i data-lucide="check" class="w-4 h-4 text-gold"></i>
-  <span>${currentLang === 'es'
-    ? 'Validar los cambios'
-    : currentLang === 'en'
-      ? 'Apply changes'
-      : currentLang === 'nl'
-        ? 'Wijzigingen bevestigen'
-        : 'Valider les modifications'}</span>
-</button>
+                <button
+                  id="restaurant-save-menu-json-btn"
+                  type="button"
+                  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
+                >
+                  <i data-lucide="check" class="w-4 h-4 text-gold"></i>
+                  <span>${currentLang === 'es'
+                    ? 'Validar los cambios'
+                    : currentLang === 'en'
+                      ? 'Apply changes'
+                      : currentLang === 'nl'
+                        ? 'Wijzigingen bevestigen'
+                        : 'Valider les modifications'}</span>
+                </button>
               </div>
             </div>
 
@@ -3406,6 +3987,26 @@ ${!item.treated ? `
               <div id="restaurant-menu-categories-list" class="space-y-4"></div>
             </div>
           </article>
+
+          <div
+            id="restaurant-menu-floating-save-wrap"
+            class="menu-editor-floating-save"
+          >
+            <button
+              id="restaurant-save-menu-floating-btn"
+              type="button"
+              class="menu-editor-floating-save-btn btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 bg-[#151515]/95 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
+            >
+              <i data-lucide="check" class="w-4 h-4 text-gold"></i>
+              <span>${currentLang === 'es'
+                ? 'Validar los cambios'
+                : currentLang === 'en'
+                  ? 'Apply changes'
+                  : currentLang === 'nl'
+                    ? 'Wijzigingen bevestigen'
+                    : 'Valider les modifications'}</span>
+            </button>
+          </div>
         </section>
       </div>
     </main>
@@ -3451,6 +4052,26 @@ ${!item.treated ? `
       activeRestaurantData.menu.updatedAt = '';
     }
 
+    function ensureTranslationBucket(source) {
+      const bucket = source && typeof source === 'object' ? source : {};
+
+      ['fr', 'es', 'en', 'nl'].forEach((lang) => {
+        if (!bucket[lang] || typeof bucket[lang] !== 'object') {
+          bucket[lang] = {};
+        }
+
+        if (typeof bucket[lang].name !== 'string') {
+          bucket[lang].name = '';
+        }
+
+        if (typeof bucket[lang].subtitle !== 'string') {
+          bucket[lang].subtitle = '';
+        }
+      });
+
+      return bucket;
+    }
+
     activeRestaurantData.menu.categories = activeRestaurantData.menu.categories.map((category, categoryIndex) => {
       const normalizedCategory = category && typeof category === 'object' ? category : {};
 
@@ -3488,6 +4109,8 @@ ${!item.treated ? `
         if (typeof normalizedItem.subtitle !== 'string') {
           normalizedItem.subtitle = '';
         }
+
+        normalizedItem.translations = ensureTranslationBucket(normalizedItem.translations);
 
         if (typeof normalizedItem.price !== 'number') {
           normalizedItem.price = 0;
@@ -3630,8 +4253,94 @@ ${!item.treated ? `
           ? 'No dish in this category.'
           : currentLang === 'nl'
             ? 'Geen gerecht in deze categorie.'
-            : 'Aucun plat dans cette catégorie.'
+            : 'Aucun plat dans cette catégorie.',
+      translations: currentLang === 'es'
+        ? 'Traducciones'
+        : currentLang === 'en'
+          ? 'Translations'
+          : currentLang === 'nl'
+            ? 'Vertalingen'
+            : 'Traductions',
+      manualTranslations: currentLang === 'es'
+        ? 'Edición manual por idioma'
+        : currentLang === 'en'
+          ? 'Manual edit by language'
+          : currentLang === 'nl'
+            ? 'Handmatige invoer per taal'
+            : 'Édition manuelle par langue',
+      mainValueHint: currentLang === 'es'
+        ? 'Valor principal'
+        : currentLang === 'en'
+          ? 'Main value'
+          : currentLang === 'nl'
+            ? 'Hoofdwaarde'
+            : 'Valeur principale'
     };
+
+    const translationLangs = [
+      { code: 'fr', label: 'FR' },
+      { code: 'es', label: 'ES' },
+      { code: 'en', label: 'EN' },
+      { code: 'nl', label: 'NL' }
+    ];
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    }
+
+    function renderTranslationFields(item, categoryIndex, itemIndex) {
+      const translations = item?.translations || {};
+
+      return `
+        <details class="mt-4 rounded-lg border border-white/8 bg-black/15">
+          <summary class="cursor-pointer list-none px-3 py-3 flex items-center justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold text-cream">${editorText.translations}</div>
+              <div class="text-[11px] text-cream/50 mt-1">${editorText.manualTranslations}</div>
+            </div>
+            <span class="text-[11px] text-gold">${translationLangs.map((lang) => lang.label).join(' · ')}</span>
+          </summary>
+
+          <div class="px-3 pb-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${translationLangs.map((lang) => `
+              <div class="rounded-lg border border-white/8 bg-black/20 p-3">
+                <div class="text-[11px] font-semibold uppercase tracking-wide text-gold mb-3">${lang.label}</div>
+
+                <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2">
+                  ${editorText.dishName}
+                </label>
+                <input
+                  type="text"
+                  value="${escapeHtml(translations?.[lang.code]?.name || '')}"
+                  data-category-index="${categoryIndex}"
+                  data-item-index="${itemIndex}"
+                  data-lang="${lang.code}"
+                  data-field="item-translation-name"
+                  class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+                >
+
+                <label class="block text-[11px] uppercase tracking-wide text-cream/45 mt-3 mb-2">
+                  ${editorText.subtitle}
+                </label>
+                <input
+                  type="text"
+                  value="${escapeHtml(translations?.[lang.code]?.subtitle || '')}"
+                  data-category-index="${categoryIndex}"
+                  data-item-index="${itemIndex}"
+                  data-lang="${lang.code}"
+                  data-field="item-translation-subtitle"
+                  class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+                >
+              </div>
+            `).join('')}
+          </div>
+        </details>
+      `;
+    }
 
     if (!categories.length) {
       container.innerHTML = `
@@ -3651,13 +4360,13 @@ ${!item.treated ? `
             </label>
             <input
               type="text"
-              value="${category.name || ''}"
+              value="${escapeHtml(category.name || '')}"
               data-category-index="${categoryIndex}"
               data-field="category-name"
               class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
             >
             <div class="text-xs text-cream/55 mt-2">
-              ID : ${category.id || '—'} · ${editorText.order} : ${typeof category.order === 'number' ? category.order : categoryIndex + 1}
+              ID : ${escapeHtml(category.id || '—')} · ${editorText.order} : ${typeof category.order === 'number' ? category.order : categoryIndex + 1}
             </div>
           </div>
 
@@ -3714,14 +4423,14 @@ ${!item.treated ? `
                   </label>
                   <input
                     type="text"
-                    value="${item.name || ''}"
+                    value="${escapeHtml(item.name || '')}"
                     data-category-index="${categoryIndex}"
                     data-item-index="${itemIndex}"
                     data-field="item-name"
                     class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
                   >
                   <div class="text-xs text-cream/55 mt-2">
-                    ID : ${item.id || '—'}
+                    ID : ${escapeHtml(item.id || '—')} · ${editorText.mainValueHint}
                   </div>
 
                   <label class="block text-[11px] uppercase tracking-wide text-cream/45 mt-3 mb-2">
@@ -3729,12 +4438,14 @@ ${!item.treated ? `
                   </label>
                   <input
                     type="text"
-                    value="${item.subtitle || ''}"
+                    value="${escapeHtml(item.subtitle || '')}"
                     data-category-index="${categoryIndex}"
                     data-item-index="${itemIndex}"
                     data-field="item-subtitle"
                     class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
                   >
+
+                  ${renderTranslationFields(item, categoryIndex, itemIndex)}
                 </div>
 
                 <div class="text-right flex-shrink-0">
@@ -3825,31 +4536,109 @@ ${!item.treated ? `
     }
   }
 
- let menuTranslationWarningNeeded = false;
-let menuSavePending = false;
+  let menuTranslationWarningNeeded = false;
+  let menuEditorDirty = false;
 
-function refreshMenuSaveButtonState() {
-  const saveButton = document.getElementById('restaurant-save-menu-json-btn');
-  if (!saveButton) return;
-
-  if (menuSavePending) {
-    saveButton.classList.add('ring-4', 'ring-gold/70', 'animate-pulse', 'scale-[1.02]');
-    saveButton.classList.remove('opacity-90');
-  } else {
-    saveButton.classList.remove('ring-4', 'ring-gold/70', 'animate-pulse', 'scale-[1.02]');
-    saveButton.classList.add('opacity-90');
+  function getMenuUnsavedChangesLabel() {
+    return currentLang === 'es'
+      ? 'Cambios no validados'
+      : currentLang === 'en'
+        ? 'Unsaved changes'
+        : currentLang === 'nl'
+          ? 'Niet-opgeslagen wijzigingen'
+          : 'Modifications non validées';
   }
-}
 
-function setMenuSavePending(value) {
-  menuSavePending = value;
-  refreshMenuSaveButtonState();
-}
+  function getMenuSaveDefaultLabel() {
+    return currentLang === 'es'
+      ? 'Validar los cambios'
+      : currentLang === 'en'
+        ? 'Apply changes'
+        : currentLang === 'nl'
+          ? 'Wijzigingen bevestigen'
+          : 'Valider les modifications';
+  }
 
-function markMenuTranslationWarningNeeded() {
-  menuTranslationWarningNeeded = true;
-  setMenuSavePending(true);
-}
+  function getMenuLeaveWarningLabel() {
+    return currentLang === 'es'
+      ? 'Tiene cambios no validados en el menú. ¿Desea salir sin validar?'
+      : currentLang === 'en'
+        ? 'You have unsaved menu changes. Do you want to leave without applying them?'
+        : currentLang === 'nl'
+          ? 'U heeft niet-opgeslagen menuwijzigingen. Wilt u sluiten zonder te bevestigen?'
+          : 'Vous avez des modifications de menu non validées. Voulez-vous quitter sans valider ?';
+  }
+
+  function updateMenuEditorDirtyUi() {
+    const banner = document.getElementById('restaurant-menu-unsaved-banner');
+    const saveButton = document.getElementById('restaurant-save-menu-json-btn');
+    const floatingWrap = document.getElementById('restaurant-menu-floating-save-wrap');
+    const floatingButton = document.getElementById('restaurant-save-menu-floating-btn');
+
+    if (banner) {
+      banner.classList.toggle('hidden', !menuEditorDirty);
+    }
+
+    if (saveButton) {
+      saveButton.classList.toggle('border-amber-400/50', menuEditorDirty);
+      saveButton.classList.toggle('bg-amber-500/10', menuEditorDirty);
+      saveButton.classList.toggle('text-amber-100', menuEditorDirty);
+
+      const labelSpan = saveButton.querySelector('span');
+      if (labelSpan) {
+        labelSpan.textContent = menuEditorDirty
+          ? `${getMenuSaveDefaultLabel()} • ${getMenuUnsavedChangesLabel()}`
+          : getMenuSaveDefaultLabel();
+      }
+    }
+
+    if (floatingWrap) {
+      floatingWrap.classList.toggle('visible', !!menuEditorDirty);
+    }
+
+    if (floatingButton) {
+      floatingButton.classList.toggle('border-amber-400/50', menuEditorDirty);
+      floatingButton.classList.toggle('bg-amber-500/10', menuEditorDirty);
+      floatingButton.classList.toggle('text-amber-100', menuEditorDirty);
+
+      const floatingLabelSpan = floatingButton.querySelector('span');
+      if (floatingLabelSpan) {
+        floatingLabelSpan.textContent = getMenuSaveDefaultLabel();
+      }
+    }
+
+    if (window.lucide) {
+      requestAnimationFrame(() => {
+        lucide.createIcons();
+      });
+    }
+  }
+
+  function markMenuEditorDirty() {
+    menuEditorDirty = true;
+    updateMenuEditorDirtyUi();
+  }
+
+  function resetMenuEditorDirty() {
+    menuEditorDirty = false;
+    updateMenuEditorDirtyUi();
+  }
+
+  function confirmLeaveMenuEditorIfDirty() {
+    if (!menuEditorDirty) return true;
+    return window.confirm(getMenuLeaveWarningLabel());
+  }
+
+  window.addEventListener('beforeunload', (event) => {
+    if (!menuEditorDirty) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
+
+  function markMenuTranslationWarningNeeded() {
+    menuTranslationWarningNeeded = true;
+    markMenuEditorDirty();
+  }
 
   function addRestaurantItemToCategory(categoryIndex) {
     ensureRestaurantMenuShape();
@@ -3900,7 +4689,7 @@ function markMenuTranslationWarningNeeded() {
     const nextCategory = canonicalCategories.find((category) => !existingIds.has(category.id));
 
     if (!nextCategory) {
-      alert('Toutes les catégories standard compatibles sont déjà créées.');
+      alert(t.restaurantStandardCategoriesAlreadyCreated);
       return;
     }
 
@@ -4043,7 +4832,7 @@ function markMenuTranslationWarningNeeded() {
       }
 
       menuTranslationWarningNeeded = false;
-      setMenuSavePending(false);
+      resetMenuEditorDirty();
 
       alert(
         currentLang === 'es'
@@ -4081,41 +4870,75 @@ function markMenuTranslationWarningNeeded() {
 
   const editorToggleBtn = document.getElementById('restaurant-menu-editor-toggle');
   const editorSection = document.getElementById('restaurant-menu-editor-section');
+  const closeEditorBtn = document.getElementById('restaurant-close-menu-editor-btn');
   const addCategoryBtn = document.getElementById('restaurant-add-category-btn');
   const exportJsonBtn = document.getElementById('restaurant-save-menu-json-btn');
+  const floatingSaveBtn = document.getElementById('restaurant-save-menu-floating-btn');
   const editorList = document.getElementById('restaurant-menu-categories-list');
 
+  function syncMenuEditorUiState() {
+    const isEditorOpen = !!editorSection && !editorSection.classList.contains('hidden');
+    document.body.classList.toggle('menu-editor-open', isEditorOpen);
+  }
+
+  function closeMenuEditor() {
+    if (!editorSection || editorSection.classList.contains('hidden')) return;
+    if (!confirmLeaveMenuEditorIfDirty()) return;
+
+    editorSection.classList.add('hidden');
+    syncMenuEditorUiState();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   if (editorToggleBtn && editorSection) {
+    syncMenuEditorUiState();
+
     editorToggleBtn.addEventListener('click', () => {
       const willOpen = editorSection.classList.contains('hidden');
 
-      editorSection.classList.toggle('hidden');
-
-      if (willOpen) {
-        renderRestaurantMenuEditor();
-        requestAnimationFrame(() => {
-          editorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+      if (!willOpen) {
+        closeMenuEditor();
+        return;
       }
+
+      editorSection.classList.remove('hidden');
+      syncMenuEditorUiState();
+      renderRestaurantMenuEditor();
+      updateMenuEditorDirtyUi();
+
+      requestAnimationFrame(() => {
+        editorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     });
   }
 
+  if (closeEditorBtn) {
+    closeEditorBtn.addEventListener('click', closeMenuEditor);
+  }
+
   if (addCategoryBtn) {
-    addCategoryBtn.addEventListener('click', addRestaurantCategory);
+    addCategoryBtn.addEventListener('click', () => {
+      markMenuEditorDirty();
+      addRestaurantCategory();
+    });
   }
 
   if (exportJsonBtn) {
     exportJsonBtn.addEventListener('click', exportRestaurantJson);
   }
 
+  if (floatingSaveBtn) {
+    floatingSaveBtn.addEventListener('click', exportRestaurantJson);
+  }
+
   if (editorList) {
     editorList.addEventListener('input', (e) => {
       if (!activeRestaurantData) return;
-      setMenuSavePending(true);
 
       const categoryIndex = Number(e.target.dataset.categoryIndex);
       const itemIndex = Number(e.target.dataset.itemIndex);
       const field = e.target.dataset.field;
+      const lang = e.target.dataset.lang;
 
       if (field === 'category-name') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]) return;
@@ -4138,16 +4961,44 @@ function markMenuTranslationWarningNeeded() {
         return;
       }
 
+      if (field === 'item-translation-name') {
+        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex] || !lang) return;
+        const item = activeRestaurantData.menu.categories[categoryIndex].items[itemIndex];
+        if (!item.translations || typeof item.translations !== 'object') {
+          item.translations = {};
+        }
+        if (!item.translations[lang] || typeof item.translations[lang] !== 'object') {
+          item.translations[lang] = { name: '', subtitle: '' };
+        }
+        item.translations[lang].name = e.target.value;
+        markMenuTranslationWarningNeeded();
+        return;
+      }
+
+      if (field === 'item-translation-subtitle') {
+        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex] || !lang) return;
+        const item = activeRestaurantData.menu.categories[categoryIndex].items[itemIndex];
+        if (!item.translations || typeof item.translations !== 'object') {
+          item.translations = {};
+        }
+        if (!item.translations[lang] || typeof item.translations[lang] !== 'object') {
+          item.translations[lang] = { name: '', subtitle: '' };
+        }
+        item.translations[lang].subtitle = e.target.value;
+        markMenuTranslationWarningNeeded();
+        return;
+      }
+
       if (field === 'item-price') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
         const parsedPrice = parseFloat(String(e.target.value).replace(',', '.'));
         activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].price = Number.isNaN(parsedPrice) ? 0 : parsedPrice;
+        markMenuEditorDirty();
       }
     });
 
     editorList.addEventListener('change', (e) => {
       if (!activeRestaurantData) return;
-      setMenuSavePending(true);
 
       const categoryIndex = Number(e.target.dataset.categoryIndex);
       const itemIndex = Number(e.target.dataset.itemIndex);
@@ -4156,14 +5007,18 @@ function markMenuTranslationWarningNeeded() {
       if (field === 'item-visible') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
         activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].visible = e.target.checked;
+        markMenuEditorDirty();
         renderRestaurantMenuEditor();
+        updateMenuEditorDirtyUi();
         return;
       }
 
       if (field === 'item-available') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
         activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].available = e.target.checked;
+        markMenuEditorDirty();
         renderRestaurantMenuEditor();
+        updateMenuEditorDirtyUi();
       }
     });
 
@@ -4176,37 +5031,51 @@ function markMenuTranslationWarningNeeded() {
       const action = actionButton.dataset.action;
 
       if (action === 'add-item') {
+        markMenuEditorDirty();
         addRestaurantItemToCategory(categoryIndex);
+        updateMenuEditorDirtyUi();
         return;
       }
 
       if (action === 'move-item-up') {
+        markMenuEditorDirty();
         moveRestaurantItem(categoryIndex, itemIndex, 'up');
+        updateMenuEditorDirtyUi();
         return;
       }
 
       if (action === 'move-item-down') {
+        markMenuEditorDirty();
         moveRestaurantItem(categoryIndex, itemIndex, 'down');
+        updateMenuEditorDirtyUi();
         return;
       }
 
       if (action === 'move-category-up') {
+        markMenuEditorDirty();
         moveRestaurantCategory(categoryIndex, 'up');
+        updateMenuEditorDirtyUi();
         return;
       }
 
       if (action === 'move-category-down') {
+        markMenuEditorDirty();
         moveRestaurantCategory(categoryIndex, 'down');
+        updateMenuEditorDirtyUi();
         return;
       }
 
       if (action === 'delete-item') {
+        markMenuEditorDirty();
         deleteRestaurantItem(categoryIndex, itemIndex);
+        updateMenuEditorDirtyUi();
         return;
       }
 
       if (action === 'delete-category') {
+        markMenuEditorDirty();
         deleteRestaurantCategory(categoryIndex);
+        updateMenuEditorDirtyUi();
       }
     });
   }
@@ -4215,7 +5084,7 @@ function markMenuTranslationWarningNeeded() {
     clearInterval(window.tapCartaRestaurantRefreshState.requestsIntervalId);
   }
 
-  window.tapCartaRestaurantRefreshState.requestsIntervalId = window.setInterval(() => {
+  window.tapCartaRestaurantRefreshState.requestsIntervalId = window.setInterval(async () => {
     const requestsPanelEl = document.getElementById('restaurant-requests-panel');
     const requestsCountEl = document.getElementById('restaurant-active-requests-count');
     const requestsListEl = requestsPanelEl
@@ -4226,6 +5095,7 @@ function markMenuTranslationWarningNeeded() {
       return;
     }
 
+    await syncLiveBookingsToLocalStorage();
     syncRequestsState();
 
     requestsCountEl.textContent = String(activeRequests.length);
@@ -4285,19 +5155,15 @@ function markMenuTranslationWarningNeeded() {
     const lastLoadedVersion = localStorage.getItem(VERSION_STORAGE_KEY);
     const reloadDoneForVersion = sessionStorage.getItem(VERSION_RELOAD_FLAG_KEY);
     const currentUrl = new URL(window.location.href);
-    const hasVersionInUrl = currentUrl.searchParams.has('v');
-
-    if (hasVersionInUrl) {
-      currentUrl.searchParams.delete('v');
-      window.history.replaceState({}, document.title, currentUrl.toString());
-    }
+    const urlVersion = currentUrl.searchParams.get('v');
 
     if (lastLoadedVersion !== APP_VERSION) {
       localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION);
 
-      if (reloadDoneForVersion !== APP_VERSION) {
+      if (reloadDoneForVersion !== APP_VERSION || urlVersion !== APP_VERSION) {
         sessionStorage.setItem(VERSION_RELOAD_FLAG_KEY, APP_VERSION);
-        window.location.reload();
+        currentUrl.searchParams.set('v', APP_VERSION);
+        window.location.replace(currentUrl.toString());
         return true;
       }
     } else if (reloadDoneForVersion && reloadDoneForVersion !== APP_VERSION) {
