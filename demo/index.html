@@ -6,9 +6,12 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V1.1.2';
+    const APP_VERSION = 'V1.2.10';
+const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
+let clientOrderSyncUnavailable = false;
+let clientBookingSyncUnavailable = false;
 
 function normalizeRequestItems(items) {
   if (!Array.isArray(items)) return [];
@@ -31,15 +34,23 @@ async function insertLiveRequest(payload) {
   return data;
 }
 
-async function fetchLiveRequestById(requestId) {
-  const { data, error } = await supabaseClient
+ async function fetchLiveRequestById(requestId, requestType = null) {
+  if (!requestId || !LIVE_RESTAURANT_ID) return null;
+
+  let query = supabaseClient
     .from('requests')
     .select('*')
     .eq('id', requestId)
-    .single();
+    .eq('restaurant_id', LIVE_RESTAURANT_ID);
+
+  if (requestType) {
+    query = query.eq('type', requestType);
+  }
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data || null;
 }
 
 async function fetchLiveRequestsByType(requestType) {
@@ -47,8 +58,13 @@ async function fetchLiveRequestsByType(requestType) {
     return await readBookingRequestsFromStorage();
   }
 
+  if (requestType === 'order') {
+    return await readOrderRequestsFromSource();
+  }
+
   return [];
 }
+
 function mapLiveBookingRowToRequest(row) {
   if (!row) return null;
 
@@ -90,6 +106,60 @@ function mapLiveBookingRowToRequest(row) {
     }
   };
 }
+
+function mapLiveOrderRowToRequest(row) {
+  if (!row) return null;
+
+  const orderItems = Array.isArray(row.items)
+    ? row.items.map((item) => {
+        const quantity = Number(item?.quantity || 1);
+        const unitPrice = Number(item?.unitPrice ?? item?.price ?? 0);
+        const lineTotal = Number(item?.lineTotal ?? (unitPrice * quantity));
+
+        return {
+          id: item?.id || '',
+          name: item?.name || '',
+          category: item?.category || '',
+          quantity,
+          price: Number.isFinite(unitPrice) ? unitPrice : 0,
+          unitPrice: Number.isFinite(unitPrice) ? unitPrice : null,
+          lineTotal: Number.isFinite(lineTotal) ? Number(lineTotal.toFixed(2)) : null
+        };
+      })
+    : [];
+
+  const totalAmount = orderItems.reduce(
+    (sum, item) => sum + Number(item.lineTotal ?? (Number(item.price || 0) * Number(item.quantity || 1))),
+    0
+  );
+
+  return {
+    restaurantId: row.restaurant_id || LIVE_RESTAURANT_ID,
+    requestId: row.id,
+    liveRequestId: row.id,
+    requestType: 'order',
+    createdAt: row.created_at || new Date().toISOString(),
+    updatedAt: row.updated_at || null,
+    status: row.status || 'pending',
+    customer: {
+      name: row.client_name || '',
+      phone: row.client_phone || '',
+      language: row.client_language || 'fr'
+    },
+    order: {
+      date: row.booking_date || '',
+      time: row.booking_time ? String(row.booking_time).slice(0, 5) : '',
+      note: row.note || '',
+      items: orderItems,
+      totalAmount: Number(totalAmount.toFixed(2))
+    },
+    restaurantResponse: {
+      reason: row.status || '',
+      message: row.restaurant_message || '',
+      updatedBy: row.restaurant_message ? 'restaurant' : ''
+    }
+  };
+}
     function getBasePath() {
       const path = window.location.pathname;
       return path.endsWith('/') ? path.slice(0, -1) : path.substring(0, path.lastIndexOf('/'));
@@ -104,7 +174,6 @@ const SW_URL = `${BASE_PATH}/sw.js?v=${APP_VERSION}`;
 
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <script src="/_sdk/element_sdk.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
@@ -313,6 +382,44 @@ const SW_URL = `${BASE_PATH}/sw.js?v=${APP_VERSION}`;
       display: none;
       font-size: 22px;
       line-height: 1;
+    }
+
+    .tapcarta-public-signature {
+      position: fixed;
+      top: 128px;
+      right: 28px;
+      z-index: 42;
+      width: min(210px, calc(100vw - 24px));
+      padding: 7px 8px 8px;
+      border: 1px solid rgba(242, 199, 68, 0.12);
+      border-radius: 10px;
+      background: rgba(6, 6, 6, 0.48);
+      box-shadow: none;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      text-align: center;
+      opacity: 0.9;
+    }
+
+    .tapcarta-public-logo {
+      display: block;
+      width: 132px;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto 3px;
+    }
+
+    .tapcarta-public-text {
+      font-size: 0.62rem;
+      line-height: 1.2;
+      color: rgba(250, 246, 238, 0.52);
+      letter-spacing: 0.02em;
+    }
+
+    .tapcarta-public-version {
+      color: rgba(242, 199, 68, 0.9);
+      font-weight: 700;
+      white-space: nowrap;
     }
 
     .menu-item-subtitle {
@@ -634,6 +741,25 @@ const SW_URL = `${BASE_PATH}/sw.js?v=${APP_VERSION}`;
         padding: 8px 10px;
       }
 
+      .tapcarta-public-signature {
+        top: 104px;
+        left: auto;
+        right: 14px;
+        width: 168px;
+        max-width: calc(100vw - 28px);
+        padding: 6px 7px 7px;
+        border-radius: 10px;
+      }
+
+      .tapcarta-public-logo {
+        width: 118px;
+        margin-bottom: 2px;
+      }
+
+      .tapcarta-public-text {
+        font-size: 0.58rem;
+      }
+
       .lang-btn {
         min-width: 44px;
         height: 42px;
@@ -689,7 +815,6 @@ const SW_URL = `${BASE_PATH}/sw.js?v=${APP_VERSION}`;
     }
   </style>
 
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   const SUPABASE_URL = 'https://uzuejudgccpnuzqefjre.supabase.co';
@@ -716,6 +841,17 @@ const SW_URL = `${BASE_PATH}/sw.js?v=${APP_VERSION}`;
       <span class="lang-label">NL</span>
       <span class="lang-flag">🇳🇱</span>
     </button>
+  </div>
+
+  <div class="tapcarta-public-signature" aria-label="TapCarta menu digital">
+    <img
+      id="tapcarta-public-logo"
+      class="tapcarta-public-logo"
+      src=""
+      alt="TapCarta"
+      loading="eager"
+    >
+    <div id="tapcarta-public-text" class="tapcarta-public-text"></div>
   </div>
 
   <div id="app-wrapper" class="w-full min-h-screen bg-dark text-cream">
@@ -1029,6 +1165,8 @@ reviewBackButton: 'Retour',
 reviewValidateButton: 'Valider la commande',
 reviewPendingMessage: 'Étape suivante prête : l’envoi réel de la commande sera branché ensuite.',
 continueAddingButton: 'Ajouter d’autres plats',
+modifyOrderButton: 'Modifier ma commande',
+editCustomerInfoButton: 'Modifier mes coordonnées',
 allergens: ['Gluten', 'Crustacés', 'Œufs', 'Poisson', 'Lait / lactose', 'Fruits à coque', 'Céleri', 'Moutarde', 'Sésame', 'Sulfites', 'Mollusques'],
         items: {
           ailes_poulet: { name: 'Ailes de poulet', subtitle: 'croustillantes et moelleuses' },
@@ -1152,6 +1290,8 @@ reviewBackButton: 'Volver',
 reviewValidateButton: 'Validar el pedido',
 reviewPendingMessage: 'Siguiente etapa preparada: el envío real del pedido se conectará después.',
 continueAddingButton: 'Añadir más platos',
+modifyOrderButton: 'Modificar mi pedido',
+editCustomerInfoButton: 'Modificar mis datos',
 allergens: ['Gluten', 'Crustáceos', 'Huevos', 'Pescado', 'Leche / lactosa', 'Frutos secos', 'Apio', 'Mostaza', 'Sésamo', 'Sulfitos', 'Moluscos'],
         items: {
           ailes_poulet: { name: 'Alitas de pollo', subtitle: 'crujientes y tiernas' },
@@ -1276,6 +1416,8 @@ reviewBackButton: 'Back',
 reviewValidateButton: 'Validate order',
 reviewPendingMessage: 'Next step ready: the real order submission will be connected afterwards.',
 continueAddingButton: 'Add more dishes',
+modifyOrderButton: 'Modify my order',
+editCustomerInfoButton: 'Edit my details',
 allergens: ['Gluten', 'Crustaceans', 'Eggs', 'Fish', 'Milk / lactose', 'Nuts', 'Celery', 'Mustard', 'Sesame', 'Sulfites', 'Molluscs'],
         items: {
           ailes_poulet: { name: 'Chicken wings', subtitle: 'crispy and tender' },
@@ -1400,6 +1542,8 @@ reviewBackButton: 'Terug',
 reviewValidateButton: 'Bestelling valideren',
 reviewPendingMessage: 'Volgende stap is klaar: de echte verzending van de bestelling wordt later gekoppeld.',
 continueAddingButton: 'Meer gerechten toevoegen',
+modifyOrderButton: 'Mijn bestelling wijzigen',
+editCustomerInfoButton: 'Mijn gegevens wijzigen',
 allergens: ['Gluten', 'Schaaldieren', 'Eieren', 'Vis', 'Melk / lactose', 'Noten', 'Selderij', 'Mosterd', 'Sesam', 'Sulfieten', 'Weekdieren'],
         items: {
           ailes_poulet: { name: 'Kipvleugels', subtitle: 'knapperig en mals' },
@@ -1627,6 +1771,7 @@ let orderMode = false;
 let bookingMode = false;
 let cart = [];
 let cartPanelOpen = false;
+let activeOrderCategory = 'all';
 let orderReviewOpen = false;
 let orderForm = {
   name: '',
@@ -1635,6 +1780,8 @@ let orderForm = {
   time: '',
   note: ''
 };
+let orderFeedback = null;
+let bookingFeedback = null;
 let bookingForm = {
   name: '',
   phone: '',
@@ -1685,10 +1832,41 @@ function persistClientActiveView() {
       return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     }
 
+    function getTapCartaPublicSignatureText() {
+      const texts = {
+        fr: 'Menu digital interactif',
+        es: 'Menú digital interactivo',
+        en: 'Interactive digital menu',
+        nl: 'Interactief digitaal menu'
+      };
+
+      const versionLabels = {
+        fr: 'Version',
+        es: 'Versión',
+        en: 'Version',
+        nl: 'Versie'
+      };
+
+      const label = texts[currentLang] || texts.fr;
+      const versionLabel = versionLabels[currentLang] || versionLabels.fr;
+
+      return `${label} · ${versionLabel} <span class="tapcarta-public-version">${APP_VERSION}</span>`;
+    }
+
+    function updateTapCartaPublicSignature() {
+      const tapCartaPublicText = document.getElementById('tapcarta-public-text');
+
+      if (tapCartaPublicText) {
+        tapCartaPublicText.innerHTML = getTapCartaPublicSignatureText();
+      }
+    }
+
     function updateLangButtons() {
       document.querySelectorAll('.lang-btn').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.lang === currentLang);
       });
+
+      updateTapCartaPublicSignature();
     }
 
     function updateInstallUI() {
@@ -1963,7 +2141,6 @@ function getBookingStorageKey() {
 function getLastBookingStorageKey() {
   return 'tapcarta_last_booking_request';
 }
-
 async function readBookingRequestsFromStorage() {
   if (LIVE_REQUESTS_ENABLED) {
     try {
@@ -1980,26 +2157,15 @@ async function readBookingRequestsFromStorage() {
         ? data.map(mapLiveBookingRowToRequest).filter(Boolean)
         : [];
 
-      try {
-        const rawLastBooking = localStorage.getItem(getLastBookingStorageKey());
-        const parsedLastBooking = rawLastBooking ? JSON.parse(rawLastBooking) : null;
-        const liveRequestId = parsedLastBooking?.liveRequestId || parsedLastBooking?.requestId || null;
+      writeBookingRequestsToStorage(liveRequests.slice(0, 20));
 
-        if (liveRequestId) {
-          const liveRow = await fetchLiveRequestById(liveRequestId);
-          const syncedLastBooking = mapLiveBookingRowToRequest(liveRow);
+      await syncLastBookingRequestFromSource();
 
-          if (syncedLastBooking) {
-            localStorage.setItem(getLastBookingStorageKey(), JSON.stringify(syncedLastBooking));
-          }
-        }
-      } catch (syncError) {
-        console.error('Supabase booking sync error:', syncError);
-      }
-
+      clientBookingSyncUnavailable = false;
       return liveRequests;
     } catch (error) {
       console.error('Supabase booking read error:', error);
+      clientBookingSyncUnavailable = true;
       return [];
     }
   }
@@ -2069,12 +2235,62 @@ function getLastBookingRequest() {
   }
 }
 
+async function syncLastBookingRequestFromSource() {
+  if (!LIVE_REQUESTS_ENABLED) {
+    clientBookingSyncUnavailable = false;
+    return getLastBookingRequest();
+  }
+
+  try {
+    const rawLastBooking = localStorage.getItem(getLastBookingStorageKey());
+    const parsedLastBooking = rawLastBooking ? JSON.parse(rawLastBooking) : null;
+    const liveRequestId = parsedLastBooking?.liveRequestId || parsedLastBooking?.requestId || null;
+
+    if (!liveRequestId) {
+      clientBookingSyncUnavailable = false;
+      return null;
+    }
+
+    const liveRow = await fetchLiveRequestById(liveRequestId, 'booking');
+    const syncedLastBooking = mapLiveBookingRowToRequest(liveRow);
+
+    if (!syncedLastBooking) {
+      clientBookingSyncUnavailable = false;
+      localStorage.removeItem(getLastBookingStorageKey());
+      return null;
+    }
+
+    const mergedLastBooking = {
+      ...syncedLastBooking,
+      restaurantResponse: {
+        ...(parsedLastBooking?.restaurantResponse || {}),
+        ...(syncedLastBooking.restaurantResponse || {})
+      }
+    };
+
+    localStorage.setItem(getLastBookingStorageKey(), JSON.stringify(mergedLastBooking));
+
+    clientBookingSyncUnavailable = false;
+    return mergedLastBooking;
+  } catch (error) {
+    console.error('Supabase booking sync error:', error);
+    clientBookingSyncUnavailable = true;
+    return null;
+  }
+}
 async function updateStoredBookingRequest(updatedRequest) {
   if (!updatedRequest || !updatedRequest.requestId) return null;
 
-  if (LIVE_REQUESTS_ENABLED && updatedRequest.liveRequestId) {
+  const liveRequestId = updatedRequest.liveRequestId || updatedRequest.requestId || null;
+
+  if (LIVE_REQUESTS_ENABLED) {
+    if (!liveRequestId) {
+      console.warn('Supabase booking update impossible : aucun ID live disponible.');
+      return null;
+    }
+
     try {
-      const { error } = await supabaseClient
+      let query = supabaseClient
         .from('requests')
         .update({
           client_name: updatedRequest?.customer?.name || '',
@@ -2087,17 +2303,65 @@ async function updateStoredBookingRequest(updatedRequest) {
           note: updatedRequest?.booking?.note || '',
           status: updatedRequest?.status || 'pending'
         })
-        .eq('id', updatedRequest.liveRequestId);
+        .eq('id', liveRequestId)
+        .eq('restaurant_id', updatedRequest?.restaurantId || LIVE_RESTAURANT_ID)
+        .eq('type', 'booking');
+
+      if (['accepted_by_client', 'rejected_by_client'].includes(updatedRequest?.status || '')) {
+        query = query.eq('status', 'modified');
+      }
+
+      if ((updatedRequest?.status || '') === 'cancelled') {
+        query = query.in('status', ['pending', 'processing', 'modified']);
+      }
+
+      const { data, error } = await query
+        .select('*')
+        .maybeSingle();
 
       if (error) throw error;
+
+      if (!data) {
+        console.warn('Supabase booking update: aucune ligne mise à jour pour id =', liveRequestId);
+        alert(`Supabase n'a mis à jour aucune réservation.\nLa demande a peut-être déjà changé de statut côté restaurant.\nID utilisé : ${liveRequestId}`);
+        await readBookingRequestsFromStorage();
+        return null;
+      }
+
+      const syncedRequest = mapLiveBookingRowToRequest(data) || updatedRequest;
+      const mergedRequest = {
+        ...updatedRequest,
+        ...syncedRequest,
+        liveRequestId: syncedRequest.liveRequestId || liveRequestId,
+        requestId: syncedRequest.requestId || liveRequestId,
+        status: syncedRequest.status || updatedRequest.status,
+        updatedAt: syncedRequest.updatedAt || updatedRequest.updatedAt,
+        clientDecision: updatedRequest.clientDecision || '',
+        clientDecisionAt: updatedRequest.clientDecisionAt || '',
+        restaurantResponse: {
+          ...(syncedRequest.restaurantResponse || {}),
+          ...(updatedRequest.restaurantResponse || {})
+        }
+      };
+
+      localStorage.setItem(getLastBookingStorageKey(), JSON.stringify(mergedRequest));
+
+      const existingRequests = await readBookingRequestsFromStorage();
+      const withoutDuplicate = existingRequests.filter(
+        (entry) => String(entry?.requestId) !== String(mergedRequest.requestId)
+      );
+
+      writeBookingRequestsToStorage([mergedRequest, ...withoutDuplicate].slice(0, 20));
+
+      return mergedRequest;
     } catch (error) {
       console.error('Supabase booking update error:', error);
+      alert(`Erreur Supabase update réservation : ${error?.message || error}`);
       return null;
     }
-
-    localStorage.setItem(getLastBookingStorageKey(), JSON.stringify(updatedRequest));
-    return updatedRequest;
   }
+
+  localStorage.setItem(getLastBookingStorageKey(), JSON.stringify(updatedRequest));
 
   const existingRequests = await readBookingRequestsFromStorage();
   const updatedRequests = existingRequests.map((request) =>
@@ -2151,51 +2415,253 @@ function formatBookingDateTimeForDisplay(dateTimeValue) {
 }
 
 function getBookingStatusLabel(status) {
+  const normalizedStatus = status || 'pending';
   const tBooking = getBookingTexts(currentLang);
+  const tDecision = getBookingClientDecisionTexts();
 
-  if (status === 'cancelled') {
-    return tBooking.bookingStatusCancelled;
+  if (normalizedStatus === 'accepted_by_client') {
+    return tDecision.acceptedStatus;
   }
 
-  if (status === 'confirmed') {
-    return currentLang === 'fr'
-      ? 'Confirmée'
-      : currentLang === 'es'
-        ? 'Confirmada'
-        : currentLang === 'nl'
-          ? 'Bevestigd'
-          : 'Confirmed';
+  if (normalizedStatus === 'rejected_by_client') {
+    return tDecision.rejectedStatus;
   }
 
-  if (status === 'refused') {
-    return currentLang === 'fr'
-      ? 'Refusée'
-      : currentLang === 'es'
-        ? 'Rechazada'
-        : currentLang === 'nl'
-          ? 'Geweigerd'
-          : 'Refused';
-  }
+  const labels = {
+    fr: {
+      pending: tBooking.bookingStatusPending,
+      processing: 'En cours de traitement',
+      modified: 'Modification proposée',
+      confirmed: 'Confirmée',
+      refused: 'Refusée',
+      cancelled: tBooking.bookingStatusCancelled,
+      cancelled_by_client: 'Annulée par le client',
+      arrived: 'Client arrivé',
+      not_arrived: 'Client non venu',
+      presence_unknown_no_action: 'Réservation clôturée'
+    },
+    es: {
+      pending: tBooking.bookingStatusPending,
+      processing: 'En tratamiento',
+      modified: 'Modificación propuesta',
+      confirmed: 'Confirmada',
+      refused: 'Rechazada',
+      cancelled: tBooking.bookingStatusCancelled,
+      cancelled_by_client: 'Cancelada por el cliente',
+      arrived: 'Cliente llegado',
+      not_arrived: 'Cliente no presentado',
+      presence_unknown_no_action: 'Reserva cerrada'
+    },
+    en: {
+      pending: tBooking.bookingStatusPending,
+      processing: 'Processing',
+      modified: 'Modification proposed',
+      confirmed: 'Confirmed',
+      refused: 'Refused',
+      cancelled: tBooking.bookingStatusCancelled,
+      cancelled_by_client: 'Cancelled by client',
+      arrived: 'Client arrived',
+      not_arrived: 'Client did not arrive',
+      presence_unknown_no_action: 'Booking closed'
+    },
+    nl: {
+      pending: tBooking.bookingStatusPending,
+      processing: 'In behandeling',
+      modified: 'Wijziging voorgesteld',
+      confirmed: 'Bevestigd',
+      refused: 'Geweigerd',
+      cancelled: tBooking.bookingStatusCancelled,
+      cancelled_by_client: 'Geannuleerd door klant',
+      arrived: 'Klant aangekomen',
+      not_arrived: 'Klant niet gekomen',
+      presence_unknown_no_action: 'Reservatie afgesloten'
+    }
+  };
 
-  if (status === 'processing') {
-    return currentLang === 'fr'
-      ? 'En cours de traitement'
-      : currentLang === 'es'
-        ? 'En tratamiento'
-        : currentLang === 'nl'
-          ? 'In behandeling'
-          : 'Processing';
-  }
-
-  return tBooking.bookingStatusPending;
+  const langLabels = labels[currentLang] || labels.fr;
+  return langLabels[normalizedStatus] || langLabels.pending;
 }
 
 function isEditingBookingRequest() {
   return Boolean(editingBookingRequestId);
 }
 
+function escapeBookingModalHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function removeBookingSummaryModal() {
+  const existingModal = document.getElementById('booking-summary-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+}
+
+function getBookingSummaryModalTexts() {
+  if (currentLang === 'es') {
+    return {
+      title: 'Detalle de su solicitud',
+      close: 'Cerrar',
+      status: 'Estado',
+      proposedTime: 'Hora propuesta',
+      restaurantMessage: 'Mensaje del restaurante'
+    };
+  }
+
+  if (currentLang === 'en') {
+    return {
+      title: 'Your request details',
+      close: 'Close',
+      status: 'Status',
+      proposedTime: 'Proposed time',
+      restaurantMessage: 'Restaurant message'
+    };
+  }
+
+  if (currentLang === 'nl') {
+    return {
+      title: 'Details van uw aanvraag',
+      close: 'Sluiten',
+      status: 'Status',
+      proposedTime: 'Voorgesteld uur',
+      restaurantMessage: 'Bericht van het restaurant'
+    };
+  }
+
+  return {
+    title: 'Détail de votre demande',
+    close: 'Fermer',
+    status: 'Statut',
+    proposedTime: 'Horaire proposé',
+    restaurantMessage: 'Message du restaurant'
+  };
+}
+
+function buildBookingSummaryModalHtml(bookingRequest) {
+  const tBooking = getBookingTexts(currentLang);
+  const modalTexts = getBookingSummaryModalTexts();
+  const proposedTime = bookingRequest?.restaurantResponse?.proposal?.proposedTime || '';
+  const restaurantMessage = bookingRequest?.restaurantResponse?.message || '';
+  const preorderItems = Array.isArray(bookingRequest?.booking?.preorderItems)
+    ? bookingRequest.booking.preorderItems
+    : [];
+
+  return `
+    <div id="booking-summary-modal" class="fixed inset-0 z-[140] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-gold/20 bg-[#0D0D0D] shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+        <div class="sticky top-0 z-10 bg-[#0D0D0D]/95 backdrop-blur border-b border-white/8 px-5 py-4 flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <div class="text-xs uppercase tracking-[0.18em] text-gold/70 mb-1">${tBooking.bookingTitle || 'Reserva'}</div>
+            <h3 class="font-display text-xl font-bold text-cream">${modalTexts.title}</h3>
+          </div>
+
+          <button
+            type="button"
+            onclick="closeBookingSummaryModal()"
+            class="btn-action px-4 py-2 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+          >
+            ${modalTexts.close}
+          </button>
+        </div>
+
+        <div class="p-5 md:p-6 space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${tBooking.bookingName}</div>
+              <div class="text-sm font-semibold text-cream">${escapeBookingModalHtml(bookingRequest?.customer?.name || '-')}</div>
+            </div>
+
+            <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${tBooking.bookingPhone}</div>
+              <div class="text-sm font-semibold text-cream">${escapeBookingModalHtml(bookingRequest?.customer?.phone || '-')}</div>
+            </div>
+
+            <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${tBooking.bookingDate}</div>
+              <div class="text-sm font-semibold text-cream">${escapeBookingModalHtml(formatBookingDateForDisplay(bookingRequest?.booking?.date || ''))}</div>
+            </div>
+
+            <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${tBooking.bookingTime}</div>
+              <div class="text-sm font-semibold text-cream">${escapeBookingModalHtml(bookingRequest?.booking?.time || '-')}</div>
+            </div>
+
+            <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${tBooking.bookingPeople}</div>
+              <div class="text-sm font-semibold text-cream">${escapeBookingModalHtml(String(bookingRequest?.booking?.people || '-'))}</div>
+            </div>
+
+            <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${modalTexts.status}</div>
+              <div class="text-sm font-semibold text-cream">${escapeBookingModalHtml(getBookingStatusLabel(bookingRequest?.status || 'pending'))}</div>
+            </div>
+
+            ${proposedTime ? `
+              <div class="rounded-xl border border-sky-400/25 bg-sky-500/10 px-4 py-3 md:col-span-2">
+                <div class="text-[11px] uppercase tracking-wide text-sky-100/70 mb-1">${modalTexts.proposedTime}</div>
+                <div class="text-sm font-semibold text-sky-100">${escapeBookingModalHtml(proposedTime)}</div>
+              </div>
+            ` : ''}
+
+            ${restaurantMessage ? `
+              <div class="rounded-xl border border-sky-400/25 bg-sky-500/10 px-4 py-3 md:col-span-2">
+                <div class="text-[11px] uppercase tracking-wide text-sky-100/70 mb-1">${modalTexts.restaurantMessage}</div>
+                <div class="text-sm font-semibold text-cream">${escapeBookingModalHtml(restaurantMessage)}</div>
+              </div>
+            ` : ''}
+
+            ${bookingRequest?.booking?.note ? `
+              <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
+                <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${tBooking.bookingNote}</div>
+                <div class="text-sm font-semibold text-cream">${escapeBookingModalHtml(bookingRequest.booking.note)}</div>
+              </div>
+            ` : ''}
+
+            ${preorderItems.length ? `
+              <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
+                <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${tBooking.bookingPreorder}</div>
+                <div class="text-sm font-semibold text-cream">${escapeBookingModalHtml(preorderItems.map((item) => item.name).join(', '))}</div>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button
+              type="button"
+              onclick="closeBookingSummaryModal()"
+              class="btn-action px-4 py-3 rounded-xl border border-gold/30 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
+            >
+              ${modalTexts.close}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function buildBookingRequestSummaryText(bookingRequest) {
   const tBooking = getBookingTexts(currentLang);
+  const proposedTimeLabel = currentLang === 'fr'
+    ? 'Horaire proposé'
+    : currentLang === 'es'
+      ? 'Hora propuesta'
+      : currentLang === 'nl'
+        ? 'Voorgesteld uur'
+        : 'Proposed time';
+
+  const restaurantMessageLabel = currentLang === 'fr'
+    ? 'Message du restaurant'
+    : currentLang === 'es'
+      ? 'Mensaje del restaurante'
+      : currentLang === 'nl'
+        ? 'Bericht van het restaurant'
+        : 'Restaurant message';
+
   const lines = [
     `${tBooking.bookingName}: ${bookingRequest?.customer?.name || '-'}`,
     `${tBooking.bookingPhone}: ${bookingRequest?.customer?.phone || '-'}`,
@@ -2204,6 +2670,16 @@ function buildBookingRequestSummaryText(bookingRequest) {
     `${tBooking.bookingPeople}: ${bookingRequest?.booking?.people || '-'}`,
     `${tBooking.bookingStatusLabel}: ${getBookingStatusLabel(bookingRequest?.status || 'pending')}`
   ];
+
+  const proposedTime = bookingRequest?.restaurantResponse?.proposal?.proposedTime || '';
+  if (proposedTime) {
+    lines.push(`${proposedTimeLabel}: ${proposedTime}`);
+  }
+
+  const restaurantMessage = bookingRequest?.restaurantResponse?.message || '';
+  if (restaurantMessage) {
+    lines.push(`${restaurantMessageLabel}: ${restaurantMessage}`);
+  }
 
   if (bookingRequest?.booking?.note) {
     lines.push(`${tBooking.bookingNote}: ${bookingRequest.booking.note}`);
@@ -2220,17 +2696,212 @@ function buildBookingRequestSummaryText(bookingRequest) {
   return lines.join('\n');
 }
 
-function viewLastBookingRequest() {
+window.closeBookingSummaryModal = function() {
+  removeBookingSummaryModal();
+};
+
+async function viewLastBookingRequest() {
+  if (LIVE_REQUESTS_ENABLED) {
+    await readBookingRequestsFromStorage();
+
+    if (clientBookingSyncUnavailable) {
+      openClientHistoryModal(getClientHistoryTexts().currentBooking, renderClientSyncUnavailableCard('booking'));
+      return;
+    }
+  }
+
   const bookingRequest = getLastBookingRequest();
   if (!bookingRequest) return;
 
-  alert(buildBookingRequestSummaryText(bookingRequest));
+  removeBookingSummaryModal();
+  document.body.insertAdjacentHTML('beforeend', buildBookingSummaryModalHtml(bookingRequest));
+
+  const modal = document.getElementById('booking-summary-modal');
+  if (modal) {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        closeBookingSummaryModal();
+      }
+    });
+  }
 }
 
-function editLastBookingRequest() {
+function getBookingClientDecisionTexts() {
+  if (currentLang === 'es') {
+    return {
+      acceptButton: 'Aceptar',
+      rejectButton: 'Rechazar',
+      acceptConfirm: '¿Aceptar la modificación propuesta por el restaurante?',
+      rejectConfirm: '¿Rechazar la modificación propuesta por el restaurante?',
+      acceptedStatus: 'Modificación aceptada',
+      rejectedStatus: 'Modificación rechazada',
+      acceptedMessage: 'Has aceptado la modificación propuesta. Tu reserva queda validada con estos cambios.',
+      rejectedMessage: 'Has rechazado la modificación propuesta. Tu solicitud no queda validada con esta modificación.'
+    };
+  }
+
+  if (currentLang === 'en') {
+    return {
+      acceptButton: 'Accept',
+      rejectButton: 'Reject',
+      acceptConfirm: 'Accept the modification proposed by the restaurant?',
+      rejectConfirm: 'Reject the modification proposed by the restaurant?',
+      acceptedStatus: 'Modification accepted',
+      rejectedStatus: 'Modification rejected',
+      acceptedMessage: 'You accepted the proposed modification. Your booking is confirmed with these changes.',
+      rejectedMessage: 'You rejected the proposed modification. Your request is not confirmed with this change.'
+    };
+  }
+
+  if (currentLang === 'nl') {
+    return {
+      acceptButton: 'Aanvaarden',
+      rejectButton: 'Weigeren',
+      acceptConfirm: 'De door het restaurant voorgestelde wijziging aanvaarden?',
+      rejectConfirm: 'De door het restaurant voorgestelde wijziging weigeren?',
+      acceptedStatus: 'Wijziging aanvaard',
+      rejectedStatus: 'Wijziging geweigerd',
+      acceptedMessage: 'U hebt de voorgestelde wijziging aanvaard. Uw reservatie is bevestigd met deze wijzigingen.',
+      rejectedMessage: 'U hebt de voorgestelde wijziging geweigerd. Uw aanvraag is niet bevestigd met deze wijziging.'
+    };
+  }
+
+  return {
+    acceptButton: 'Accepter',
+    rejectButton: 'Refuser',
+    acceptConfirm: 'Accepter la modification proposée par le restaurant ?',
+    rejectConfirm: 'Refuser la modification proposée par le restaurant ?',
+    acceptedStatus: 'Modification acceptée',
+    rejectedStatus: 'Modification refusée',
+    acceptedMessage: 'Vous avez accepté la modification proposée. Votre réservation est validée avec ces changements.',
+    rejectedMessage: 'Vous avez refusé la modification proposée. Votre demande n’est pas validée avec cette modification.'
+  };
+}
+window.acceptLastBookingModification = async function() {
+  const bookingRequest = getLastBookingRequest();
+  if (!bookingRequest || (bookingRequest.status || 'pending') !== 'modified') return;
+
+  const hadOpenBookingSummaryModal = Boolean(document.getElementById('booking-summary-modal'));
+  const hadOpenHistoryModal = Boolean(document.getElementById('client-history-modal'));
+  const nowIso = new Date().toISOString();
+  const updatedRequest = {
+    ...bookingRequest,
+    status: 'accepted_by_client',
+    updatedAt: nowIso,
+    clientDecision: 'accepted',
+    clientDecisionAt: nowIso,
+    restaurantResponse: {
+      ...(bookingRequest.restaurantResponse || {}),
+      clientDecision: 'accepted',
+      clientDecisionAt: nowIso
+    }
+  };
+
+  const syncedBookingRequest = await updateStoredBookingRequest(updatedRequest);
+
+  if (!syncedBookingRequest) {
+    return;
+  }
+
+  await readBookingRequestsFromStorage();
+  renderMenu();
+
+  if (hadOpenBookingSummaryModal) {
+    removeBookingSummaryModal();
+    await viewLastBookingRequest();
+  }
+
+  if (hadOpenHistoryModal) {
+    await openCurrentBookingModal();
+  }
+
+  setTimeout(() => {
+    const bookingCard = document.getElementById('client-booking-card');
+    if (bookingCard) {
+      bookingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 80);
+};
+window.rejectLastBookingModification = async function() {
+  const bookingRequest = getLastBookingRequest();
+  if (!bookingRequest || (bookingRequest.status || 'pending') !== 'modified') return;
+
+  const hadOpenBookingSummaryModal = Boolean(document.getElementById('booking-summary-modal'));
+  const hadOpenHistoryModal = Boolean(document.getElementById('client-history-modal'));
+  const nowIso = new Date().toISOString();
+  const updatedRequest = {
+    ...bookingRequest,
+    status: 'rejected_by_client',
+    updatedAt: nowIso,
+    clientDecision: 'rejected',
+    clientDecisionAt: nowIso,
+    restaurantResponse: {
+      ...(bookingRequest.restaurantResponse || {}),
+      clientDecision: 'rejected',
+      clientDecisionAt: nowIso
+    }
+  };
+
+  const syncedBookingRequest = await updateStoredBookingRequest(updatedRequest);
+
+  if (!syncedBookingRequest) {
+    return;
+  }
+
+  await readBookingRequestsFromStorage();
+  renderMenu();
+
+  if (hadOpenBookingSummaryModal) {
+    removeBookingSummaryModal();
+    await viewLastBookingRequest();
+  }
+
+  if (hadOpenHistoryModal) {
+    await openCurrentBookingModal();
+  }
+
+  setTimeout(() => {
+    const bookingCard = document.getElementById('client-booking-card');
+    if (bookingCard) {
+      bookingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 80);
+};
+
+async function editLastBookingRequest() {
+  if (LIVE_REQUESTS_ENABLED) {
+    const syncedBookingRequest = await syncLastBookingRequestFromSource();
+
+    if (clientBookingSyncUnavailable) {
+      await refreshClientRequestCards();
+      return;
+    }
+
+    if (!syncedBookingRequest) {
+      renderMenu();
+      return;
+    }
+  }
+
   const bookingRequest = getLastBookingRequest();
 
-  if (!bookingRequest || bookingRequest.status === 'cancelled') return;
+  if (!bookingRequest) return;
+
+  if ([
+    'cancelled',
+    'cancelled_by_client',
+    'confirmed',
+    'refused',
+    'arrived',
+    'not_arrived',
+    'presence_unknown_no_action',
+    'modified',
+    'accepted_by_client',
+    'rejected_by_client'
+  ].includes(bookingRequest.status || 'pending')) {
+    renderMenu();
+    return;
+  }
 
   editingBookingRequestId = bookingRequest.requestId || null;
   loadBookingRequestIntoForm(bookingRequest);
@@ -2244,11 +2915,11 @@ function editLastBookingRequest() {
     }
   }, 80);
 }
-
-function cancelLastBookingRequest() {
+async function cancelLastBookingRequest() {
   const bookingRequest = getLastBookingRequest();
 
-  if (!bookingRequest || bookingRequest.status === 'cancelled') return;
+  if (!bookingRequest) return;
+  if (['cancelled', 'confirmed', 'refused', 'accepted_by_client', 'rejected_by_client'].includes(bookingRequest.status || 'pending')) return;
 
   const tBooking = getBookingTexts(currentLang);
 
@@ -2262,11 +2933,17 @@ function cancelLastBookingRequest() {
     cancelledAt: new Date().toISOString()
   };
 
+  const syncedBookingRequest = await updateStoredBookingRequest(updatedRequest);
+
+  if (!syncedBookingRequest) {
+    return;
+  }
+
   if (editingBookingRequestId && editingBookingRequestId === bookingRequest.requestId) {
     editingBookingRequestId = null;
   }
 
-  updateStoredBookingRequest(updatedRequest);
+  await readBookingRequestsFromStorage();
   alert(tBooking.bookingCancelledAlert);
   renderMenu();
 }
@@ -2279,14 +2956,35 @@ function renderLastBookingRequestCard() {
   }
 
   const tBooking = getBookingTexts(currentLang);
+  const tDecision = getBookingClientDecisionTexts();
   const status = bookingRequest.status || 'pending';
-  const isLocked = ['confirmed', 'cancelled', 'refused'].includes(status);
+
+  if (isFinalClientBookingStatus(status)) {
+    return '';
+  }
+
+  const canEdit = !['confirmed', 'cancelled', 'cancelled_by_client', 'refused', 'modified', 'accepted_by_client', 'rejected_by_client', 'arrived', 'not_arrived', 'presence_unknown_no_action'].includes(status);
+  const canCancel = !['confirmed', 'cancelled', 'cancelled_by_client', 'refused', 'accepted_by_client', 'rejected_by_client', 'arrived', 'not_arrived', 'presence_unknown_no_action'].includes(status);
   const preorderItems = Array.isArray(bookingRequest.booking.preorderItems)
     ? bookingRequest.booking.preorderItems
     : [];
 
-  const statusLabel = getBookingStatusLabel(status);
   const restaurantMessage = bookingRequest.restaurantResponse?.message || '';
+  const proposedTime = bookingRequest.restaurantResponse?.proposal?.proposedTime || '';
+
+  const proposedTimeLabel = currentLang === 'fr'
+    ? 'Horaire proposé'
+    : currentLang === 'es'
+      ? 'Hora propuesta'
+      : currentLang === 'nl'
+        ? 'Voorgesteld uur'
+        : 'Proposed time';
+
+  const statusLabel = status === 'accepted_by_client'
+    ? tDecision.acceptedStatus
+    : status === 'rejected_by_client'
+      ? tDecision.rejectedStatus
+      : getBookingStatusLabel(status);
 
   const statusUi = status === 'confirmed'
     ? {
@@ -2333,33 +3031,62 @@ function renderLastBookingRequestCard() {
                     : 'The restaurant has refused your booking.'
             )
           }
-        : status === 'processing'
+        : status === 'accepted_by_client'
           ? {
-              card: 'border-sky-400/35 bg-sky-500/10',
-              badge: 'border-sky-300/35 bg-sky-500/15 text-sky-100',
-              message: 'border-sky-300/20 bg-sky-500/10 text-sky-100',
-              text: restaurantMessage || (
-                currentLang === 'fr'
-                  ? 'Le restaurant traite actuellement votre réservation.'
-                  : currentLang === 'es'
-                    ? 'El restaurante está tratando actualmente tu reserva.'
-                    : currentLang === 'nl'
-                      ? 'Het restaurant verwerkt momenteel je reservatie.'
-                      : 'The restaurant is currently processing your booking.'
-              )
+              card: 'border-emerald-400/35 bg-emerald-500/10',
+              badge: 'border-emerald-300/35 bg-emerald-500/15 text-emerald-200',
+              message: 'border-emerald-300/20 bg-emerald-500/10 text-emerald-100',
+              text: tDecision.acceptedMessage
             }
-          : {
-              card: 'border-amber-300/35 bg-amber-500/10',
-              badge: 'border-amber-300/35 bg-amber-500/15 text-amber-100',
-              message: 'border-amber-300/20 bg-amber-500/10 text-amber-100',
-              text: currentLang === 'fr'
-                ? 'Votre réservation a bien été envoyée et reste en attente de réponse.'
-                : currentLang === 'es'
-                  ? 'Tu reserva ha sido enviada correctamente y está pendiente de respuesta.'
-                  : currentLang === 'nl'
-                    ? 'Je reservatie is goed verzonden en wacht op een antwoord.'
-                    : 'Your booking has been sent and is awaiting a reply.'
-            };
+          : status === 'rejected_by_client'
+            ? {
+                card: 'border-red-400/35 bg-red-500/10',
+                badge: 'border-red-300/35 bg-red-500/15 text-red-200',
+                message: 'border-red-300/20 bg-red-500/10 text-red-100',
+                text: tDecision.rejectedMessage
+              }
+            : status === 'modified'
+              ? {
+                  card: 'border-sky-400/35 bg-sky-500/10',
+                  badge: 'border-sky-300/35 bg-sky-500/15 text-sky-100',
+                  message: 'border-sky-300/20 bg-sky-500/10 text-sky-100',
+                  text: restaurantMessage || (
+                    currentLang === 'fr'
+                      ? 'Le restaurant vous propose une modification de votre réservation.'
+                      : currentLang === 'es'
+                        ? 'El restaurante le propone una modificación de su reserva.'
+                      : currentLang === 'nl'
+                          ? 'Het restaurant stelt een wijziging van uw reservatie voor.'
+                          : 'The restaurant proposes a modification to your booking.'
+                  )
+                }
+              : status === 'processing'
+                ? {
+                    card: 'border-sky-400/35 bg-sky-500/10',
+                    badge: 'border-sky-300/35 bg-sky-500/15 text-sky-100',
+                    message: 'border-sky-300/20 bg-sky-500/10 text-sky-100',
+                    text: restaurantMessage || (
+                      currentLang === 'fr'
+                        ? 'Le restaurant traite actuellement votre réservation.'
+                        : currentLang === 'es'
+                          ? 'El restaurante está tratando actualmente tu reserva.'
+                        : currentLang === 'nl'
+                            ? 'Het restaurant verwerkt momenteel je reservatie.'
+                            : 'The restaurant is currently processing your booking.'
+                    )
+                  }
+                : {
+                    card: 'border-amber-300/35 bg-amber-500/10',
+                    badge: 'border-amber-300/35 bg-amber-500/15 text-amber-100',
+                    message: 'border-amber-300/20 bg-amber-500/10 text-amber-100',
+                    text: currentLang === 'fr'
+                      ? 'Votre réservation a bien été envoyée et reste en attente de réponse.'
+                      : currentLang === 'es'
+                        ? 'Tu reserva ha sido enviada correctamente y está pendiente de respuesta.'
+                      : currentLang === 'nl'
+                          ? 'Je reservatie is goed verzonden en wacht op een antwoord.'
+                          : 'Your booking has been sent and is awaiting a reply.'
+                  };
 
   return `
     <div id="client-booking-card" class="mt-4 rounded-2xl border ${statusUi.card} p-4">
@@ -2380,24 +3107,38 @@ function renderLastBookingRequestCard() {
           <button onclick="viewLastBookingRequest()" class="btn-action px-3 py-2 rounded-xl border border-gold/25 bg-black/20 text-xs font-semibold text-cream/85 hover:border-gold/50 hover:bg-gold/10 transition-all">
             ${tBooking.bookingActionView}
           </button>
-          <button onclick="editLastBookingRequest()" ${isLocked ? 'disabled' : ''} class="btn-action px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${isLocked ? 'border-gold/10 bg-black/10 text-cream/30 cursor-not-allowed' : 'border-gold/25 bg-black/20 text-cream/85 hover:border-gold/50 hover:bg-gold/10'}">
-            ${tBooking.bookingActionEdit}
-          </button>
-          <button onclick="cancelLastBookingRequest()" ${isLocked ? 'disabled' : ''} class="btn-action px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${isLocked ? 'border-gold/10 bg-black/10 text-cream/30 cursor-not-allowed' : 'border-red-400/40 bg-red-500/10 text-cream/90 hover:border-red-300/70 hover:bg-red-500/20'}">
-            ${tBooking.bookingActionCancel}
-          </button>
+
+          ${status === 'modified' ? `
+            <button onclick="acceptLastBookingModification()" class="btn-action px-3 py-2 rounded-xl border border-emerald-400/40 bg-emerald-500/10 text-xs font-semibold text-cream/90 hover:border-emerald-300/70 hover:bg-emerald-500/20 transition-all">
+              ${tDecision.acceptButton}
+            </button>
+            <button onclick="rejectLastBookingModification()" class="btn-action px-3 py-2 rounded-xl border border-red-400/40 bg-red-500/10 text-xs font-semibold text-cream/90 hover:border-red-300/70 hover:bg-red-500/20 transition-all">
+              ${tDecision.rejectButton}
+            </button>
+          ` : `
+            <button onclick="editLastBookingRequest()" ${!canEdit ? 'disabled' : ''} class="btn-action px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${!canEdit ? 'border-gold/10 bg-black/10 text-cream/30 cursor-not-allowed' : 'border-gold/25 bg-black/20 text-cream/85 hover:border-gold/50 hover:bg-gold/10'}">
+              ${tBooking.bookingActionEdit}
+            </button>
+            <button onclick="cancelLastBookingRequest()" ${!canCancel ? 'disabled' : ''} class="btn-action px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${!canCancel ? 'border-gold/10 bg-black/10 text-cream/30 cursor-not-allowed' : 'border-red-400/40 bg-red-500/10 text-cream/90 hover:border-red-300/70 hover:bg-red-500/20'}">
+              ${tBooking.bookingActionCancel}
+            </button>
+          `}
         </div>
       </div>
 
-
-
       ${['pending', 'processing'].includes(status) ? renderClientRequestRefreshPanel() : ''}
 
-      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-cream/80">        <div><span class="text-gold/85 font-semibold">${tBooking.bookingName} :</span> ${escapeBookingHtml(bookingRequest.customer.name || '-')}</div>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-cream/80">
+        <div><span class="text-gold/85 font-semibold">${tBooking.bookingName} :</span> ${escapeBookingHtml(bookingRequest.customer.name || '-')}</div>
         <div><span class="text-gold/85 font-semibold">${tBooking.bookingPhone} :</span> ${escapeBookingHtml(bookingRequest.customer.phone || '-')}</div>
         <div><span class="text-gold/85 font-semibold">${tBooking.bookingDate} :</span> ${escapeBookingHtml(formatBookingDateForDisplay(bookingRequest.booking.date || ''))}</div>
         <div><span class="text-gold/85 font-semibold">${tBooking.bookingTime} :</span> ${escapeBookingHtml(bookingRequest.booking.time || '-')}</div>
         <div><span class="text-gold/85 font-semibold">${tBooking.bookingPeople} :</span> ${escapeBookingHtml(String(bookingRequest.booking.people || '-'))}</div>
+        ${proposedTime ? `<div><span class="text-gold/85 font-semibold">${proposedTimeLabel} :</span> ${escapeBookingHtml(proposedTime)}</div>` : ''}
+      </div>
+
+      <div class="mt-3 rounded-xl border ${statusUi.message} px-3 py-3 text-sm text-cream/90">
+        ${escapeBookingHtml(statusUi.text)}
       </div>
 
       ${bookingRequest.confirmedAt ? `
@@ -2431,8 +3172,113 @@ function renderLastBookingRequestCard() {
   `;
 }
 
+function setBookingFeedback(type, key, fallbackMessage = '') {
+  bookingFeedback = {
+    type,
+    key: String(key || '').trim(),
+    fallbackMessage: String(fallbackMessage || '').trim()
+  };
+}
+
+function clearBookingFeedback() {
+  bookingFeedback = null;
+
+  const existingBlock = document.getElementById('booking-feedback-block');
+  if (existingBlock) {
+    existingBlock.remove();
+  }
+}
+
+function getBookingFeedbackTexts() {
+  const texts = {
+    fr: {
+      nameRequired: 'Veuillez indiquer votre nom pour continuer.',
+      phoneRequired: 'Veuillez indiquer votre numéro de téléphone pour continuer.',
+      namePhoneRequired: 'Veuillez indiquer votre nom et votre téléphone pour continuer.',
+      dateTimePeopleRequired: 'Veuillez compléter la date, l’heure et le nombre de personnes.',
+      invalidPhone: 'Veuillez entrer un numéro de téléphone valide.\nExemple : +34612345678',
+      invalidPeople: 'Le nombre de personnes doit être au minimum de 1.',
+      sendRequired: 'Veuillez compléter les informations obligatoires de votre réservation.'
+    },
+    es: {
+      nameRequired: 'Indica tu nombre para continuar.',
+      phoneRequired: 'Indica tu número de teléfono para continuar.',
+      namePhoneRequired: 'Indica tu nombre y tu teléfono para continuar.',
+      dateTimePeopleRequired: 'Completa la fecha, la hora y el número de personas.',
+      invalidPhone: 'Introduce un número de teléfono válido.\nEjemplo: +34612345678',
+      invalidPeople: 'El número de personas debe ser como mínimo 1.',
+      sendRequired: 'Completa la información obligatoria de tu reserva.'
+    },
+    en: {
+      nameRequired: 'Please enter your name to continue.',
+      phoneRequired: 'Please enter your phone number to continue.',
+      namePhoneRequired: 'Please enter your name and phone number to continue.',
+      dateTimePeopleRequired: 'Please complete the date, time and number of guests.',
+      invalidPhone: 'Please enter a valid phone number.\nExample: +34612345678',
+      invalidPeople: 'The number of guests must be at least 1.',
+      sendRequired: 'Please complete the required booking information.'
+    },
+    nl: {
+      nameRequired: 'Vul je naam in om verder te gaan.',
+      phoneRequired: 'Vul je telefoonnummer in om verder te gaan.',
+      namePhoneRequired: 'Vul je naam en telefoonnummer in om verder te gaan.',
+      dateTimePeopleRequired: 'Vul de datum, het uur en het aantal personen in.',
+      invalidPhone: 'Geef een geldig telefoonnummer op.\nVoorbeeld: +34612345678',
+      invalidPeople: 'Het aantal personen moet minstens 1 zijn.',
+      sendRequired: 'Vul de verplichte reservatiegegevens in.'
+    }
+  };
+
+  return texts[currentLang] || texts.fr;
+}
+
+function getMissingBookingFieldFeedbackKey({ name, phone, date, time, people }) {
+  const missingName = !String(name || '').trim();
+  const missingPhone = !String(phone || '').trim();
+  const missingDate = !String(date || '').trim();
+  const missingTime = !String(time || '').trim();
+  const missingPeople = !String(people || '').trim();
+
+  if (missingName && missingPhone) return 'namePhoneRequired';
+  if (missingName) return 'nameRequired';
+  if (missingPhone) return 'phoneRequired';
+  if (missingDate || missingTime || missingPeople) return 'dateTimePeopleRequired';
+
+  return 'sendRequired';
+}
+
+function getCurrentBookingFeedbackMessage() {
+  if (!bookingFeedback?.key) return '';
+
+  const feedbackTexts = getBookingFeedbackTexts();
+
+  return feedbackTexts[bookingFeedback.key] || bookingFeedback.fallbackMessage || '';
+}
+
+function renderBookingFeedbackMessage() {
+  const feedbackMessage = getCurrentBookingFeedbackMessage();
+
+  if (!feedbackMessage) {
+    return '';
+  }
+
+  const isSuccess = bookingFeedback.type === 'success';
+
+  return `
+    <div
+      id="booking-feedback-block"
+      class="mt-4 rounded-xl border px-4 py-3 text-sm font-semibold ${
+        isSuccess
+          ? 'border-emerald-400/40 bg-emerald-500/12 text-emerald-100'
+          : 'border-red-400/45 bg-red-950/55 text-red-50'
+      }"
+    >
+      ${escapeOrderFeedbackHtml(feedbackMessage).replace(/\n/g, '<br>')}
+    </div>
+  `;
+}
+
 async function validateAndSubmitBooking() {
-  const tBooking = getBookingTexts(currentLang);
 
   bookingForm.name = (bookingForm.name || '').trim();
   bookingForm.phone = (bookingForm.phone || '').trim();
@@ -2442,7 +3288,16 @@ async function validateAndSubmitBooking() {
   bookingForm.note = (bookingForm.note || '').trim();
 
   if (!bookingForm.name || !bookingForm.phone || !bookingForm.date || !bookingForm.time || !bookingForm.people) {
-    alert(tBooking.bookingRequiredAlert);
+    setBookingFeedback(
+      'error',
+      getMissingBookingFieldFeedbackKey({
+        name: bookingForm.name,
+        phone: bookingForm.phone,
+        date: bookingForm.date,
+        time: bookingForm.time,
+        people: bookingForm.people
+      })
+    );
     renderMenu();
     return;
   }
@@ -2452,30 +3307,38 @@ async function validateAndSubmitBooking() {
   const phonePattern = /^\+?[0-9]{8,15}$/;
 
   if (!phonePattern.test(normalizedPhone) || digitCount < 8) {
-    alert(`${tBooking.bookingInvalidPhoneAlert}\n${phoneExampleByLang[currentLang] || phoneExampleByLang.fr}`);
+    setBookingFeedback('error', 'invalidPhone');
     renderMenu();
     return;
   }
 
   if (Number(bookingForm.people) < 1) {
-    alert(({
-  fr: 'Le nombre de personnes doit être au minimum de 1.',
-  es: 'El número de personas debe ser como mínimo 1.',
-  en: 'The number of guests must be at least 1.',
-  nl: 'Het aantal personen moet minstens 1 zijn.'
-})[currentLang] || 'Le nombre de personnes doit être au minimum de 1.');
+    setBookingFeedback('error', 'invalidPeople');
     renderMenu();
     return;
   }
 
   bookingForm.phone = normalizedPhone;
+  clearBookingFeedback();
 
   const existingBookingRequests = LIVE_REQUESTS_ENABLED
-  ? await fetchLiveRequestsByType('booking')
-  : await readBookingRequestsFromStorage();
+    ? await fetchLiveRequestsByType('booking')
+    : await readBookingRequestsFromStorage();
+
   const existingBookingRequest = editingBookingRequestId
     ? existingBookingRequests.find((request) => request && request.requestId === editingBookingRequestId)
     : null;
+
+  if (
+    LIVE_REQUESTS_ENABLED &&
+    existingBookingRequest &&
+    !['pending', 'processing'].includes(existingBookingRequest.status || 'pending')
+  ) {
+    editingBookingRequestId = null;
+    await readBookingRequestsFromStorage();
+    renderMenu();
+    return;
+  }
 
   const bookingRequest = buildBookingRequest();
 
@@ -2490,10 +3353,16 @@ async function validateAndSubmitBooking() {
   const isEditingExistingBooking = Boolean(existingBookingRequest);
 
   if (existingBookingRequest) {
-    await updateStoredBookingRequest(bookingRequest);
+    const syncedBookingRequest = await updateStoredBookingRequest(bookingRequest);
+
+    if (!syncedBookingRequest) {
+      renderMenu();
+      return;
+    }
+
     bookingRequests = LIVE_REQUESTS_ENABLED
-  ? await fetchLiveRequestsByType('booking')
-  : await readBookingRequestsFromStorage();
+      ? await fetchLiveRequestsByType('booking')
+      : await readBookingRequestsFromStorage();
   } else {
     bookingRequests = await saveBookingRequestLocally(bookingRequest);
   }
@@ -2502,8 +3371,6 @@ async function validateAndSubmitBooking() {
 
   console.log('TapCarta booking request saved:', bookingRequest);
   console.log('TapCarta booking requests history:', bookingRequests);
-
-  alert(isEditingExistingBooking ? tBooking.bookingUpdatedAlert : tBooking.bookingPendingAlert);
 
   resetBookingForm();
   renderMenu();
@@ -2521,6 +3388,7 @@ function activateOrderMode() {
     orderMode = false;
     bookingMode = false;
     cartPanelOpen = false;
+    activeOrderCategory = 'all';
     orderReviewOpen = false;
     renderApp();
     return;
@@ -2529,6 +3397,7 @@ function activateOrderMode() {
   orderMode = true;
   bookingMode = false;
   cartPanelOpen = false;
+  activeOrderCategory = 'all';
   orderReviewOpen = false;
 
   if (!orderForm.date && !orderForm.time) {
@@ -2538,10 +3407,7 @@ function activateOrderMode() {
   renderMenu();
 
   requestAnimationFrame(() => {
-    const target =
-      document.getElementById('menu-snacks') ||
-      document.getElementById('menu-entrees') ||
-      document.getElementById('menu-plats');
+    const target = document.getElementById('menu-start');
 
     if (target) {
       target.scrollIntoView({ behavior: 'auto', block: 'start' });
@@ -2554,6 +3420,7 @@ function activateOrderMode() {
 function deactivateOrderMode() {
   orderMode = false;
   cartPanelOpen = false;
+  activeOrderCategory = 'all';
   orderReviewOpen = false;
   renderMenu();
   window.scrollTo({ top: 0, behavior: 'auto' });
@@ -2656,7 +3523,135 @@ function writeOrderRequestsToStorage(requests) {
   localStorage.setItem(getOrderStorageKey(), JSON.stringify(requests));
 }
 
-function saveOrderRequestLocally(orderRequest) {
+async function syncLastOrderRequestFromSource() {
+  if (!LIVE_REQUESTS_ENABLED) {
+    clientOrderSyncUnavailable = false;
+    return getLastOrderRequest();
+  }
+
+  try {
+    const rawLastOrder = localStorage.getItem(getLastOrderStorageKey());
+    const parsedLastOrder = rawLastOrder ? JSON.parse(rawLastOrder) : null;
+    const liveRequestId = parsedLastOrder?.liveRequestId || parsedLastOrder?.requestId || null;
+
+    if (!liveRequestId) {
+      clientOrderSyncUnavailable = false;
+      return null;
+    }
+
+    const liveRow = await fetchLiveRequestById(liveRequestId, 'order');
+    const syncedLastOrder = mapLiveOrderRowToRequest(liveRow);
+
+    if (!syncedLastOrder) {
+      clientOrderSyncUnavailable = false;
+      localStorage.removeItem(getLastOrderStorageKey());
+      return null;
+    }
+
+    const mergedLastOrder = {
+      ...syncedLastOrder,
+      restaurantResponse: {
+        ...(parsedLastOrder?.restaurantResponse || {}),
+        ...(syncedLastOrder.restaurantResponse || {})
+      }
+    };
+
+    localStorage.setItem(getLastOrderStorageKey(), JSON.stringify(mergedLastOrder));
+
+    const existingOrders = readOrderRequestsFromStorage();
+    const withoutDuplicate = existingOrders.filter(
+      (entry) => String(entry?.requestId) !== String(mergedLastOrder.requestId)
+    );
+
+    writeOrderRequestsToStorage([mergedLastOrder, ...withoutDuplicate].slice(0, 20));
+
+    clientOrderSyncUnavailable = false;
+    return mergedLastOrder;
+  } catch (error) {
+    console.error('Supabase order sync error:', error);
+    clientOrderSyncUnavailable = true;
+    return null;
+  }
+}
+
+async function readOrderRequestsFromSource() {
+  if (LIVE_REQUESTS_ENABLED) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('requests')
+        .select('*')
+        .eq('restaurant_id', LIVE_RESTAURANT_ID)
+        .eq('type', 'order')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const liveOrders = Array.isArray(data)
+        ? data.map(mapLiveOrderRowToRequest).filter(Boolean)
+        : [];
+
+      writeOrderRequestsToStorage(liveOrders.slice(0, 20));
+      await syncLastOrderRequestFromSource();
+
+      clientOrderSyncUnavailable = false;
+      return liveOrders;
+    } catch (error) {
+      console.error('Supabase order read error:', error);
+      clientOrderSyncUnavailable = true;
+      return [];
+    }
+  }
+
+  return readOrderRequestsFromStorage();
+}
+
+async function writeOrderRequestToSource(orderRequest) {
+  if (LIVE_REQUESTS_ENABLED) {
+    const liveOrder = await insertLiveRequest({
+      restaurant_id: orderRequest?.restaurantId || LIVE_RESTAURANT_ID,
+      type: 'order',
+      status: 'pending',
+      client_name: orderRequest?.customer?.name || '',
+      client_phone: orderRequest?.customer?.phone || '',
+      client_language: orderRequest?.customer?.language || currentLang || 'fr',
+      booking_date: orderRequest?.order?.date || null,
+      booking_time: orderRequest?.order?.time || null,
+      party_size: null,
+      items: Array.isArray(orderRequest?.order?.items)
+        ? orderRequest.order.items.map((item) => ({
+            id: item?.id || '',
+            name: item?.name || '',
+            quantity: Number(item?.quantity || 1),
+            price: Number(item?.unitPrice || item?.price || 0),
+            unitPrice: item?.unitPrice ?? null,
+            lineTotal: item?.lineTotal ?? null
+          }))
+        : [],
+      note: orderRequest?.order?.note || '',
+      restaurant_message: orderRequest?.restaurantResponse?.message || ''
+    });
+
+    const syncedOrderRequest = {
+      ...orderRequest,
+      liveRequestId: liveOrder.id,
+      requestId: liveOrder.id,
+      status: liveOrder.status || 'pending',
+      createdAt: liveOrder.created_at || orderRequest.createdAt,
+      updatedAt: liveOrder.updated_at || orderRequest.updatedAt || null
+    };
+
+    const existingRequests = readOrderRequestsFromStorage();
+    const withoutDuplicate = existingRequests.filter(
+      (entry) => String(entry?.requestId) !== String(syncedOrderRequest.requestId)
+    );
+    const updatedRequests = [syncedOrderRequest, ...withoutDuplicate].slice(0, 20);
+
+    writeOrderRequestsToStorage(updatedRequests);
+    localStorage.setItem(getLastOrderStorageKey(), JSON.stringify(syncedOrderRequest));
+
+    return updatedRequests;
+  }
+
   const maxItems = 20;
   const existingRequests = readOrderRequestsFromStorage();
   const updatedRequests = [orderRequest, ...existingRequests].slice(0, maxItems);
@@ -2667,6 +3662,10 @@ function saveOrderRequestLocally(orderRequest) {
   return updatedRequests;
 }
 
+async function saveOrderRequestLocally(orderRequest) {
+  return await writeOrderRequestToSource(orderRequest);
+}
+
 function getLastOrderRequest() {
   try {
     const raw = localStorage.getItem(getLastOrderStorageKey());
@@ -2675,37 +3674,797 @@ function getLastOrderRequest() {
     return null;
   }
 }
+async function updateStoredOrderRequest(updatedOrderRequest) {
+  if (!updatedOrderRequest || !updatedOrderRequest.requestId) return null;
+
+  const liveRequestId = updatedOrderRequest.liveRequestId || updatedOrderRequest.requestId || null;
+
+  if (LIVE_REQUESTS_ENABLED) {
+    if (!liveRequestId) {
+      console.warn('Supabase order update impossible : aucun ID live disponible.');
+      return null;
+    }
+
+    try {
+      let query = supabaseClient
+        .from('requests')
+        .update({
+          status: updatedOrderRequest?.status || 'pending',
+          restaurant_message: updatedOrderRequest?.restaurantResponse?.message || ''
+        })
+        .eq('id', liveRequestId)
+        .eq('restaurant_id', updatedOrderRequest?.restaurantId || LIVE_RESTAURANT_ID)
+        .eq('type', 'order');
+
+      if (['accepted_by_client', 'rejected_by_client'].includes(updatedOrderRequest?.status || '')) {
+        query = query.eq('status', 'modified');
+      }
+
+      const { data, error } = await query
+        .select('*')
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        console.warn('Supabase order update: aucune ligne mise à jour pour id =', liveRequestId);
+        alert(`Supabase n'a mis à jour aucune commande.\nLa demande a peut-être déjà changé de statut côté restaurant.\nID utilisé : ${liveRequestId}`);
+        await syncLastOrderRequestFromSource();
+        return null;
+      }
+
+      const syncedRequest = mapLiveOrderRowToRequest(data) || updatedOrderRequest;
+      const mergedRequest = {
+        ...updatedOrderRequest,
+        ...syncedRequest,
+        liveRequestId: syncedRequest.liveRequestId || liveRequestId,
+        requestId: syncedRequest.requestId || liveRequestId,
+        status: syncedRequest.status || updatedOrderRequest.status,
+        updatedAt: syncedRequest.updatedAt || updatedOrderRequest.updatedAt,
+        clientDecision: updatedOrderRequest.clientDecision || '',
+        clientDecisionAt: updatedOrderRequest.clientDecisionAt || '',
+        restaurantResponse: {
+          ...(syncedRequest.restaurantResponse || {}),
+          ...(updatedOrderRequest.restaurantResponse || {})
+        }
+      };
+
+      const existingRequests = readOrderRequestsFromStorage();
+      const withoutDuplicate = existingRequests.filter(
+        (entry) => String(entry?.requestId) !== String(mergedRequest.requestId)
+      );
+      const updatedRequests = [mergedRequest, ...withoutDuplicate].slice(0, 20);
+
+      writeOrderRequestsToStorage(updatedRequests);
+      localStorage.setItem(getLastOrderStorageKey(), JSON.stringify(mergedRequest));
+
+      return mergedRequest;
+    } catch (error) {
+      console.error('Supabase order update error:', error);
+      alert(`Erreur Supabase update commande : ${error?.message || error}`);
+      return null;
+    }
+  }
+
+  const existingRequests = readOrderRequestsFromStorage();
+  const updatedRequests = existingRequests.map((entry) =>
+    String(entry?.requestId) === String(updatedOrderRequest?.requestId)
+      ? {
+          ...entry,
+          ...updatedOrderRequest,
+          restaurantResponse: {
+            ...(entry?.restaurantResponse || {}),
+            ...(updatedOrderRequest?.restaurantResponse || {})
+          }
+        }
+      : entry
+  );
+
+  writeOrderRequestsToStorage(updatedRequests);
+  localStorage.setItem(getLastOrderStorageKey(), JSON.stringify(updatedOrderRequest));
+
+  return updatedOrderRequest;
+}
+
+function getOrderClientDecisionTexts() {
+  if (currentLang === 'es') {
+    return {
+      statusModified: 'Modificación solicitada por el restaurante',
+      statusAccepted: 'Modificación aceptada',
+      statusRejected: 'Modificación rechazada',
+      acceptButton: 'Aceptar',
+      rejectButton: 'Rechazar',
+      acceptConfirm: '¿Aceptar la modificación propuesta por el restaurante?',
+      rejectConfirm: '¿Rechazar la modificación propuesta por el restaurante?',
+      acceptedMessage: 'Has aceptado la modificación propuesta. Tu pedido queda validado con estos cambios.',
+      rejectedMessage: 'Has rechazado la modificación propuesta. El restaurante verá ahora tu respuesta.'
+    };
+  }
+
+  if (currentLang === 'en') {
+    return {
+      statusModified: 'Modification requested by the restaurant',
+      statusAccepted: 'Modification accepted',
+      statusRejected: 'Modification rejected',
+      acceptButton: 'Accept',
+      rejectButton: 'Reject',
+      acceptConfirm: 'Accept the modification proposed by the restaurant?',
+      rejectConfirm: 'Reject the modification proposed by the restaurant?',
+      acceptedMessage: 'You accepted the proposed modification. Your order is confirmed with these changes.',
+      rejectedMessage: 'You rejected the proposed modification. The restaurant will now see your response.'
+    };
+  }
+
+  if (currentLang === 'nl') {
+    return {
+      statusModified: 'Wijziging gevraagd door het restaurant',
+      statusAccepted: 'Wijziging aanvaard',
+      statusRejected: 'Wijziging geweigerd',
+      acceptButton: 'Aanvaarden',
+      rejectButton: 'Weigeren',
+      acceptConfirm: 'De door het restaurant voorgestelde wijziging aanvaarden?',
+      rejectConfirm: 'De door het restaurant voorgestelde wijziging weigeren?',
+      acceptedMessage: 'U hebt de voorgestelde wijziging aanvaard. Uw bestelling is bevestigd met deze wijzigingen.',
+      rejectedMessage: 'U hebt de voorgestelde wijziging geweigerd. Het restaurant ziet nu uw antwoord.'
+    };
+  }
+
+  return {
+    statusModified: 'Modification demandée par le restaurant',
+    statusAccepted: 'Modification acceptée',
+    statusRejected: 'Modification refusée',
+    acceptButton: 'Accepter',
+    rejectButton: 'Refuser',
+    acceptConfirm: 'Accepter la modification proposée par le restaurant ?',
+    rejectConfirm: 'Refuser la modification proposée par le restaurant ?',
+    acceptedMessage: 'Vous avez accepté la modification proposée. Votre commande est validée avec ces changements.',
+    rejectedMessage: 'Vous avez refusé la modification proposée. Le restaurant verra maintenant votre réponse.'
+  };
+}
+
+window.acceptLastOrderModification = async function() {
+  const orderRequest = getLastOrderRequest();
+  if (!orderRequest || (orderRequest.status || 'sent') !== 'modified') return;
+
+  const hadOpenHistoryModal = Boolean(document.getElementById('client-history-modal'));
+  const nowIso = new Date().toISOString();
+  const updatedOrderRequest = {
+    ...orderRequest,
+    status: 'accepted_by_client',
+    updatedAt: nowIso,
+    clientDecisionAt: nowIso,
+    clientDecision: 'accepted',
+    restaurantResponse: {
+      ...(orderRequest.restaurantResponse || {}),
+      clientDecision: 'accepted',
+      clientDecisionAt: nowIso
+    }
+  };
+
+  const syncedOrderRequest = await updateStoredOrderRequest(updatedOrderRequest);
+
+  if (syncedOrderRequest) {
+    await syncLastOrderRequestFromSource();
+    await refreshClientRequestCards();
+
+    if (hadOpenHistoryModal) {
+      await openCurrentOrderModal();
+    }
+
+    setTimeout(() => {
+      const orderCard = document.getElementById('client-order-card');
+      if (orderCard) {
+        orderCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 80);
+  }
+};
+
+window.rejectLastOrderModification = async function() {
+  const orderRequest = getLastOrderRequest();
+  if (!orderRequest || (orderRequest.status || 'sent') !== 'modified') return;
+
+  const hadOpenHistoryModal = Boolean(document.getElementById('client-history-modal'));
+  const nowIso = new Date().toISOString();
+  const updatedOrderRequest = {
+    ...orderRequest,
+    status: 'rejected_by_client',
+    updatedAt: nowIso,
+    clientDecisionAt: nowIso,
+    clientDecision: 'rejected',
+    restaurantResponse: {
+      ...(orderRequest.restaurantResponse || {}),
+      clientDecision: 'rejected',
+      clientDecisionAt: nowIso
+    }
+  };
+
+  const syncedOrderRequest = await updateStoredOrderRequest(updatedOrderRequest);
+
+  if (syncedOrderRequest) {
+    await syncLastOrderRequestFromSource();
+    await refreshClientRequestCards();
+
+    if (hadOpenHistoryModal) {
+      await openCurrentOrderModal();
+    }
+
+    setTimeout(() => {
+      const orderCard = document.getElementById('client-order-card');
+      if (orderCard) {
+        orderCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 80);
+  }
+};
 
 function getOrderStatusLabel(status) {
+  const tDecision = getOrderClientDecisionTexts();
+
   const labels = {
     fr: {
+      pending: 'En attente de confirmation',
       sent: 'Envoyée au restaurant',
       processing: 'En cours de traitement par le restaurant',
+      modified: tDecision.statusModified,
+      accepted_by_client: tDecision.statusAccepted,
+      rejected_by_client: tDecision.statusRejected,
       confirmed: 'Commande confirmée',
-      refused: 'Commande refusée'
+      served: 'Commande servie',
+      not_served: 'Commande non servie',
+      refused: 'Commande refusée',
+      cancelled: 'Commande annulée',
+      service_unknown_no_action: 'Commande clôturée'
     },
     es: {
+      pending: 'Pendiente de confirmación',
       sent: 'Enviado al restaurante',
       processing: 'En tratamiento por el restaurante',
+      modified: tDecision.statusModified,
+      accepted_by_client: tDecision.statusAccepted,
+      rejected_by_client: tDecision.statusRejected,
       confirmed: 'Pedido confirmado',
-      refused: 'Pedido rechazado'
+      served: 'Pedido servido',
+      not_served: 'Pedido no servido',
+      refused: 'Pedido rechazado',
+      cancelled: 'Pedido cancelado',
+      service_unknown_no_action: 'Pedido cerrado'
     },
     en: {
+      pending: 'Awaiting confirmation',
       sent: 'Sent to the restaurant',
       processing: 'Being processed by the restaurant',
+      modified: tDecision.statusModified,
+      accepted_by_client: tDecision.statusAccepted,
+      rejected_by_client: tDecision.statusRejected,
       confirmed: 'Order confirmed',
-      refused: 'Order refused'
+      served: 'Order served',
+      not_served: 'Order not served',
+      refused: 'Order refused',
+      cancelled: 'Order cancelled',
+      service_unknown_no_action: 'Order closed'
     },
     nl: {
+      pending: 'Wacht op bevestiging',
       sent: 'Verzonden naar het restaurant',
       processing: 'Wordt verwerkt door het restaurant',
+      modified: tDecision.statusModified,
+      accepted_by_client: tDecision.statusAccepted,
+      rejected_by_client: tDecision.statusRejected,
       confirmed: 'Bestelling bevestigd',
-      refused: 'Bestelling geweigerd'
+      served: 'Bestelling geserveerd',
+      not_served: 'Bestelling niet geserveerd',
+      refused: 'Bestelling geweigerd',
+      cancelled: 'Bestelling geannuleerd',
+      service_unknown_no_action: 'Bestelling afgesloten'
     }
   };
 
   const langLabels = labels[currentLang] || labels.fr;
-  return langLabels[status] || langLabels.sent;
+  return langLabels[status] || langLabels.pending;
+}
+
+function getClientHistoryTexts() {
+  const texts = {
+    fr: {
+      currentOrder: 'Commande en cours',
+      lastOrders: 'Vos 5 dernières commandes',
+      currentBooking: 'Réservation en cours',
+      lastBookings: 'Vos 5 dernières réservations',
+      close: 'Fermer'
+    },
+    es: {
+      currentOrder: 'Pedido en curso',
+      lastOrders: 'Tus 5 últimos pedidos',
+      currentBooking: 'Reserva en curso',
+      lastBookings: 'Tus 5 últimas reservas',
+      close: 'Cerrar'
+    },
+    en: {
+      currentOrder: 'Current order',
+      lastOrders: 'Your last 5 orders',
+      currentBooking: 'Current booking',
+      lastBookings: 'Your last 5 bookings',
+      close: 'Close'
+    },
+    nl: {
+      currentOrder: 'Lopende bestelling',
+      lastOrders: 'Uw 5 laatste bestellingen',
+      currentBooking: 'Lopende reservatie',
+      lastBookings: 'Uw 5 laatste reservaties',
+      close: 'Sluiten'
+    }
+  };
+
+  return texts[currentLang] || texts.fr;
+}
+
+function isFinalClientOrderStatus(status) {
+  return ['served', 'not_served', 'refused', 'cancelled', 'cancelled_by_client', 'service_unknown_no_action'].includes(status || '');
+}
+
+function isFinalClientBookingStatus(status) {
+  return ['arrived', 'not_arrived', 'refused', 'cancelled', 'cancelled_by_client', 'presence_unknown_no_action'].includes(status || '');
+}
+
+function openClientHistoryModal(title, contentHtml) {
+  const existingModal = document.getElementById('client-history-modal');
+
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const tHistory = getClientHistoryTexts();
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="client-history-modal" class="fixed inset-0 z-[150] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-gold/25 bg-[#0D0D0D] shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+        <div class="sticky top-0 z-10 bg-[#0D0D0D]/95 backdrop-blur border-b border-white/8 px-5 py-4 flex items-center justify-between gap-4">
+          <h3 class="font-display text-xl font-bold text-gold">${title}</h3>
+
+          <button
+            type="button"
+            onclick="closeClientHistoryModal()"
+            class="btn-action px-4 py-2 rounded-xl border border-gold/25 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
+          >
+            ${tHistory.close}
+          </button>
+        </div>
+
+        <div class="p-5 space-y-4">
+          ${contentHtml}
+        </div>
+      </div>
+    </div>
+  `);
+
+  const modal = document.getElementById('client-history-modal');
+
+  if (modal) {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        closeClientHistoryModal();
+      }
+    });
+  }
+
+  if (window.lucide) {
+    requestAnimationFrame(() => {
+      lucide.createIcons();
+    });
+  }
+}
+
+function closeClientHistoryModal() {
+  const existingModal = document.getElementById('client-history-modal');
+
+  if (existingModal) {
+    existingModal.remove();
+  }
+}
+
+function renderClientHistoryEmptyText() {
+  if (currentLang === 'es') return 'Nada que mostrar por ahora.';
+  if (currentLang === 'en') return 'Nothing to show yet.';
+  if (currentLang === 'nl') return 'Nog niets om weer te geven.';
+  return 'Rien à afficher pour le moment.';
+}
+
+async function openCurrentOrderModal() {
+  const tHistory = getClientHistoryTexts();
+
+  if (LIVE_REQUESTS_ENABLED) {
+    await syncLastOrderRequestFromSource();
+
+    if (clientOrderSyncUnavailable) {
+      openClientHistoryModal(tHistory.currentOrder, renderClientSyncUnavailableCard('order'));
+      return;
+    }
+  }
+
+  openClientHistoryModal(tHistory.currentOrder, renderLastOrderRequestCard());
+}
+
+async function openLastOrdersModal() {
+  const tHistory = getClientHistoryTexts();
+
+  const orders = (await readOrderRequestsFromSource())
+    .filter((orderRequest) =>
+      orderRequest &&
+      orderRequest.order &&
+      orderRequest.customer &&
+      isFinalClientOrderStatus(orderRequest.status || 'pending')
+    )
+    .slice(0, 5);
+
+  const contentHtml = orders.length
+    ? orders.map((orderRequest) => renderClientOrderHistoryItem(orderRequest)).join('')
+    : `<div class="text-sm text-cream/70">${renderClientHistoryEmptyText()}</div>`;
+
+  openClientHistoryModal(tHistory.lastOrders, contentHtml);
+}
+
+async function openCurrentBookingModal() {
+  const tHistory = getClientHistoryTexts();
+
+  if (LIVE_REQUESTS_ENABLED) {
+    await readBookingRequestsFromStorage();
+
+    if (clientBookingSyncUnavailable) {
+      openClientHistoryModal(tHistory.currentBooking, renderClientSyncUnavailableCard('booking'));
+      return;
+    }
+  }
+
+  openClientHistoryModal(tHistory.currentBooking, renderLastBookingRequestCard());
+}
+
+async function openLastBookingsModal() {
+  const tHistory = getClientHistoryTexts();
+
+  let bookings = (await readBookingRequestsFromStorage())
+    .filter((bookingRequest) =>
+      bookingRequest &&
+      bookingRequest.booking &&
+      bookingRequest.customer &&
+      isFinalClientBookingStatus(bookingRequest.status || 'pending')
+    );
+
+  const lastBooking = getLastBookingRequest();
+
+  if (!LIVE_REQUESTS_ENABLED && lastBooking && isFinalClientBookingStatus(lastBooking.status || 'pending')) {
+    bookings = [
+      lastBooking,
+      ...bookings.filter((bookingRequest) => String(bookingRequest?.requestId) !== String(lastBooking.requestId))
+    ];
+  }
+
+  bookings = bookings.slice(0, 5);
+
+  const contentHtml = bookings.length
+    ? bookings.map((bookingRequest) => renderClientBookingHistoryItem(bookingRequest)).join('')
+    : `<div class="text-sm text-cream/70">${renderClientHistoryEmptyText()}</div>`;
+
+  openClientHistoryModal(tHistory.lastBookings, contentHtml);
+}
+
+function renderClientOrderHistoryItem(orderRequest) {
+  const status = orderRequest.status || 'pending';
+  const orderItems = Array.isArray(orderRequest.order?.items) ? orderRequest.order.items : [];
+  const totalAmount = Number(orderRequest.order?.totalAmount || 0);
+  const statusLabel = getOrderStatusLabel(status);
+
+  const statusClass = isFinalClientOrderStatus(status)
+    ? (
+        status === 'served'
+          ? 'text-emerald-200'
+          : status === 'service_unknown_no_action'
+            ? 'text-gold'
+            : 'text-red-200'
+      )
+    : (
+        status === 'confirmed' || status === 'accepted_by_client'
+          ? 'text-emerald-200'
+          : status === 'processing' || status === 'modified'
+            ? 'text-sky-100'
+            : 'text-amber-100'
+      );
+
+  return `
+    <div class="rounded-2xl border border-gold/20 bg-black/20 p-4">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div class="text-sm font-semibold ${statusClass}">${escapeBookingHtml(statusLabel)}</div>
+          <div class="mt-1 text-xs text-cream/65">
+            ${escapeBookingHtml(formatBookingDateForDisplay(orderRequest.order?.date || ''))}
+            · ${escapeBookingHtml(orderRequest.order?.time || '-')}
+          </div>
+        </div>
+
+        ${totalAmount ? `
+          <div class="text-sm font-bold text-gold">
+            ${totalAmount.toFixed(2).replace('.', ',')} €
+          </div>
+        ` : ''}
+      </div>
+
+      ${orderItems.length ? `
+        <div class="mt-3 text-sm text-cream/80">
+          ${escapeBookingHtml(orderItems.map((item) => `${item.name} x${item.quantity}`).join(', '))}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderClientBookingHistoryItem(bookingRequest) {
+  const status = bookingRequest.status || 'pending';
+  const statusLabel = getBookingStatusLabel(status);
+
+  const statusClass = isFinalClientBookingStatus(status)
+    ? (
+        status === 'arrived'
+          ? 'text-emerald-200'
+          : status === 'presence_unknown_no_action'
+            ? 'text-gold'
+            : 'text-red-200'
+      )
+    : (
+        status === 'confirmed' || status === 'accepted_by_client'
+          ? 'text-emerald-200'
+          : status === 'processing' || status === 'modified'
+            ? 'text-sky-100'
+            : 'text-amber-100'
+      );
+
+  return `
+    <div class="rounded-2xl border border-gold/20 bg-black/20 p-4">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div class="text-sm font-semibold ${statusClass}">${escapeBookingHtml(statusLabel)}</div>
+          <div class="mt-1 text-xs text-cream/65">
+            ${escapeBookingHtml(formatBookingDateForDisplay(bookingRequest.booking?.date || ''))}
+            · ${escapeBookingHtml(bookingRequest.booking?.time || '-')}
+          </div>
+        </div>
+
+        <div class="text-sm font-semibold text-cream/80">
+          ${escapeBookingHtml(String(bookingRequest.booking?.people || '-'))}
+        </div>
+      </div>
+
+      ${bookingRequest.booking?.note ? `
+        <div class="mt-3 text-sm text-cream/80">
+          ${escapeBookingHtml(bookingRequest.booking.note)}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderClientOrderAccessButtons() {
+  if (!siteConfig.modules?.ordering) {
+    return '';
+  }
+
+  const lastOrderRequest = getLastOrderRequest();
+
+  if (!lastOrderRequest || !lastOrderRequest.order || !lastOrderRequest.customer) {
+    return '';
+  }
+
+  const tHistory = getClientHistoryTexts();
+  const status = lastOrderRequest.status || 'pending';
+  const hasCurrentOrder = !isFinalClientOrderStatus(status);
+
+  return `
+    <div class="mt-4 flex flex-wrap gap-2">
+      ${hasCurrentOrder ? `
+        <button onclick="openCurrentOrderModal()" class="btn-action px-3 py-2 rounded-xl border border-gold/30 bg-black/20 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
+          ${tHistory.currentOrder}
+        </button>
+      ` : ''}
+
+      <button onclick="openLastOrdersModal()" class="btn-action px-3 py-2 rounded-xl border border-gold/20 bg-black/10 text-xs font-semibold text-cream/80 hover:border-gold/45 hover:bg-gold/10 transition-all">
+        ${tHistory.lastOrders}
+      </button>
+    </div>
+  `;
+}
+
+function renderClientBookingAccessButtons() {
+  const lastBookingRequest = getLastBookingRequest();
+
+  if (!lastBookingRequest || !lastBookingRequest.booking || !lastBookingRequest.customer) {
+    return '';
+  }
+
+  const tHistory = getClientHistoryTexts();
+  const status = lastBookingRequest.status || 'pending';
+  const hasCurrentBooking = !isFinalClientBookingStatus(status);
+
+  return `
+    <div class="mt-4 flex flex-wrap gap-2">
+      ${hasCurrentBooking ? `
+        <button onclick="openCurrentBookingModal()" class="btn-action px-3 py-2 rounded-xl border border-gold/30 bg-black/20 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
+          ${tHistory.currentBooking}
+        </button>
+      ` : ''}
+
+      <button onclick="openLastBookingsModal()" class="btn-action px-3 py-2 rounded-xl border border-gold/20 bg-black/10 text-xs font-semibold text-cream/80 hover:border-gold/45 hover:bg-gold/10 transition-all">
+        ${tHistory.lastBookings}
+      </button>
+    </div>
+  `;
+}
+
+function getClientEntryChoiceTexts() {
+  const texts = {
+    fr: {
+      orderTitle: 'Que souhaitez-vous faire ?',
+      newOrder: 'Nouvelle commande',
+      viewOrders: 'Voir mes commandes',
+      bookingTitle: 'Que souhaitez-vous faire ?',
+      newBooking: 'Nouvelle réservation',
+      viewBookings: 'Voir mes réservations',
+      close: 'Fermer'
+    },
+    es: {
+      orderTitle: '¿Qué desea hacer?',
+      newOrder: 'Nuevo pedido',
+      viewOrders: 'Ver mis pedidos',
+      bookingTitle: '¿Qué desea hacer?',
+      newBooking: 'Nueva reserva',
+      viewBookings: 'Ver mis reservas',
+      close: 'Cerrar'
+    },
+    en: {
+      orderTitle: 'What would you like to do?',
+      newOrder: 'New order',
+      viewOrders: 'View my orders',
+      bookingTitle: 'What would you like to do?',
+      newBooking: 'New booking',
+      viewBookings: 'View my bookings',
+      close: 'Close'
+    },
+    nl: {
+      orderTitle: 'Wat wilt u doen?',
+      newOrder: 'Nieuwe bestelling',
+      viewOrders: 'Mijn bestellingen bekijken',
+      bookingTitle: 'Wat wilt u doen?',
+      newBooking: 'Nieuwe reservatie',
+      viewBookings: 'Mijn reservaties bekijken',
+      close: 'Sluiten'
+    }
+  };
+
+  return texts[currentLang] || texts.fr;
+}
+
+function hasClientOrderHistory() {
+  const lastOrder = getLastOrderRequest();
+  const storedOrders = readOrderRequestsFromStorage();
+
+  return Boolean(lastOrder) || (Array.isArray(storedOrders) && storedOrders.length > 0);
+}
+
+function hasClientBookingHistory() {
+  const lastBooking = getLastBookingRequest();
+
+  let storedBookings = [];
+
+  try {
+    const raw = localStorage.getItem(getBookingStorageKey());
+    const parsed = raw ? JSON.parse(raw) : [];
+    storedBookings = Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    storedBookings = [];
+  }
+
+  return Boolean(lastBooking) || storedBookings.length > 0;
+}
+
+function closeClientEntryChoiceModal() {
+  const existingModal = document.getElementById('client-entry-choice-modal');
+
+  if (existingModal) {
+    existingModal.remove();
+  }
+}
+
+function openClientEntryChoiceModal(type) {
+  closeClientEntryChoiceModal();
+
+  const tChoice = getClientEntryChoiceTexts();
+  const isOrderChoice = type === 'order';
+
+  const title = isOrderChoice ? tChoice.orderTitle : tChoice.bookingTitle;
+  const primaryLabel = isOrderChoice ? tChoice.newOrder : tChoice.newBooking;
+  const secondaryLabel = isOrderChoice ? tChoice.viewOrders : tChoice.viewBookings;
+  const primaryAction = isOrderChoice ? 'startNewOrderFromChoice()' : 'startNewBookingFromChoice()';
+  const secondaryAction = isOrderChoice ? 'openLastOrdersModal()' : 'openLastBookingsModal()';
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="client-entry-choice-modal" class="fixed inset-0 z-[150] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="w-full max-w-md rounded-[28px] border border-gold/25 bg-[#0D0D0D] shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+        <div class="border-b border-white/8 px-5 py-4 flex items-center justify-between gap-4">
+          <h3 class="font-display text-xl font-bold text-gold">${title}</h3>
+
+          <button
+            type="button"
+            onclick="closeClientEntryChoiceModal()"
+            class="btn-action px-3 py-2 rounded-xl border border-gold/25 text-xs font-semibold text-cream hover:bg-gold/10 transition-all"
+          >
+            ${tChoice.close}
+          </button>
+        </div>
+
+        <div class="p-5 space-y-3">
+          <button
+            type="button"
+            onclick="${primaryAction}"
+            class="btn-action w-full flex items-center justify-center gap-3 px-5 py-4 rounded-2xl bg-gradient-to-br from-gold/22 to-gold/10 border-2 border-gold text-cream hover:from-gold/30 hover:to-gold/15 transition-all shadow-lg"
+          >
+            <i data-lucide="${isOrderChoice ? 'shopping-bag' : 'calendar-days'}" class="w-5 h-5 text-gold"></i>
+            <span class="text-sm font-semibold tracking-wide">${primaryLabel}</span>
+          </button>
+
+          <button
+            type="button"
+            onclick="${secondaryAction}"
+            class="btn-action w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-2xl border border-gold/25 bg-black/20 text-cream/85 hover:border-gold/50 hover:bg-gold/10 transition-all"
+          >
+            <i data-lucide="${isOrderChoice ? 'history' : 'clock'}" class="w-4 h-4 text-gold"></i>
+            <span class="text-sm font-semibold tracking-wide">${secondaryLabel}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  const modal = document.getElementById('client-entry-choice-modal');
+
+  if (modal) {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        closeClientEntryChoiceModal();
+      }
+    });
+  }
+
+  if (window.lucide) {
+    requestAnimationFrame(() => {
+      lucide.createIcons();
+    });
+  }
+}
+
+function handleOrderEntryClick() {
+  if (hasClientOrderHistory()) {
+    openClientEntryChoiceModal('order');
+    return;
+  }
+
+  activateOrderMode();
+}
+
+function handleBookingEntryClick() {
+  if (hasClientBookingHistory()) {
+    openClientEntryChoiceModal('booking');
+    return;
+  }
+
+  activateBookingMode();
+}
+
+function startNewOrderFromChoice() {
+  closeClientEntryChoiceModal();
+  activateOrderMode();
+}
+
+function startNewBookingFromChoice() {
+  closeClientEntryChoiceModal();
+  activateBookingMode();
 }
 
 function renderLastOrderRequestCard() {
@@ -2719,121 +4478,216 @@ function renderLastOrderRequestCard() {
     return '';
   }
 
+  const status = orderRequest.status || 'pending';
+
+  if (isFinalClientOrderStatus(status)) {
+    return '';
+  }
+
+  const tDecision = getOrderClientDecisionTexts();
+
   const cardTexts = {
     fr: {
-      title: 'Suivi de votre commande',
+      title: 'Ma commande',
       status: 'Statut',
+      view: 'Voir',
       reference: 'Référence',
       name: 'Nom',
       phone: 'Téléphone',
       date: 'Date',
       time: 'Heure',
+      proposedTime: 'Horaire proposé',
       updatedAt: 'Dernière mise à jour',
       note: 'Remarque',
       items: 'Articles',
+      total: 'Total',
       refusalReason: 'Motif du refus',
-      waiting: 'Votre commande a bien été transmise. La réponse du restaurant apparaîtra ici.',
+      waiting: 'Votre commande a bien été transmise. Elle est en attente de confirmation par le restaurant.',
       processing: 'Le restaurant a consulté votre commande et la traite actuellement.',
+      modified: 'Le restaurant vous propose une modification de votre commande.',
+      acceptedByClient: 'Vous avez accepté la modification proposée. Votre commande est validée avec ces changements.',
+      rejectedByClient: 'Vous avez refusé la modification proposée. Votre demande n’est pas validée avec cette modification.',
       confirmed: 'Le restaurant a confirmé votre commande.',
-      refused: 'Le restaurant a refusé votre commande.'
+      served: 'Votre commande a été servie.',
+      notServed: 'Votre commande est indiquée comme non servie.',
+      refused: 'Le restaurant a refusé votre commande.',
+      cancelled: 'Le restaurant a annulé votre commande.',
+      closed: 'Cette commande est clôturée.'
     },
     es: {
-      title: 'Seguimiento de tu pedido',
+      title: 'Mi pedido',
       status: 'Estado',
+      view: 'Ver',
       reference: 'Referencia',
       name: 'Nombre',
       phone: 'Teléfono',
       date: 'Fecha',
       time: 'Hora',
+      proposedTime: 'Hora propuesta',
       updatedAt: 'Última actualización',
       note: 'Observación',
       items: 'Artículos',
+      total: 'Total',
       refusalReason: 'Motivo del rechazo',
-      waiting: 'Tu pedido ha sido transmitido correctamente. La respuesta del restaurante aparecerá aquí.',
+      waiting: 'Tu pedido ha sido transmitido correctamente. Está pendiente de confirmación por el restaurante.',
       processing: 'El restaurante ha consultado tu pedido y lo está gestionando.',
+      modified: 'El restaurante te propone una modificación de tu pedido.',
+      acceptedByClient: 'Has aceptado la modificación propuesta. Tu pedido queda validado con estos cambios.',
+      rejectedByClient: 'Has rechazado la modificación propuesta. Tu solicitud no queda validada con esta modificación.',
       confirmed: 'El restaurante ha confirmado tu pedido.',
-      refused: 'El restaurante ha rechazado tu pedido.'
+      served: 'Tu pedido ha sido servido.',
+      notServed: 'Tu pedido aparece como no servido.',
+      refused: 'El restaurante ha rechazado tu pedido.',
+      cancelled: 'El restaurante ha cancelado tu pedido.',
+      closed: 'Este pedido está cerrado.'
     },
     en: {
-      title: 'Your order tracking',
+      title: 'My order',
       status: 'Status',
+      view: 'View',
       reference: 'Reference',
       name: 'Name',
       phone: 'Phone',
       date: 'Date',
       time: 'Time',
+      proposedTime: 'Proposed time',
       updatedAt: 'Last update',
       note: 'Note',
       items: 'Items',
+      total: 'Total',
       refusalReason: 'Reason for refusal',
-      waiting: 'Your order has been transmitted. The restaurant response will appear here.',
+      waiting: 'Your order has been transmitted. It is awaiting confirmation from the restaurant.',
       processing: 'The restaurant has opened your order and is currently processing it.',
+      modified: 'The restaurant proposes a modification to your order.',
+      acceptedByClient: 'You accepted the proposed modification. Your order is confirmed with these changes.',
+      rejectedByClient: 'You rejected the proposed modification. Your request is not confirmed with this change.',
       confirmed: 'The restaurant has confirmed your order.',
-      refused: 'The restaurant has refused your order.'
+      served: 'Your order has been served.',
+      notServed: 'Your order is marked as not served.',
+      refused: 'The restaurant has refused your order.',
+      cancelled: 'The restaurant has cancelled your order.',
+      closed: 'This order is closed.'
     },
     nl: {
-      title: 'Opvolging van je bestelling',
+      title: 'Mijn bestelling',
       status: 'Status',
+      view: 'Bekijken',
       reference: 'Referentie',
       name: 'Naam',
       phone: 'Telefoon',
       date: 'Datum',
       time: 'Uur',
+      proposedTime: 'Voorgesteld uur',
       updatedAt: 'Laatste update',
       note: 'Opmerking',
       items: 'Artikelen',
+      total: 'Totaal',
       refusalReason: 'Reden van weigering',
-      waiting: 'Je bestelling is goed doorgestuurd. Het antwoord van het restaurant verschijnt hier.',
+      waiting: 'Je bestelling is goed doorgestuurd. Ze wacht op bevestiging door het restaurant.',
       processing: 'Het restaurant heeft je bestelling geopend en verwerkt ze momenteel.',
+      modified: 'Het restaurant stelt een wijziging van je bestelling voor.',
+      acceptedByClient: 'U hebt de voorgestelde wijziging aanvaard. Uw bestelling is bevestigd met deze wijzigingen.',
+      rejectedByClient: 'U hebt de voorgestelde wijziging geweigerd. Uw aanvraag is niet bevestigd met deze wijziging.',
       confirmed: 'Het restaurant heeft je bestelling bevestigd.',
-      refused: 'Het restaurant heeft je bestelling geweigerd.'
+      served: 'Je bestelling werd geserveerd.',
+      notServed: 'Je bestelling staat aangeduid als niet geserveerd.',
+      refused: 'Het restaurant heeft je bestelling geweigerd.',
+      cancelled: 'Het restaurant heeft je bestelling geannuleerd.',
+      closed: 'Deze bestelling is afgesloten.'
     }
   };
 
   const texts = cardTexts[currentLang] || cardTexts.fr;
   const orderItems = Array.isArray(orderRequest.order.items) ? orderRequest.order.items : [];
+  const proposedTime = orderRequest.restaurantResponse?.proposal?.proposedTime || '';
+  const totalAmount = Number(orderRequest.order.totalAmount || 0);
+  const isFinalStatus = isFinalClientOrderStatus(status);
+
   const responseMessageByStatus = {
+    pending: texts.waiting,
     sent: texts.waiting,
     processing: texts.processing,
-    confirmed: texts.confirmed,
-    refused: texts.refused
+    modified: orderRequest.restaurantResponse?.message || texts.modified,
+    accepted_by_client: texts.acceptedByClient,
+    rejected_by_client: texts.rejectedByClient,
+    confirmed: orderRequest.restaurantResponse?.message || texts.confirmed,
+    served: orderRequest.restaurantResponse?.message || texts.served,
+    not_served: orderRequest.restaurantResponse?.message || texts.notServed,
+    refused: orderRequest.restaurantResponse?.message || texts.refused,
+    cancelled: orderRequest.restaurantResponse?.message || texts.cancelled,
+    service_unknown_no_action: texts.closed
   };
 
+  const statusUi = status === 'confirmed' || status === 'accepted_by_client' || status === 'served'
+    ? {
+        card: 'border-emerald-400/35 bg-emerald-500/10',
+        badge: 'border-emerald-300/35 bg-emerald-500/15 text-emerald-200',
+        message: 'border-emerald-300/20 bg-emerald-500/10 text-emerald-100'
+      }
+    : status === 'processing' || status === 'modified'
+      ? {
+          card: 'border-sky-400/35 bg-sky-500/10',
+          badge: 'border-sky-300/35 bg-sky-500/15 text-sky-100',
+          message: 'border-sky-300/20 bg-sky-500/10 text-sky-100'
+        }
+      : status === 'rejected_by_client' || status === 'refused' || status === 'cancelled' || status === 'not_served'
+        ? {
+            card: 'border-red-400/35 bg-red-500/10',
+            badge: 'border-red-300/35 bg-red-500/15 text-red-200',
+            message: 'border-red-300/20 bg-red-500/10 text-red-100'
+          }
+        : {
+            card: 'border-amber-300/35 bg-amber-500/10',
+            badge: 'border-amber-300/35 bg-amber-500/15 text-amber-100',
+            message: 'border-amber-300/20 bg-amber-500/10 text-amber-100'
+          };
+
   return `
-    <div id="client-order-card" class="mt-4 rounded-2xl border border-gold/30 bg-black/20 p-4">
+    <div id="client-order-card" class="mt-4 rounded-2xl border ${statusUi.card} p-4">
       <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           <div class="text-xs font-semibold uppercase tracking-wide text-gold/85">
             ${texts.title}
           </div>
-          <div class="mt-2 text-sm text-cream/90">
-            <span class="font-semibold text-gold/90">${texts.status} :</span>
-            ${escapeBookingHtml(getOrderStatusLabel(orderRequest.status || 'sent'))}
+
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            <span class="text-sm font-semibold text-gold/90">${texts.status} :</span>
+            <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusUi.badge}">
+              ${escapeBookingHtml(getOrderStatusLabel(status))}
+            </span>
           </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button onclick="openCurrentOrderModal()" class="btn-action px-3 py-2 rounded-xl border border-gold/25 bg-black/20 text-xs font-semibold text-cream/85 hover:border-gold/50 hover:bg-gold/10 transition-all">
+            ${texts.view}
+          </button>
+
+          ${status === 'modified' ? `
+            <button onclick="acceptLastOrderModification()" class="btn-action px-3 py-2 rounded-xl border border-emerald-400/40 bg-emerald-500/10 text-xs font-semibold text-cream/90 hover:border-emerald-300/70 hover:bg-emerald-500/20 transition-all">
+              ${tDecision.acceptButton}
+            </button>
+            <button onclick="rejectLastOrderModification()" class="btn-action px-3 py-2 rounded-xl border border-red-400/40 bg-red-500/10 text-xs font-semibold text-cream/90 hover:border-red-300/70 hover:bg-red-500/20 transition-all">
+              ${tDecision.rejectButton}
+            </button>
+          ` : ''}
         </div>
       </div>
 
-      ${''}
+      ${!isFinalStatus ? renderClientRequestRefreshPanel() : ''}
 
       <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-cream/80">
-        <div><span class="text-gold/85 font-semibold">${texts.reference} :</span> ${escapeBookingHtml(orderRequest.requestId || '-')}</div>
-        <div><span class="text-gold/85 font-semibold">${texts.updatedAt} :</span> ${escapeBookingHtml(formatBookingDateTimeForDisplay(orderRequest.updatedAt || orderRequest.createdAt || ''))}</div>
         <div><span class="text-gold/85 font-semibold">${texts.name} :</span> ${escapeBookingHtml(orderRequest.customer.name || '-')}</div>
         <div><span class="text-gold/85 font-semibold">${texts.phone} :</span> ${escapeBookingHtml(orderRequest.customer.phone || '-')}</div>
         <div><span class="text-gold/85 font-semibold">${texts.date} :</span> ${escapeBookingHtml(formatBookingDateForDisplay(orderRequest.order.date || ''))}</div>
         <div><span class="text-gold/85 font-semibold">${texts.time} :</span> ${escapeBookingHtml(orderRequest.order.time || '-')}</div>
+        ${totalAmount ? `<div><span class="text-gold/85 font-semibold">${texts.total} :</span> ${totalAmount.toFixed(2).replace('.', ',')} €</div>` : ''}
+        ${proposedTime ? `<div><span class="text-gold/85 font-semibold">${texts.proposedTime} :</span> ${escapeBookingHtml(proposedTime)}</div>` : ''}
       </div>
 
-      <div class="mt-3 rounded-xl border border-gold/15 bg-black/15 px-3 py-3 text-sm text-cream/80">
-        ${escapeBookingHtml(responseMessageByStatus[orderRequest.status || 'sent'] || texts.waiting)}
+      <div class="mt-3 rounded-xl border ${statusUi.message} px-3 py-3 text-sm text-cream/90">
+        ${escapeBookingHtml(responseMessageByStatus[status] || texts.waiting)}
       </div>
-
-      ${orderRequest.order.note ? `
-        <div class="mt-3 text-sm text-cream/80">
-          <span class="text-gold/85 font-semibold">${texts.note} :</span>
-          ${escapeBookingHtml(orderRequest.order.note)}
-        </div>
-      ` : ''}
 
       ${orderItems.length ? `
         <div class="mt-3 text-sm text-cream/80">
@@ -2842,7 +4696,21 @@ function renderLastOrderRequestCard() {
         </div>
       ` : ''}
 
-      ${orderRequest.status === 'refused' && orderRequest.restaurantResponse?.reason ? `
+      ${orderRequest.order.note ? `
+        <div class="mt-3 text-sm text-cream/80">
+          <span class="text-gold/85 font-semibold">${texts.note} :</span>
+          ${escapeBookingHtml(orderRequest.order.note)}
+        </div>
+      ` : ''}
+
+      ${orderRequest.updatedAt || orderRequest.createdAt ? `
+        <div class="mt-3 text-sm text-cream/70">
+          <span class="text-gold/85 font-semibold">${texts.updatedAt} :</span>
+          ${escapeBookingHtml(formatBookingDateTimeForDisplay(orderRequest.updatedAt || orderRequest.createdAt || ''))}
+        </div>
+      ` : ''}
+
+      ${['refused', 'cancelled', 'rejected_by_client', 'not_served'].includes(status) && orderRequest.restaurantResponse?.reason ? `
         <div class="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-3 text-sm text-cream/90">
           <span class="text-red-200 font-semibold">${texts.refusalReason} :</span>
           ${escapeBookingHtml(orderRequest.restaurantResponse.reason)}
@@ -2881,13 +4749,30 @@ function getClientRequestRefreshTexts() {
 function hasPendingClientBookingRequest() {
   const bookingRequest = getLastBookingRequest();
   if (!bookingRequest) return false;
-  return ['pending', 'processing'].includes(bookingRequest.status || 'pending');
+
+  return [
+    'pending',
+    'processing',
+    'modified',
+    'accepted_by_client',
+    'rejected_by_client',
+    'confirmed'
+  ].includes(bookingRequest.status || 'pending');
 }
 
 function hasPendingClientOrderRequest() {
   const orderRequest = getLastOrderRequest();
   if (!orderRequest) return false;
-  return ['sent', 'processing'].includes(orderRequest.status || 'sent');
+
+  return [
+    'pending',
+    'sent',
+    'processing',
+    'modified',
+    'accepted_by_client',
+    'rejected_by_client',
+    'confirmed'
+  ].includes(orderRequest.status || 'pending');
 }
 
 function renderClientRequestRefreshPanel() {
@@ -2906,16 +4791,109 @@ function renderClientRequestRefreshPanel() {
   `;
 }
 
-function refreshClientRequestCards() {
+function renderClientSyncUnavailableCard(type) {
+  const isOrder = type === 'order';
+
+  const texts = {
+    fr: {
+      title: isOrder ? 'Suivi de commande' : 'Suivi de réservation',
+      message: 'Mise à jour temporairement indisponible. Veuillez réessayer dans quelques instants.'
+    },
+    es: {
+      title: isOrder ? 'Seguimiento del pedido' : 'Seguimiento de la reserva',
+      message: 'Actualización temporalmente no disponible. Inténtelo de nuevo en unos instantes.'
+    },
+    en: {
+      title: isOrder ? 'Order tracking' : 'Booking tracking',
+      message: 'Update temporarily unavailable. Please try again in a moment.'
+    },
+    nl: {
+      title: isOrder ? 'Bestelling opvolgen' : 'Reservatie opvolgen',
+      message: 'Update tijdelijk niet beschikbaar. Probeer het over enkele ogenblikken opnieuw.'
+    }
+  };
+
+  const t = texts[currentLang] || texts.fr;
+
+  return `
+    <div class="mt-4 rounded-2xl border border-amber-300/35 bg-amber-500/10 p-4">
+      <div class="text-sm font-semibold text-amber-100">${escapeBookingHtml(t.title)}</div>
+      <div class="mt-2 text-sm text-cream/80">${escapeBookingHtml(t.message)}</div>
+      <button onclick="manualRefreshClientRequests()" class="btn-action mt-3 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gold/35 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
+        <i data-lucide="refresh-cw" class="w-4 h-4 text-gold"></i>
+        <span>OK / Refresh</span>
+      </button>
+    </div>
+  `;
+}
+
+function getClientOrderTrackingSnapshot() {
+  const orderRequest = getLastOrderRequest();
+
+  if (!orderRequest || !orderRequest.requestId) {
+    return null;
+  }
+
+  return {
+    requestId: String(orderRequest.requestId),
+    status: orderRequest.status || 'pending'
+  };
+}
+
+function shouldFocusClientOrderCardAfterRefresh(previousSnapshot, nextSnapshot) {
+  if (!orderMode) return false;
+  if (!previousSnapshot || !nextSnapshot) return false;
+  if (previousSnapshot.requestId !== nextSnapshot.requestId) return false;
+  if (previousSnapshot.status === nextSnapshot.status) return false;
+  if (isFinalClientOrderStatus(nextSnapshot.status)) return false;
+
+  return true;
+}
+
+function focusClientOrderCardAfterRefresh() {
+  requestAnimationFrame(() => {
+    const orderCard = document.getElementById('client-order-card');
+
+    if (orderCard) {
+      orderCard.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  });
+}
+
+async function refreshClientRequestCards() {
+  const previousOrderSnapshot = getClientOrderTrackingSnapshot();
+
+  if (LIVE_REQUESTS_ENABLED) {
+    try {
+      await syncLastOrderRequestFromSource();
+      await readBookingRequestsFromStorage();
+    } catch (error) {
+      console.error('Supabase client cards refresh error:', error);
+      clientOrderSyncUnavailable = true;
+      clientBookingSyncUnavailable = true;
+    }
+  }
+
+  const nextOrderSnapshot = getClientOrderTrackingSnapshot();
+  const shouldFocusOrderCard = shouldFocusClientOrderCardAfterRefresh(previousOrderSnapshot, nextOrderSnapshot);
+
   const orderSlot = document.getElementById('client-order-card-slot');
   const bookingSlot = document.getElementById('client-booking-card-slot');
 
-  if (orderSlot && typeof renderLastOrderRequestCard === 'function') {
-    orderSlot.innerHTML = renderLastOrderRequestCard();
+  if (orderSlot) {
+    orderSlot.innerHTML = clientOrderSyncUnavailable
+      ? renderClientSyncUnavailableCard('order')
+      : renderLastOrderRequestCard();
   }
 
   if (bookingSlot) {
-    bookingSlot.innerHTML = renderLastBookingRequestCard();
+    bookingSlot.innerHTML = clientBookingSyncUnavailable
+      ? renderClientSyncUnavailableCard('booking')
+      : renderLastBookingRequestCard();
+  }
+
+  if (shouldFocusOrderCard) {
+    focusClientOrderCardAfterRefresh();
   }
 
   if (window.lucide) {
@@ -2926,13 +4904,27 @@ function refreshClientRequestCards() {
 }
 
 window.manualRefreshClientRequests = async function() {
-  if (LIVE_REQUESTS_ENABLED) {
-    bookingRequests = await fetchLiveRequestsByType('booking');
-  } else if (typeof readBookingRequestsFromStorage === 'function') {
-    bookingRequests = await readBookingRequestsFromStorage();
+  try {
+    if (LIVE_REQUESTS_ENABLED) {
+      bookingRequests = await fetchLiveRequestsByType('booking');
+      await fetchLiveRequestsByType('order');
+    } else {
+      if (typeof readBookingRequestsFromStorage === 'function') {
+        bookingRequests = await readBookingRequestsFromStorage();
+      }
+
+      readOrderRequestsFromStorage();
+    }
+  } catch (error) {
+    console.error('Manual client request refresh error:', error);
+
+    if (LIVE_REQUESTS_ENABLED) {
+      clientOrderSyncUnavailable = true;
+      clientBookingSyncUnavailable = true;
+    }
   }
 
-  refreshClientRequestCards();
+  await refreshClientRequestCards();
 };
 
 async function fetchLiveMenuMeta() {
@@ -2970,7 +4962,14 @@ function startClientRequestAutoRefresh() {
 
   if (document.hidden) return;
   if (!orderMode && !bookingMode) return;
-  if (!hasPendingClientBookingRequest()) return;
+
+  const shouldKeepRefreshing =
+    hasPendingClientBookingRequest() ||
+    hasPendingClientOrderRequest() ||
+    clientOrderSyncUnavailable ||
+    clientBookingSyncUnavailable;
+
+  if (!shouldKeepRefreshing) return;
 
   clientRequestAutoRefreshTimer = setInterval(async () => {
     if (bookingMode) {
@@ -2981,7 +4980,15 @@ function startClientRequestAutoRefresh() {
             : bookingRequests);
     }
 
-    refreshClientRequestCards();
+    if (orderMode) {
+      if (LIVE_REQUESTS_ENABLED) {
+        await fetchLiveRequestsByType('order');
+      } else {
+        readOrderRequestsFromStorage();
+      }
+    }
+
+    await refreshClientRequestCards();
   }, 30000);
 }
 
@@ -3022,9 +5029,11 @@ function startClientMenuAutoRefresh() {
 }
 
 function setupClientRequestAutoRefresh() {
-  refreshClientRequestCards();
-  startClientRequestAutoRefresh();
-  startClientMenuAutoRefresh();
+  refreshClientRequestCards()
+    .finally(() => {
+      startClientRequestAutoRefresh();
+      startClientMenuAutoRefresh();
+    });
 }
 
 function deactivateBookingMode() {
@@ -3101,9 +5110,129 @@ function toggleCartPanel() {
   renderMenu();
 }
 
-function openOrderReview() {
-  const t = translations[currentLang];
+function escapeOrderFeedbackHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
+function setOrderFeedback(type, key, fallbackMessage = '') {
+  orderFeedback = {
+    type,
+    key: String(key || '').trim(),
+    fallbackMessage: String(fallbackMessage || '').trim()
+  };
+}
+
+function clearOrderFeedback() {
+  orderFeedback = null;
+
+  const existingBlock = document.getElementById('order-feedback-block');
+  if (existingBlock) {
+    existingBlock.remove();
+  }
+}
+
+function getCurrentOrderFeedbackMessage() {
+  if (!orderFeedback?.key) return '';
+
+  const feedbackTexts = getOrderFeedbackTexts();
+
+  return feedbackTexts[orderFeedback.key] || orderFeedback.fallbackMessage || '';
+}
+
+function renderOrderFeedbackMessage() {
+  const feedbackMessage = getCurrentOrderFeedbackMessage();
+
+  if (!feedbackMessage) {
+    return '';
+  }
+
+  const isSuccess = orderFeedback.type === 'success';
+
+  return `
+    <div
+      id="order-feedback-block"
+      class="mb-4 rounded-xl border px-4 py-3 text-sm font-semibold ${
+        isSuccess
+          ? 'border-emerald-400/40 bg-emerald-500/12 text-emerald-100'
+          : 'border-red-400/45 bg-red-950/55 text-red-50'
+      }"
+    >
+      ${escapeOrderFeedbackHtml(feedbackMessage).replace(/\n/g, '<br>')}
+    </div>
+  `;
+}
+
+function getOrderFeedbackTexts() {
+  const texts = {
+    fr: {
+      nameRequired: 'Veuillez indiquer votre nom pour continuer.',
+      phoneRequired: 'Veuillez indiquer votre numéro de téléphone pour continuer.',
+      namePhoneRequired: 'Veuillez indiquer votre nom et votre téléphone pour continuer.',
+      dateTimeRequired: 'Veuillez indiquer la date et l’heure souhaitées.',
+      cartEmpty: 'Ajoutez au moins un article à votre panier avant de valider votre commande.',
+      requiredReviewFields: 'Veuillez compléter les informations obligatoires de votre commande.',
+      invalidPhone: 'Veuillez entrer un numéro de téléphone valide.\nExemple : +34612345678',
+      sendError: "La commande n'a pas pu être envoyée au restaurant. Veuillez réessayer dans quelques instants ou contacter le restaurant.",
+      orderSent: 'Votre commande a bien été envoyée au restaurant. Elle est maintenant en attente de confirmation.'
+    },
+    es: {
+      nameRequired: 'Indica tu nombre para continuar.',
+      phoneRequired: 'Indica tu número de teléfono para continuar.',
+      namePhoneRequired: 'Indica tu nombre y tu teléfono para continuar.',
+      dateTimeRequired: 'Indica la fecha y la hora deseadas.',
+      cartEmpty: 'Añade al menos un artículo a tu cesta antes de validar el pedido.',
+      requiredReviewFields: 'Completa la información obligatoria de tu pedido.',
+      invalidPhone: 'Introduce un número de teléfono válido.\nEjemplo: +34612345678',
+      sendError: 'No se ha podido enviar el pedido al restaurante. Inténtalo de nuevo en unos instantes o contacta con el restaurante.',
+      orderSent: 'Tu pedido se ha enviado correctamente al restaurante. Ahora está pendiente de confirmación.'
+    },
+    en: {
+      nameRequired: 'Please enter your name to continue.',
+      phoneRequired: 'Please enter your phone number to continue.',
+      namePhoneRequired: 'Please enter your name and phone number to continue.',
+      dateTimeRequired: 'Please enter the preferred date and time.',
+      cartEmpty: 'Add at least one item to your cart before confirming your order.',
+      requiredReviewFields: 'Please complete the required order information.',
+      invalidPhone: 'Please enter a valid phone number.\nExample: +34612345678',
+      sendError: 'The order could not be sent to the restaurant. Please try again in a few moments or contact the restaurant.',
+      orderSent: 'Your order has been sent to the restaurant. It is now awaiting confirmation.'
+    },
+    nl: {
+      nameRequired: 'Vul je naam in om verder te gaan.',
+      phoneRequired: 'Vul je telefoonnummer in om verder te gaan.',
+      namePhoneRequired: 'Vul je naam en telefoonnummer in om verder te gaan.',
+      dateTimeRequired: 'Vul de gewenste datum en het gewenste uur in.',
+      cartEmpty: 'Voeg minstens één artikel toe aan je mandje voordat je je bestelling bevestigt.',
+      requiredReviewFields: 'Vul de verplichte bestelgegevens in.',
+      invalidPhone: 'Geef een geldig telefoonnummer op.\nVoorbeeld: +34612345678',
+      sendError: 'De bestelling kon niet naar het restaurant worden verzonden. Probeer het over enkele ogenblikken opnieuw of neem contact op met het restaurant.',
+      orderSent: 'Je bestelling is naar het restaurant verzonden. Ze wacht nu op bevestiging.'
+    }
+  };
+
+  return texts[currentLang] || texts.fr;
+}
+
+function getMissingOrderFieldFeedbackKey({ name, phone, date, time }) {
+  const missingName = !String(name || '').trim();
+  const missingPhone = !String(phone || '').trim();
+  const missingDate = !String(date || '').trim();
+  const missingTime = !String(time || '').trim();
+
+  if (missingName && missingPhone) return 'namePhoneRequired';
+  if (missingName) return 'nameRequired';
+  if (missingPhone) return 'phoneRequired';
+  if (missingDate || missingTime) return 'dateTimeRequired';
+
+  return 'requiredReviewFields';
+}
+
+function openOrderReview() {
   if (!siteConfig.modules?.ordering) {
     orderReviewOpen = false;
     renderMenu();
@@ -3111,6 +5240,7 @@ function openOrderReview() {
   }
 
   if (!cart.length) {
+    setOrderFeedback('error', 'cartEmpty');
     orderReviewOpen = false;
     renderMenu();
     return;
@@ -3120,12 +5250,34 @@ function openOrderReview() {
   orderForm.phone = (orderForm.phone || '').trim();
 
   if (!orderForm.name || !orderForm.phone) {
-    alert(`${t.orderFormTitle}\n\n- ${t.orderFormName}\n- ${t.orderFormPhone}`);
+    setOrderFeedback(
+      'error',
+      getMissingOrderFieldFeedbackKey({
+        name: orderForm.name,
+        phone: orderForm.phone,
+        date: orderForm.date,
+        time: orderForm.time
+      })
+    );
     orderReviewOpen = false;
     renderMenu();
     return;
   }
 
+  const normalizedPhone = orderForm.phone.replace(/[^\d+]/g, '');
+  const digitCount = normalizedPhone.replace(/\D/g, '').length;
+  const phonePattern = /^\+?[0-9]{8,15}$/;
+
+  if (!phonePattern.test(normalizedPhone) || digitCount < 8) {
+    setOrderFeedback('error', 'invalidPhone');
+    orderReviewOpen = false;
+    renderMenu();
+    return;
+  }
+
+  orderForm.phone = normalizedPhone;
+
+  clearOrderFeedback();
   orderReviewOpen = true;
   renderMenu();
 }
@@ -3135,10 +5287,37 @@ function closeOrderReview() {
   renderMenu();
 }
 
-function validateOrderReview() {
-  const t = translations[currentLang];
-  const tBooking = getBookingTexts(currentLang);
+function modifyOrderItems() {
+  orderReviewOpen = false;
+  cartPanelOpen = false;
+  clearOrderFeedback();
+  renderMenu();
 
+  requestAnimationFrame(() => {
+    const target = document.getElementById('menu-start');
+
+    if (target) {
+      target.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  });
+}
+
+function editOrderCustomerInfo() {
+  orderReviewOpen = false;
+  cartPanelOpen = true;
+  clearOrderFeedback();
+  renderMenu();
+
+  requestAnimationFrame(() => {
+    const target = document.getElementById('order-customer-info');
+
+    if (target) {
+      target.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
+  });
+}
+
+async function validateOrderReview() {
   if (!siteConfig.modules?.ordering) {
     orderReviewOpen = false;
     renderMenu();
@@ -3151,14 +5330,22 @@ function validateOrderReview() {
   orderForm.time = (orderForm.time || '').trim();
 
   if (!cart.length) {
-    alert(t.cartEmpty);
+    setOrderFeedback('error', 'cartEmpty');
     orderReviewOpen = false;
     renderMenu();
     return;
   }
 
   if (!orderForm.name || !orderForm.phone || !orderForm.date || !orderForm.time) {
-    alert(`${t.orderFormTitle}\n\n- ${t.orderFormName}\n- ${t.orderFormPhone}\n- ${t.orderFormDate}\n- ${t.orderFormTime}`);
+    setOrderFeedback(
+      'error',
+      getMissingOrderFieldFeedbackKey({
+        name: orderForm.name,
+        phone: orderForm.phone,
+        date: orderForm.date,
+        time: orderForm.time
+      })
+    );
     renderMenu();
     return;
   }
@@ -3167,20 +5354,8 @@ function validateOrderReview() {
   const digitCount = normalizedPhone.replace(/\D/g, '').length;
   const phonePattern = /^\+?[0-9]{8,15}$/;
 
-if (!phonePattern.test(normalizedPhone) || digitCount < 8) {
-    const phoneExampleByLang = {
-      fr: 'Exemple : +34612345678',
-      es: 'Ejemplo: +34612345678',
-      en: 'Example: +34612345678',
-      nl: 'Voorbeeld: +34612345678'
-    };
-
-    alert(({
-  fr: `Veuillez entrer un numéro de téléphone valide.\n${phoneExampleByLang.fr}`,
-  es: `Por favor, indique un número de teléfono válido.\n${phoneExampleByLang.es}`,
-  en: `Please enter a valid phone number.\n${phoneExampleByLang.en}`,
-  nl: `Geef een geldig telefoonnummer op.\n${phoneExampleByLang.nl}`
-})[currentLang] || `Veuillez entrer un numéro de téléphone valide.\n${phoneExampleByLang.fr}`);
+  if (!phonePattern.test(normalizedPhone) || digitCount < 8) {
+    setOrderFeedback('error', 'invalidPhone');
     renderMenu();
     return;
   }
@@ -3188,75 +5363,75 @@ if (!phonePattern.test(normalizedPhone) || digitCount < 8) {
   orderForm.phone = normalizedPhone;
 
   const orderItems = cart.map((cartItem) => {
-  const sourceItem = Object.values(menuData).flat().find((menuItem) => menuItem.id === cartItem.id);
-  const itemLabel = sourceItem?.adminName || sourceItem?.name || cartItem.id;
+    const sourceItem = Object.values(menuData).flat().find((menuItem) => menuItem.id === cartItem.id);
+    const itemLabel = sourceItem?.adminName || sourceItem?.name || cartItem.id;
 
-  const numericPrice = sourceItem && sourceItem.price
-    ? parseFloat(String(sourceItem.price).replace('€', '').replace(',', '.').trim())
-    : NaN;
+    const numericPrice = sourceItem && sourceItem.price
+      ? parseFloat(String(sourceItem.price).replace('€', '').replace(',', '.').trim())
+      : NaN;
 
-  return {
-    id: cartItem.id,
-    name: itemLabel,
-    quantity: cartItem.quantity,
-    unitPrice: Number.isNaN(numericPrice) ? null : numericPrice,
-    lineTotal: Number.isNaN(numericPrice) ? null : Number((numericPrice * cartItem.quantity).toFixed(2))
+    return {
+      id: cartItem.id,
+      name: itemLabel,
+      quantity: cartItem.quantity,
+      unitPrice: Number.isNaN(numericPrice) ? null : numericPrice,
+      lineTotal: Number.isNaN(numericPrice) ? null : Number((numericPrice * cartItem.quantity).toFixed(2))
+    };
+  });
+
+  const totalAmount = orderItems.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
+  const nowIso = new Date().toISOString();
+
+  const orderRequest = {
+    restaurantId: siteConfig?.identity?.id || LIVE_RESTAURANT_ID || '',
+    requestId: `CMD-${Date.now()}`,
+    requestType: 'order',
+    createdAt: nowIso,
+    updatedAt: nowIso,
+    status: 'pending',
+    customer: {
+      name: orderForm.name,
+      phone: orderForm.phone,
+      language: currentLang
+    },
+    order: {
+      date: orderForm.date,
+      time: orderForm.time,
+      note: orderForm.note || '',
+      items: orderItems,
+      totalAmount: Number(totalAmount.toFixed(2))
+    },
+    restaurantResponse: {
+      reason: '',
+      message: '',
+      updatedBy: ''
+    }
   };
-});
 
-const totalAmount = orderItems.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
-
-const nowIso = new Date().toISOString();
-
-const orderRequest = {
-  restaurantId: siteConfig?.identity?.id || '',
-  requestId: `CMD-${Date.now()}`,
-  requestType: 'order',
-  createdAt: nowIso,
-  updatedAt: nowIso,
-  status: 'sent',
-  customer: {
-    name: orderForm.name,
-    phone: orderForm.phone,
-    language: currentLang
-  },
-  order: {
-    date: orderForm.date,
-    time: orderForm.time,
-    note: orderForm.note || '',
-    items: orderItems,
-    totalAmount: Number(totalAmount.toFixed(2))
-  },
-  restaurantResponse: {
-    reason: '',
-    message: '',
-    updatedBy: ''
+  try {
+    await saveOrderRequestLocally(orderRequest);
+  } catch (error) {
+    console.error('TapCarta order Supabase insert error:', error);
+    setOrderFeedback('error', 'sendError');
+    renderMenu();
+    return;
   }
-};
 
-saveOrderRequestLocally(orderRequest);
+  setOrderFeedback('success', 'orderSent');
 
-const confirmationMessageByLang = {
-  fr: "Votre commande a bien été envoyée au restaurant.\n\nElle est maintenant en attente de confirmation de sa part.",
-  es: "Tu pedido ha sido enviado correctamente al restaurante.\n\nAhora está pendiente de confirmación por su parte.",
-  en: "Your order has been sent to the restaurant.\n\nIt is now awaiting confirmation from them.",
-  nl: "Je bestelling is correct naar het restaurant verzonden.\n\nZe wacht nu op bevestiging van hun kant."
-};
+  cart = [];
+  cartPanelOpen = false;
+  orderReviewOpen = false;
 
-alert(confirmationMessageByLang[currentLang] || confirmationMessageByLang.fr);
+  orderForm = {
+    name: '',
+    phone: '',
+    date: '',
+    time: '',
+    note: ''
+  };
 
-cart = [];
-orderReviewOpen = false;
-
-orderForm = {
-  name: '',
-  phone: '',
-  date: '',
-  time: '',
-  note: ''
-};
-
-renderMenu();
+  renderMenu();
 }
 
 function removeFromCart(itemId) {
@@ -3286,6 +5461,10 @@ function updateOrderFormField(field, value) {
     ...orderForm,
     [field]: value
   };
+
+  if (orderFeedback?.type === 'error') {
+    clearOrderFeedback();
+  }
 }
 
 function scrollToAddress() {
@@ -3357,6 +5536,10 @@ function updateOrderFormTimePart(part, value) {
     ...orderForm,
     time: `${nextHours}:${nextMinutes}`
   };
+
+  if (orderFeedback?.type === 'error') {
+    clearOrderFeedback();
+  }
 
   renderMenu();
 }
@@ -3485,6 +5668,8 @@ function renderMenuItem(item, t) {
   const itemTitle = item.adminName || itemData.name || '';
   const itemSubtitle = item.adminSubtitle || itemData.subtitle || '';
   const isAvailable = item.available !== false;
+  const cartItem = cart.find(selectedItem => selectedItem.id === item.id);
+  const selectedQuantity = cartItem?.quantity || 0;
 
   if (!itemTitle && !item.price && !item.noPrice && !item.specialPriceText) return '';
 
@@ -3508,11 +5693,35 @@ function renderMenuItem(item, t) {
           : 'Indisponible';
 
   const actionButton = orderMode && !item.noPrice && isAvailable
-    ? `
-      <button onclick="addToCart('${item.id}')" class="btn-action ml-3 px-3 py-1.5 rounded-lg border border-gold/50 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
-        ${t.addButton}
-      </button>
-    `
+    ? selectedQuantity > 0
+      ? `
+        <div class="ml-3 flex items-center gap-1.5 rounded-lg border border-gold/60 bg-gold/10 px-1.5 py-1">
+          <button
+            type="button"
+            onclick="removeFromCart('${item.id}')"
+            class="btn-action flex h-7 w-7 items-center justify-center rounded-md border border-gold/40 text-sm font-bold text-gold hover:bg-gold/15 transition-all"
+            aria-label="Retirer un article"
+          >
+            −
+          </button>
+          <span class="min-w-[24px] text-center text-xs font-bold text-cream">
+            ${selectedQuantity}
+          </span>
+          <button
+            type="button"
+            onclick="addToCart('${item.id}')"
+            class="btn-action flex h-7 w-7 items-center justify-center rounded-md border border-gold/40 text-sm font-bold text-gold hover:bg-gold/15 transition-all"
+            aria-label="Ajouter un article"
+          >
+            +
+          </button>
+        </div>
+      `
+      : `
+        <button onclick="addToCart('${item.id}')" class="btn-action ml-3 px-3 py-1.5 rounded-lg border border-gold/50 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
+          ${t.addButton}
+        </button>
+      `
     : !isAvailable
       ? `
         <span class="ml-3 px-3 py-1.5 rounded-lg border border-white/10 text-[11px] font-semibold text-cream/55 bg-white/5 whitespace-nowrap">
@@ -3522,7 +5731,7 @@ function renderMenuItem(item, t) {
       : '';
 
   return `
-    <div class="menu-item-row flex justify-between items-center py-2.5 px-3 rounded-lg ${isAvailable ? '' : 'opacity-60'}">
+    <div class="menu-item-row flex justify-between items-center py-2.5 px-3 rounded-lg ${isAvailable ? '' : 'opacity-60'} ${selectedQuantity > 0 ? 'border border-gold/20 bg-gold/5' : ''}">
       <div class="flex-1 min-w-0">
         <span class="text-sm ${isAvailable ? 'text-cream/90' : 'text-cream/60'}">${itemTitle}</span>
         ${itemSubtitle ? `<div class="menu-item-subtitle ${isAvailable ? '' : '!text-cream/40'}">${itemSubtitle}</div>` : ''}
@@ -3585,6 +5794,92 @@ function renderCategory(categoryKey, categoryLabel, t) {
         </div>
       `;
     }
+
+function getNumericMenuItemPrice(item) {
+  if (!item || !item.price) return 0;
+
+  const numericPrice = parseFloat(
+    String(item.price)
+      .replace('€', '')
+      .replace(',', '.')
+      .trim()
+  );
+
+  return Number.isNaN(numericPrice) ? 0 : numericPrice;
+}
+
+function calculateCartSummary() {
+  const allMenuItems = Object.values(menuData).flat();
+
+  const itemCount = cart.reduce((total, item) => total + item.quantity, 0);
+
+  const totalAmount = cart.reduce((sum, cartItem) => {
+    const sourceItem = allMenuItems.find(menuItem => menuItem.id === cartItem.id);
+    return sum + (getNumericMenuItemPrice(sourceItem) * cartItem.quantity);
+  }, 0);
+
+  return {
+    itemCount,
+    totalAmount,
+    totalFormatted: `${totalAmount.toFixed(2).replace('.', ',')} €`
+  };
+}
+
+function getOrderCategoryAllLabel() {
+  if (currentLang === 'es') return 'Todo';
+  if (currentLang === 'en') return 'All';
+  if (currentLang === 'nl') return 'Alles';
+  return 'Tout';
+}
+
+function setOrderCategory(categoryKey) {
+  activeOrderCategory = categoryKey || 'all';
+  cartPanelOpen = false;
+  orderReviewOpen = false;
+  clearOrderFeedback();
+  renderMenu();
+}
+
+function renderOrderCategoryFilter(visibleCategoryKeys, t) {
+  if (!orderMode || cartPanelOpen || !visibleCategoryKeys.length) {
+    return '';
+  }
+
+  const categoryButtons = [
+    {
+      key: 'all',
+      label: getOrderCategoryAllLabel()
+    },
+    ...visibleCategoryKeys.map(categoryKey => ({
+      key: categoryKey,
+      label: menuMeta.categories[categoryKey]?.name || t[categoryKey] || categoryKey
+    }))
+  ];
+
+  return `
+    <div class="mb-6 rounded-2xl border border-gold/25 bg-darkCard/80 px-3 py-3 shadow-lg">
+      <div class="flex flex-wrap justify-center gap-2">
+        ${categoryButtons.map(category => {
+          const isActive = activeOrderCategory === category.key;
+
+          return `
+            <button
+              type="button"
+              onclick="setOrderCategory('${category.key}')"
+              class="btn-action px-3 py-2 rounded-lg border text-xs font-semibold tracking-wide transition-all ${
+                isActive
+                  ? 'border-gold bg-gold/15 text-gold shadow-md'
+                  : 'border-gold/35 text-cream/85 hover:border-gold hover:bg-gold/10'
+              }"
+            >
+              ${category.label}
+            </button>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
 
     function renderAllergenSection(t) {
       const cards = allergenVisuals.map((item, index) => `
@@ -3723,7 +6018,16 @@ const visibleCategoryKeys = Object.keys(menuData)
     return orderA - orderB;
   });
 
-const menuHTML = visibleCategoryKeys
+if (activeOrderCategory !== 'all' && !visibleCategoryKeys.includes(activeOrderCategory)) {
+  activeOrderCategory = 'all';
+}
+
+const visibleOrderCategoryKeys =
+  orderMode && activeOrderCategory !== 'all'
+    ? visibleCategoryKeys.filter(categoryKey => categoryKey === activeOrderCategory)
+    : visibleCategoryKeys;
+
+const menuHTML = visibleOrderCategoryKeys
   .map(categoryKey => {
     const categoryLabel =
       menuMeta.categories[categoryKey]?.name ||
@@ -3732,6 +6036,8 @@ const menuHTML = visibleCategoryKeys
     return renderCategory(categoryKey, categoryLabel, t);
   })
   .join('');
+
+const cartSummary = calculateCartSummary();
 
       wrapper.innerHTML = `
       <header class="relative overflow-hidden pt-28 pb-16 px-4 text-center animate-fade-up">
@@ -3759,9 +6065,7 @@ ${orderMode ? `
   ${getBookingTexts(currentLang).bookingBackToHome}
 </button>
       </div>
-      <div id="client-order-card-slot">
-        ${renderLastOrderRequestCard()}
-      </div>
+      <div id="client-order-card-slot"></div>
     </div>
   </div>
 ` : ''}
@@ -3781,9 +6085,9 @@ ${bookingMode ? `
 </button>
       </div>
 
-      <div id="client-booking-card-slot">
-        ${renderLastBookingRequestCard()}
-      </div>
+      <div id="client-booking-card-slot"></div>
+
+      ${renderBookingFeedbackMessage()}
 
       <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
@@ -3917,14 +6221,14 @@ ${bookingMode ? `
   <section class="px-6 py-6 animate-fade-up delay-1">
     <div class="flex justify-center gap-4 flex-wrap">
       ${siteConfig.modules?.ordering ? `
-      <button onclick="activateOrderMode()" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold hover:border-gold hover:from-gold/30 hover:to-gold/15 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
+      <button onclick="handleOrderEntryClick()" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold hover:border-gold hover:from-gold/30 hover:to-gold/15 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
         <i data-lucide="shopping-bag" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
         <span class="text-sm font-semibold text-cream tracking-wide">${t.orderButton}</span>
       </button>
       ` : ''}
 
       ${siteConfig.modules?.booking ? `
-      <button onclick="activateBookingMode()" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
+      <button onclick="handleBookingEntryClick()" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
         <i data-lucide="calendar-days" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
         <span class="text-sm font-semibold text-cream tracking-wide">${t.bookingButton}</span>
       </button>
@@ -3966,11 +6270,13 @@ ${bookingMode ? `
   </section>
 ` : ''}
 
-${orderMode && !cartPanelOpen ? `
+${orderMode && !cartPanelOpen && cartSummary.itemCount > 0 ? `
   <div class="fixed right-4 bottom-4 z-40">
-    <button onclick="toggleCartPanel()" class="btn-action group flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-darkCard border-2 border-gold/50 text-cream hover:border-gold hover:bg-gold/10 transition-all shadow-xl">
-      <i data-lucide="shopping-cart" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
-      <span class="text-xs font-semibold tracking-wide">${t.cartButton} (${cart.reduce((total, item) => total + item.quantity, 0)})</span>
+    <button onclick="toggleCartPanel()" class="btn-action group flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-darkCard border-2 border-gold/50 text-cream hover:border-gold hover:bg-gold/10 transition-all shadow-xl max-w-[calc(100vw-2rem)]">
+      <i data-lucide="shopping-cart" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform flex-shrink-0"></i>
+      <span class="text-xs font-semibold tracking-wide whitespace-nowrap">
+        ${t.cartButton} · ${cartSummary.itemCount} · ${cartSummary.totalFormatted}
+      </span>
     </button>
   </div>
 ` : ''}
@@ -4022,21 +6328,15 @@ ${!orderMode ? `
 
   ${orderMode && !cartPanelOpen ? `
     <div class="w-full max-w-3xl mx-auto mt-6">
+      ${renderOrderCategoryFilter(visibleCategoryKeys, t)}
       ${menuHTML}
     </div>
   ` : ''}
 
   ${orderMode && cartPanelOpen ? `
     <div class="w-full max-w-3xl mx-auto mt-2 rounded-2xl border border-gold/40 bg-darkCard px-4 py-4 shadow-lg">
-           <div class="mb-4">
+      <div class="mb-4">
         <div class="text-sm font-semibold text-gold tracking-wide uppercase text-center mb-4">${t.cartTitle}</div>
-
-        <div class="flex justify-center">
-          <button onclick="toggleCartPanel()" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold hover:border-gold hover:from-gold/30 hover:to-gold/15 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20 w-full sm:w-auto min-w-[260px]">
-            <i data-lucide="plus-circle" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
-            <span class="text-sm font-semibold text-cream tracking-wide">${t.continueAddingButton}</span>
-          </button>
-        </div>
       </div>
 
       <div class="flex items-center justify-between gap-3 mb-2">
@@ -4050,6 +6350,8 @@ ${!orderMode ? `
           }, 0).toFixed(2).replace('.', ',')} €
         </div>
       </div>
+
+      ${renderOrderFeedbackMessage()}
 
       <div class="space-y-2">
         ${cart.length ? cart.map(cartItem => {
@@ -4075,7 +6377,7 @@ ${!orderMode ? `
      ${cart.length ? `
         <div class="mt-4 pt-4 border-t border-gold/20">
           ${!orderReviewOpen ? `
-            <div class="text-sm font-semibold text-gold tracking-wide uppercase mb-3">${t.orderFormTitle}</div>
+            <div id="order-customer-info" class="text-sm font-semibold text-gold tracking-wide uppercase mb-3">${t.orderFormTitle}</div>
 
             <div class="space-y-3">
               <div>
@@ -4161,7 +6463,11 @@ ${!orderMode ? `
                 </div>
               </div>
 
-              <div class="mt-4 flex justify-end">
+              <div class="mt-4 flex flex-col sm:flex-row justify-end gap-3">
+                <button onclick="modifyOrderItems()" class="btn-action px-4 py-2 rounded-lg border border-gold/25 bg-black/20 text-sm font-semibold text-cream/85 hover:border-gold/50 hover:bg-gold/10 transition-all">
+                  ${t.modifyOrderButton}
+                </button>
+
                 <button onclick="openOrderReview()" class="btn-action px-4 py-2 rounded-lg border border-gold/40 bg-gold/10 text-sm font-semibold text-gold hover:bg-gold/15 transition-all">
                   ${t.reviewOrderButton}
                 </button>
@@ -4226,8 +6532,12 @@ ${!orderMode ? `
               </div>
 
               <div class="flex flex-col sm:flex-row justify-end gap-3">
-                <button onclick="closeOrderReview()" class="btn-action px-4 py-2 rounded-lg border border-gold/25 bg-black/20 text-sm font-semibold text-cream/85 hover:border-gold/50 hover:bg-gold/10 transition-all">
-                  ${t.reviewBackButton}
+                <button onclick="modifyOrderItems()" class="btn-action px-4 py-2 rounded-lg border border-gold/25 bg-black/20 text-sm font-semibold text-cream/85 hover:border-gold/50 hover:bg-gold/10 transition-all">
+                  ${t.modifyOrderButton}
+                </button>
+
+                <button onclick="editOrderCustomerInfo()" class="btn-action px-4 py-2 rounded-lg border border-gold/25 bg-black/20 text-sm font-semibold text-cream/85 hover:border-gold/50 hover:bg-gold/10 transition-all">
+                  ${t.editCustomerInfoButton}
                 </button>
 
                 <button onclick="validateOrderReview()" class="btn-action px-4 py-2 rounded-lg border border-gold/40 bg-gold/10 text-sm font-semibold text-gold hover:bg-gold/15 transition-all">
@@ -4348,28 +6658,18 @@ ${!orderMode ? `
       setupClientRequestAutoRefresh();
     }
 
- function ensureFreshHtmlVersion() {
+function ensureFreshHtmlVersion() {
   try {
     const lastLoadedVersion = localStorage.getItem(VERSION_STORAGE_KEY);
-    const reloadDoneForVersion = sessionStorage.getItem(VERSION_RELOAD_FLAG_KEY);
     const currentUrl = new URL(window.location.href);
-    const hasVersionInUrl = currentUrl.searchParams.has('v');
 
-    if (hasVersionInUrl) {
+    if (currentUrl.searchParams.has('v')) {
       currentUrl.searchParams.delete('v');
       window.history.replaceState({}, document.title, currentUrl.toString());
     }
 
     if (lastLoadedVersion !== APP_VERSION) {
       localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION);
-
-      if (reloadDoneForVersion !== APP_VERSION) {
-        sessionStorage.setItem(VERSION_RELOAD_FLAG_KEY, APP_VERSION);
-        window.location.reload();
-        return true;
-      }
-    } else if (reloadDoneForVersion && reloadDoneForVersion !== APP_VERSION) {
-      sessionStorage.removeItem(VERSION_RELOAD_FLAG_KEY);
     }
   } catch (err) {
     console.warn('Version refresh check failed:', err);
@@ -4422,6 +6722,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 const manifestLink = document.getElementById('manifest-link');
 const appleTouchIconLink = document.getElementById('apple-touch-icon-link');
 const faviconLink = document.getElementById('favicon-link');
+const tapCartaPublicLogo = document.getElementById('tapcarta-public-logo');
 
 if (manifestLink) {
   manifestLink.href = MANIFEST_URL;
@@ -4434,6 +6735,12 @@ if (appleTouchIconLink) {
 if (faviconLink) {
   faviconLink.href = FAVICON_URL;
 }
+
+if (tapCartaPublicLogo) {
+  tapCartaPublicLogo.src = TAPCARTA_PUBLIC_LOGO_URL;
+}
+
+updateTapCartaPublicSignature();
 
   const reloadingForFreshVersion = ensureFreshHtmlVersion();
   if (reloadingForFreshVersion) return;
