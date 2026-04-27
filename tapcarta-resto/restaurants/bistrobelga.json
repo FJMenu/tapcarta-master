@@ -1,0 +1,79 @@
+{
+  "id": "tapcarta-demo",
+  "slug": "tapcartademo",
+  "name": "La Bonne Fourchette",
+  "status": "active",
+  "languages": ["fr", "es", "en", "nl"],
+
+  "branding": {
+    "logoUrl": "",
+    "faviconUrl": ""
+  },
+
+  "contract": {
+    "basePlan": "menu_qr",
+    "simpleWebsiteEnabled": false,
+    "orderEnabled": true,
+    "bookingEnabled": true,
+    "dishPhotosEnabled": false,
+    "customDomainEnabled": false,
+    "customDomain": "",
+    "includedLanguages": 4,
+    "extraLanguagesCount": 0,
+    "monthlyMenuUpdatesIncluded": 1,
+    "extraUpdateUnitPrice": 20,
+    "installationOffered": true,
+    "installationFee": 50,
+    "monthlyPriceHtva": 30,
+    "engagementMonths": 12,
+    "paymentDueDay": 10
+  },
+
+  "technical": {
+    "clientMenuUrl": "",
+    "qrMenuUrl": "",
+    "experienceUrl": "",
+    "reviewWriteUrl": "",
+    "reviewReadUrl": "",
+    "activationRequestUrl": "",
+    "phoneUrl": "",
+    "whatsappUrl": "",
+    "gpsUrl": "",
+    "pcMode": "light",
+    "pwaEnabled": true,
+    "recommendedBrowser": "chrome"
+  },
+
+  "display": {
+    "planLabel": "Standard",
+    "languagesLabel": "FR · ES · EN · NL",
+    "statusLabel": "Actif"
+  },
+
+  "menu": {
+    "categories": [],
+    "items": []
+  },
+
+  "billing": {
+    "customerName": "",
+    "contractStartDate": "",
+    "nextInvoiceDate": "",
+    "status": "active",
+    "manualExtras": []
+  },
+
+  "portal": {
+    "publicListingEnabled": true,
+    "clientAccessEnabled": true,
+    "clientCode": "",
+    "clientEmail": "",
+    "adminNotes": "",
+    "lastAccessAt": "",
+    "portalPaths": {
+      "publicPage": "/restaurants/tapcarta-demo",
+      "clientSpace": "/client",
+      "adminSpace": "/admin"
+    }
+  }
+}
