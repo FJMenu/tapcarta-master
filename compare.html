@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comparer les packs TapCarta | Menu digital QR pour restaurants</title>
+  <meta name="description" content="Comparez les packs TapCarta pour restaurants : Light, Standard, Plus et Max. Menu digital QR, réservation, commande, langues, visibilité Google et options évolutives.">
+  <link rel="icon" href="favicon.png">
+  <style>
+    :root{--bg:#080808;--card:#111214;--card2:#171819;--text:#f7f3e8;--muted:#c9c4b5;--soft:#9d9686;--gold:#ffc51b;--gold2:#f1a900;--line:rgba(255,255,255,.12);--line-gold:rgba(255,197,27,.28);--ok:#ffc51b;--bad:#777;--max:1180px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,Arial,sans-serif;background:radial-gradient(circle at 20% 0%,rgba(255,197,27,.15),transparent 34%),linear-gradient(180deg,#0d0d0d,#050505);color:var(--text)}
+    a{color:inherit;text-decoration:none}.container{width:min(var(--max),calc(100% - 36px));margin:auto}.nav{position:sticky;top:0;z-index:20;background:rgba(8,8,8,.82);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}.nav-inner{height:74px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;align-items:center;gap:12px}.brand img{width:46px;height:46px;border-radius:14px}.brand-title{font-weight:950;font-size:26px}.brand-sub{font-size:12px;color:var(--muted);margin-top:2px}.nav-actions{display:flex;align-items:center;gap:10px}.lang-switch{display:flex;gap:6px;padding:6px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.04)}.lang-switch button{border:0;background:transparent;color:var(--muted);font-weight:800;padding:8px 10px;border-radius:999px;cursor:pointer}.lang-switch button.active{background:var(--gold);color:#111}.btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line-gold);border-radius:999px;padding:13px 18px;font-weight:950;background:rgba(255,197,27,.08);color:var(--text);cursor:pointer}.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111;border-color:transparent;box-shadow:0 14px 34px rgba(255,197,27,.18)}.btn-dark{background:#0f0f10}.hero{padding:64px 0 34px}.kicker{color:var(--gold);font-weight:950;text-transform:uppercase;letter-spacing:.12em;font-size:13px}h1{font-size:clamp(40px,7vw,76px);line-height:.95;margin:16px 0 18px;letter-spacing:-3px}h1 span,h2 span{color:var(--gold)}.lead{font-size:20px;color:#e0dccf;max-width:850px;line-height:1.55}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}.panel{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border-radius:30px;box-shadow:0 24px 80px rgba(0,0,0,.36)}section{padding:38px 0}h2{font-size:clamp(30px,4.4vw,50px);margin:0 0 14px;letter-spacing:-1.5px}.section-text{color:var(--muted);line-height:1.55;max-width:820px;margin:0 0 24px}.table-wrap{overflow:hidden;border-radius:28px;border:1px solid var(--line);background:#0c0c0d}.compare-table{width:100%;border-collapse:collapse;min-width:0}.compare-table th,.compare-table td{padding:17px 16px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}.compare-table th:first-child,.compare-table td:first-child{text-align:left;min-width:260px;color:#e7e1d2}.compare-table thead th{position:sticky;top:0;background:#111214;color:var(--text);font-size:15px}.price{display:block;color:var(--gold);font-size:24px;font-weight:950;margin-top:6px}.note{display:block;color:var(--soft);font-size:12px;margin-top:4px}.yes{color:var(--ok);font-weight:950;font-size:21px}.no{color:var(--bad);font-weight:950;font-size:20px}.soft{color:var(--muted);font-size:13px;line-height:1.35}.highlight{background:rgba(255,197,27,.07)}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.card{padding:28px}.card h3{font-size:26px;margin:0 0 10px}.card p{color:var(--muted);line-height:1.55}.card ul{margin:14px 0 22px;padding-left:20px;color:#ddd6c6;line-height:1.7}.cta-band{padding:30px;display:grid;grid-template-columns:1.45fr .55fr;gap:20px;align-items:center;background:linear-gradient(135deg,rgba(255,197,27,.16),rgba(255,255,255,.04));border-color:var(--line-gold)}.cta-band p{color:var(--muted);line-height:1.55}.cta-actions{display:grid;gap:10px}.demo-box{padding:30px;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}.demo-pill{padding:12px 16px;border-radius:999px;background:rgba(255,197,27,.1);border:1px solid var(--line-gold);color:var(--gold);font-weight:950}.footer{padding:34px 0 54px;color:var(--soft);border-top:1px solid var(--line);margin-top:28px}.footer-row{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.max-showcase{
+  position:relative;
+  overflow:hidden;
+  border-color:rgba(255,197,27,.34)!important;
+  background:
+    radial-gradient(circle at 82% 22%,rgba(255,197,27,.18),transparent 30%),
+    linear-gradient(135deg,rgba(255,197,27,.10),rgba(255,255,255,.035))!important;
+}
+
+.max-showcase::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg,transparent 20%,rgba(255,197,27,.10),transparent 70%);
+  pointer-events:none;
+}
+
+.max-showcase-grid{
+  position:relative;
+  z-index:1;
+  padding:34px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:30px;
+  align-items:center;
+}
+
+.max-showcase-content{
+  min-width:0;
+}
+
+.max-showcase .section-text{
+  max-width:620px;
+  margin-bottom:22px;
+}
+
+.max-showcase-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:0 0 24px;
+}
+
+.max-showcase-list span{
+  display:block;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.045);
+  border-radius:16px;
+  padding:11px 13px;
+  color:#eee6d5;
+  font-size:14px;
+  font-weight:850;
+  line-height:1.25;
+}
+
+.max-showcase-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:center;
+}
+
+.max-showcase-soon{
+  color:var(--gold);
+  font-weight:950;
+  font-size:13px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.max-showcase-visual{
+  border:1px solid rgba(255,197,27,.20);
+  border-radius:28px;
+  background:rgba(0,0,0,.24);
+  padding:12px;
+  box-shadow:0 26px 70px rgba(0,0,0,.34);
+}
+
+.max-showcase-visual img{
+  width:100%;
+  display:block;
+  border-radius:22px;
+  filter:drop-shadow(0 22px 34px rgba(0,0,0,.36));
+}
+
+@media(max-width:860px){
+  .max-showcase{
+    max-width:calc(100vw - 28px);
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .max-showcase-grid{
+    grid-template-columns:minmax(0,1fr);
+    padding:22px;
+    gap:22px;
+    max-width:100%;
+    overflow:hidden;
+  }
+
+  .max-showcase-visual,
+  .max-showcase-visual img{
+    max-width:100%;
+    overflow:hidden;
+  }
+
+  .max-showcase h2{
+    font-size:clamp(30px,9vw,42px);
+    line-height:1.05;
+  }
+
+  .max-showcase-list{
+    grid-template-columns:1fr;
+  }
+
+  .max-showcase-actions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+
+  .max-showcase-soon{
+    text-align:center;
+  }
+}
+ main > section{
+  opacity:0;
+  transform:translateY(24px);
+  animation:fadeUp .7s ease forwards;
+}
+
+main > section:nth-of-type(1){animation-delay:.05s}
+main > section:nth-of-type(2){animation-delay:.12s}
+main > section:nth-of-type(3){animation-delay:.18s}
+main > section:nth-of-type(4){animation-delay:.24s}
+main > section:nth-of-type(5){animation-delay:.30s}
+
+@keyframes fadeUp{
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+.panel{
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+.panel:hover{
+  transform:translateY(-2px);
+  border-color:rgba(255,197,27,.35);
+  box-shadow:0 24px 70px rgba(255,197,27,.06), 0 20px 60px rgba(0,0,0,.35);
+}
+@media(max-width:760px){
+  .table-wrap{
+    overflow:visible;
+    border:0;
+    background:transparent;
+  }
+
+  .compare-table,
+  .compare-table tbody,
+  .compare-table tr,
+  .compare-table td{
+    display:block;
+    width:100%;
+  }
+
+  .compare-table thead{
+    display:none;
+  }
+
+  .compare-table tr{
+    margin:0 0 14px;
+    border:1px solid var(--line);
+    border-radius:22px;
+    overflow:hidden;
+    background:#0c0c0d;
+  }
+
+  .compare-table td{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:14px;
+    padding:13px 15px;
+    border-bottom:1px solid var(--line);
+    text-align:right;
+  }
+
+  .compare-table td:first-child{
+    display:block;
+    min-width:0;
+    font-weight:950;
+    color:var(--gold);
+    text-align:left;
+    background:rgba(255,197,27,.08);
+  }
+
+  .compare-table td:not(:first-child)::before{
+    content:attr(data-plan);
+    color:var(--muted);
+    font-weight:850;
+    text-align:left;
+  }
+
+  .compare-table td:last-child{
+    border-bottom:0;
+  }
+
+  .compare-table .highlight{
+    background:rgba(255,197,27,.055);
+  }
+}
+@media(max-width:760px){.nav-inner{height:auto;padding:14px 0;align-items:flex-start;flex-direction:column}.nav-actions{width:100%;display:grid;grid-template-columns:1fr}.lang-switch{justify-content:center}.hero{padding-top:42px}h1{letter-spacing:-2px}.btn{width:100%}.cards{grid-template-columns:1fr}.cta-band,.demo-box{grid-template-columns:1fr}.container{width:min(var(--max),calc(100% - 22px))}}
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="index.html" aria-label="TapCarta accueil">
+        <img src="favicon.png" alt="TapCarta">
+        <div><div class="brand-title">TapCarta</div><div class="brand-sub" data-i18n="brand.sub">Menu digital, commande et réservation</div></div>
+      </a>
+      <div class="nav-actions">
+        <div class="lang-switch" aria-label="Langue">
+          <button type="button" data-lang="fr" class="active">FR</button><button type="button" data-lang="es">ES</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="nl">NL</button>
+        </div>
+        <a class="btn btn-dark" href="index.html" data-i18n="nav.back">Retour au site</a>
+        <a class="btn btn-primary" href="join.html" data-i18n="nav.join">Je rejoins TapCarta</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="kicker" data-i18n="hero.kicker">Comparatif des packs</div>
+        <h1 data-i18n="hero.title">Choisissez le pack <span>le plus rentable</span> pour votre restaurant</h1>
+        <p class="lead" data-i18n="hero.text">TapCarta vous permet de démarrer simplement avec un QR durable, puis d’ajouter les fonctions qui comptent vraiment : menu digital, langues, réservation, commande et visibilité.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="join.html?pack=plus" data-i18n="hero.cta1">Choisir le pack conseillé</a>
+          <a class="btn" href="#table" data-i18n="hero.cta2">Voir le tableau comparatif</a>
+        </div>
+      </div>
+    </section>
+
+<section id="table">
+  <div class="container">
+    <h2 data-i18n="table.title">Comparez les packs <span>sans pression</span></h2>
+    <p class="section-text" data-i18n="table.text">Chaque formule a son rôle. Le tableau sert à comparer clairement les prix et les fonctions incluses. Le détail utile vient juste après.</p>
+
+    <div class="table-wrap">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th data-i18n="col.feature">Fonction</th>
+            <th>Light<span class="price">0 €</span><span class="note" data-i18n="price.month.simple">/ mois</span></th>
+            <th>Standard<span class="price">30 €</span><span class="note" data-i18n="price.month">/ mois HTVA</span></th>
+            <th class="highlight">Plus<span class="price">45 €</span><span class="note" data-i18n="price.month">/ mois HTVA</span></th>
+            <th>Max<span class="price" data-i18n="price.soon.short">Bientôt</span><span class="note" data-i18n="price.soon">Prix en préparation</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td data-i18n="f.qr">QR durable conservé</td><td data-plan="Light" class="yes">✓</td><td data-plan="Standard" class="yes">✓</td><td data-plan="Plus" class="yes highlight">✓</td><td data-plan="Max" class="yes">✓</td></tr>
+          <tr><td data-i18n="f.light">Nom, localisation, appel/contact</td><td data-plan="Light" class="yes">✓</td><td data-plan="Standard" class="yes">✓</td><td data-plan="Plus" class="yes highlight">✓</td><td data-plan="Max" class="yes">✓</td></tr>
+          <tr><td data-i18n="f.menu">Menu digital complet</td><td data-plan="Light" class="no">×</td><td data-plan="Standard" class="yes">✓</td><td data-plan="Plus" class="yes highlight">✓</td><td data-plan="Max" class="yes">✓</td></tr>
+          <tr><td data-i18n="f.lang">Détection automatique de la langue du client</td><td data-plan="Light" class="no">×</td><td data-plan="Standard" class="yes">✓</td><td data-plan="Plus" class="yes highlight">✓</td><td data-plan="Max" class="yes">✓</td></tr>
+          <tr><td data-i18n="f.admin">Accès de gestion restaurant</td><td data-plan="Light" class="no">×</td><td data-plan="Standard" class="yes">✓</td><td data-plan="Plus" class="yes highlight">✓</td><td data-plan="Max" class="yes">✓</td></tr>
+          <tr><td data-i18n="f.web">Site web standard lié au restaurant</td><td data-plan="Light" class="no">×</td><td data-plan="Standard" class="yes">✓</td><td data-plan="Plus" class="yes highlight">✓</td><td data-plan="Max" class="yes">✓</td></tr>
+          <tr><td data-i18n="f.seo">Référencement TapCarta et web</td><td data-plan="Light" class="soft" data-i18n="level.basic">Base</td><td data-plan="Standard" class="soft" data-i18n="level.normal">Normal</td><td data-plan="Plus" class="soft highlight" data-i18n="level.advanced">Avancé</td><td data-plan="Max" class="soft" data-i18n="level.assistant">Poussé par l’assistant</td></tr>
+          <tr><td data-i18n="f.webseo">Adresse web avec meilleur référencement internet</td><td data-plan="Light" class="no">×</td><td data-plan="Standard" class="no">×</td><td data-plan="Plus" class="no highlight">×</td><td data-plan="Max" class="yes">✓</td></tr>
+          <tr><td data-i18n="f.booking">Réservation</td><td data-plan="Light" class="no">×</td><td data-plan="Standard" class="no">×</td><td data-plan="Plus" class="yes highlight">✓</td><td data-plan="Max" class="yes">✓</td></tr>
+          <tr><td data-i18n="f.order">Commande / précommande indicative</td><td data-plan="Light" class="no">×</td><td data-plan="Standard" class="no">×</td><td data-plan="Plus" class="yes highlight">✓</td><td data-plan="Max" class="yes">✓</td></tr>
+          <tr><td data-i18n="f.assistant">Assistant personnel du restaurateur</td><td data-plan="Light" class="no">×</td><td data-plan="Standard" class="no">×</td><td data-plan="Plus" class="no highlight">×</td><td data-plan="Max" class="yes">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="panel" style="padding:34px; border-color:var(--line-gold); background:linear-gradient(135deg,rgba(255,197,27,.13),rgba(255,255,255,.035));">
+      <div class="kicker" data-i18n="plusblock.kicker">Pourquoi Plus ressort naturellement</div>
+      <h2 data-i18n="plusblock.title">Pour 15 € de plus que Standard, vous ajoutez les fonctions qui changent vraiment l’usage.</h2>
+      <p class="section-text" data-i18n="plusblock.text">Standard donne une base propre : menu digital, langues et gestion. Plus ajoute les éléments qui transforment TapCarta en outil commercial complet : réservation, commande indicative, site web standard et meilleure visibilité.</p>
+      <div class="cards">
+        <article class="card">
+          <h3>Standard</h3>
+          <p data-i18n="plusblock.standard">Une base sérieuse pour afficher un menu digital propre et multilingue.</p>
+        </article>
+        <article class="card">
+          <h3>Plus</h3>
+          <p data-i18n="plusblock.plus">La version la plus équilibrée pour un restaurant qui veut réellement exploiter son QR au quotidien.</p>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container panel max-showcase">
+    <div class="max-showcase-grid">
+      <div class="max-showcase-content">
+        <div class="kicker" data-i18n="max.kicker">TapCarta Max</div>
+        <h2 data-i18n="max.title">Max, votre assistant personnel pour restaurant</h2>
+        <p class="section-text" data-i18n="max.text">Max arrive prochainement pour accompagner le restaurateur dans les tâches qui prennent du temps : mieux traduire la carte, améliorer les descriptions, préparer des idées de contenu, analyser les performances et renforcer la visibilité du restaurant.</p>
+
+        <div class="max-showcase-list">
+          <span data-i18n="max.item1">Traductions spécialisées</span>
+          <span data-i18n="max.item2">Carte mieux valorisée</span>
+          <span data-i18n="max.item3">Rapports mensuels</span>
+          <span data-i18n="max.item4">Publications réseaux sociaux assistées</span>
+        </div>
+
+        <div class="max-showcase-actions">
+          <a class="btn btn-primary" href="join.html" data-i18n="nav.join">Je rejoins TapCarta</a>
+          <span class="max-showcase-soon" data-i18n="max.soon">Prochainement disponible</span>
+        </div>
+      </div>
+
+      <div class="max-showcase-visual">
+        <img src="max-assistant-preview.png" alt="Aperçu de TapCarta Max">
+      </div>
+    </div>
+  </div>
+</section>
+
+    <section id="demo">
+      <div class="container">
+        <div class="panel demo-box">
+          <div><div class="kicker" data-i18n="demo.kicker">Vidéo de démonstration</div><h2 data-i18n="demo.title">Voir TapCarta en action</h2><p class="section-text" data-i18n="demo.text">Cette zone est prévue pour intégrer facilement la future vidéo démo, sans casser le parcours de choix du pack.</p></div>
+          <span class="demo-pill" data-i18n="demo.soon">Vidéo bientôt disponible</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container panel cta-band">
+        <div><h2 data-i18n="final.title">Le bon choix : démarrer avec une offre utile, pas seulement visible.</h2><p data-i18n="final.text">TapCarta est pensé pour évoluer sans changer votre QR. Vous pouvez commencer proprement, puis activer davantage de fonctions selon vos besoins et selon votre contrat.</p></div>
+        <div class="cta-actions"><a class="btn btn-primary" href="join.html?pack=plus" data-i18n="final.plus">Je choisis Plus</a><a class="btn" href="join.html?pack=standard" data-i18n="final.standard">Je choisis Standard</a><!-- bouton "question" temporairement désactivé --></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+  <div class="container footer-row">
+    <span>© TapCarta</span>
+    <a href="mentions-legales.html">Mentions légales</a>
+    |
+    <a href="conditions.html">Conditions générales</a>
+    |
+    <a href="privacy.html" data-i18n="footer.privacy">Confidentialité</a>
+  </div>
+</footer>
+
+  <script>
+const dict={
+      fr:{
+        'brand.sub':'Menu digital, commande et réservation',
+        'nav.back':'Retour au site',
+        'nav.join':'Je rejoins TapCarta',
+        'hero.kicker':'Comparatif des packs',
+        'hero.title':'Choisissez le pack <span>le plus rentable</span> pour votre restaurant',
+        'hero.text':'TapCarta vous permet de démarrer simplement avec un QR durable, puis d’ajouter les fonctions qui comptent vraiment : menu digital, langues, réservation, commande et visibilité.',
+        'hero.cta1':'Choisir le pack conseillé',
+        'hero.cta2':'Voir le tableau comparatif',
+        'table.title':'Comparaison <span>claire</span> des offres',
+        'table.text':'Light garde votre QR actif en version minimale. Standard rend votre menu vraiment exploitable. Plus est le meilleur équilibre pour vendre, réserver et rassurer. Max sera activable dès son lancement.',
+        'col.feature':'Fonction',
+        'price.month':'/ mois HTVA',
+        'price.month.simple':'/ mois',
+        'price.soon.short':'Bientôt',
+        'price.soon':'Prix en préparation',
+        'f.qr':'QR durable conservé',
+        'f.light':'Nom, localisation, appel/contact',
+        'f.menu':'Menu digital complet',
+        'f.lang':'Détection automatique de la langue du client',
+        'f.admin':'Accès de gestion restaurant',
+        'f.web':'Site web standard lié au restaurant',
+        'f.seo':'Référencement TapCarta et web',
+        'f.webseo':'Adresse web avec meilleur référencement internet',
+        'f.booking':'Réservation',
+        'f.order':'Commande / précommande indicative',
+        'f.assistant':'Assistant personnel du restaurateur',
+        'level.basic':'Base',
+        'level.normal':'Normal',
+        'level.advanced':'Avancé',
+        'level.assistant':'Poussé par l’assistant',
+        'light.title':'Light garde votre QR actif, mais reste volontairement limité.',
+        'light.text':'Light sert surtout à conserver une présence minimale : nom du restaurant, localisation et contact. Ce n’est pas une vraie carte digitale.',
+        'light.cta':'Choisir Light',
+        'plus.title':'Plus est le pack le plus logique pour exploiter TapCarta.',
+        'plus.text':'Pour une différence limitée par rapport à Standard, vous ajoutez les fonctions qui ont le plus de valeur commerciale : réservation, commande, site standard et meilleure conversion.',
+        'plus.li1':'Plus utile pour les clients',
+        'plus.li2':'Plus rassurant pour le restaurant',
+        'plus.li3':'Plus cohérent pour la visibilité Google',
+        'plus.cta':'Je choisis Plus',
+        'plusblock.kicker':'Pourquoi Plus ressort naturellement',
+        'plusblock.title':'Pour 15 € de plus que Standard, vous ajoutez les fonctions qui changent vraiment l’usage.',
+        'plusblock.text':'Standard donne une base propre : menu digital, langues et gestion. Plus ajoute les éléments qui transforment TapCarta en outil commercial complet : réservation, commande indicative, site web standard et meilleure visibilité.',
+        'plusblock.standard':'Une base sérieuse pour afficher un menu digital propre et multilingue.',
+        'plusblock.plus':'La version la plus équilibrée pour un restaurant qui veut réellement exploiter son QR au quotidien.',
+        'max.kicker':'TapCarta Max',
+        'max.title':'Max, votre assistant personnel pour restaurant',
+        'max.text':'Max arrive prochainement pour accompagner le restaurateur dans les tâches qui prennent du temps : mieux traduire la carte, améliorer les descriptions, préparer des idées de contenu, analyser les performances et renforcer la visibilité du restaurant.',
+        'max.item1':'Traductions spécialisées',
+        'max.item2':'Carte mieux valorisée',
+        'max.item3':'Rapports mensuels',
+        'max.item4':'Publications réseaux sociaux assistées',
+        'max.soon':'Prochainement disponible',
+        'demo.kicker':'Vidéo de démonstration',
+        'demo.title':'Voir TapCarta en action',
+        'demo.text':'Cette zone est prévue pour intégrer facilement la future vidéo démo, sans casser le parcours de choix du pack.',
+        'demo.soon':'Vidéo bientôt disponible',
+        'final.title':'Le bon choix : démarrer avec une offre utile, pas seulement visible.',
+        'final.text':'TapCarta est pensé pour évoluer sans changer votre QR. Vous pouvez commencer proprement, puis activer davantage de fonctions selon vos besoins et selon votre contrat.',
+        'final.plus':'Je choisis Plus',
+        'final.standard':'Je choisis Standard',
+        'final.question':'J’ai une question',
+        'footer.privacy':'Confidentialité'
+      },
+      es:{
+        'brand.sub':'Menú digital, pedidos y reservas',
+        'nav.back':'Volver al sitio',
+        'nav.join':'Me uno a TapCarta',
+        'hero.kicker':'Comparativa de packs',
+        'hero.title':'Elija el pack <span>más rentable</span> para su restaurante',
+        'hero.text':'TapCarta le permite empezar con un QR duradero y añadir las funciones que realmente cuentan: menú digital, idiomas, reservas, pedidos y visibilidad.',
+        'hero.cta1':'Elegir el pack recomendado',
+        'hero.cta2':'Ver la comparativa',
+        'table.title':'Comparación <span>clara</span> de ofertas',
+        'table.text':'Light mantiene su QR activo en versión mínima. Standard convierte su menú en una herramienta real. Plus es el mejor equilibrio para vender, reservar y dar confianza. Max podrá activarse desde su lanzamiento.',
+        'col.feature':'Función',
+        'price.month':'/ mes + IVA',
+        'price.month.simple':'/ mes',
+        'price.soon.short':'Próximamente',
+        'price.soon':'Precio en preparación',
+        'f.qr':'QR duradero conservado',
+        'f.light':'Nombre, ubicación, llamada/contacto',
+        'f.menu':'Menú digital completo',
+        'f.lang':'Detección automática del idioma del cliente',
+        'f.admin':'Acceso de gestión del restaurante',
+        'f.web':'Sitio web estándar vinculado al restaurante',
+        'f.seo':'Posicionamiento TapCarta y web',
+        'f.webseo':'Dirección web con mejor posicionamiento en internet',
+        'f.booking':'Reservas',
+        'f.order':'Pedido / prepedido indicativo',
+        'f.assistant':'Asistente personal del restaurador',
+        'level.basic':'Base',
+        'level.normal':'Normal',
+        'level.advanced':'Avanzado',
+        'level.assistant':'Impulsado por el asistente',
+        'light.title':'Light mantiene su QR activo, pero es voluntariamente limitado.',
+        'light.text':'Light sirve sobre todo para conservar una presencia mínima: nombre del restaurante, ubicación y contacto. No es una carta digital real.',
+        'light.cta':'Elegir Light',
+        'plus.title':'Plus es el pack más lógico para explotar TapCarta.',
+        'plus.text':'Por una diferencia limitada frente a Standard, añade las funciones con más valor comercial: reserva, pedido, sitio estándar y mejor conversión.',
+        'plus.li1':'Más útil para los clientes',
+        'plus.li2':'Más tranquilizador para el restaurante',
+        'plus.li3':'Más coherente para la visibilidad en Google',
+        'plus.cta':'Elijo Plus',
+        'plusblock.kicker':'Por qué Plus destaca naturalmente',
+        'plusblock.title':'Por 15 € más que Standard, añade las funciones que realmente cambian el uso.',
+        'plusblock.text':'Standard ofrece una base sólida: menú digital, idiomas y gestión. Plus añade los elementos que convierten TapCarta en una herramienta comercial completa: reservas, pedido indicativo, sitio web estándar y mejor visibilidad.',
+        'plusblock.standard':'Una base seria para mostrar un menú digital limpio y multilingüe.',
+        'plusblock.plus':'La versión más equilibrada para un restaurante que quiere aprovechar realmente su QR en el día a día.',
+        'max.kicker':'TapCarta Max',
+        'max.title':'Max, su asistente personal para restaurante',
+        'max.text':'Max llegará próximamente para acompañar al restaurador en las tareas que consumen tiempo: traducir mejor la carta, mejorar las descripciones, preparar ideas de contenido, analizar el rendimiento y reforzar la visibilidad del restaurante.',
+        'max.item1':'Traducciones especializadas',
+        'max.item2':'Carta mejor valorizada',
+        'max.item3':'Informes mensuales',
+        'max.item4':'Publicaciones asistidas para redes sociales',
+        'max.soon':'Próximamente disponible',
+        'demo.kicker':'Vídeo de demostración',
+        'demo.title':'Ver TapCarta en acción',
+        'demo.text':'Esta zona está prevista para integrar fácilmente el futuro vídeo demo sin romper el recorrido de elección del pack.',
+        'demo.soon':'Vídeo próximamente',
+        'final.title':'La buena elección: empezar con una oferta útil, no solo visible.',
+        'final.text':'TapCarta está pensado para evolucionar sin cambiar su QR. Puede empezar correctamente y activar más funciones según sus necesidades y contrato.',
+        'final.plus':'Elijo Plus',
+        'final.standard':'Elijo Standard',
+        'final.question':'Tengo una pregunta',
+        'footer.privacy':'Privacidad'
+      },
+      en:{
+        'brand.sub':'Digital menu, orders and bookings',
+        'nav.back':'Back to website',
+        'nav.join':'Join TapCarta',
+        'hero.kicker':'Plan comparison',
+        'hero.title':'Choose the <span>most profitable</span> plan for your restaurant',
+        'hero.text':'TapCarta lets you start with a durable QR code and add the features that really matter: digital menu, languages, bookings, orders and visibility.',
+        'hero.cta1':'Choose recommended plan',
+        'hero.cta2':'See comparison table',
+        'table.title':'A <span>clear</span> plan comparison',
+        'table.text':'Light keeps your QR active in a minimal version. Standard makes your menu truly usable. Plus is the best balance for selling, booking and reassuring customers. Max can be activated as soon as it launches.',
+        'col.feature':'Feature',
+        'price.month':'/ month excl. VAT',
+        'price.month.simple':'/ month',
+        'price.soon.short':'Coming soon',
+        'price.soon':'Price in preparation',
+        'f.qr':'Durable QR preserved',
+        'f.light':'Name, location, call/contact',
+        'f.menu':'Full digital menu',
+        'f.lang':'Automatic customer language detection',
+        'f.admin':'Restaurant management access',
+        'f.web':'Standard website linked to the restaurant',
+        'f.seo':'TapCarta and web visibility',
+        'f.webseo':'Web address with stronger internet visibility',
+        'f.booking':'Bookings',
+        'f.order':'Order / indicative preorder',
+        'f.assistant':'Personal assistant for the restaurant owner',
+        'level.basic':'Basic',
+        'level.normal':'Standard',
+        'level.advanced':'Advanced',
+        'level.assistant':'Boosted by the assistant',
+        'light.title':'Light keeps your QR active, but remains intentionally limited.',
+        'light.text':'Light is mainly designed to keep a minimal presence: restaurant name, location and contact. It is not a real digital menu.',
+        'light.cta':'Choose Light',
+        'plus.title':'Plus is the most logical plan to make TapCarta useful.',
+        'plus.text':'For a limited difference compared with Standard, you add the functions with the most commercial value: bookings, orders, standard website and better conversion.',
+        'plus.li1':'More useful for customers',
+        'plus.li2':'More reassuring for the restaurant',
+        'plus.li3':'More consistent for Google visibility',
+        'plus.cta':'I choose Plus',
+        'plusblock.kicker':'Why Plus naturally stands out',
+        'plusblock.title':'For €15 more than Standard, you add the features that truly change daily use.',
+        'plusblock.text':'Standard provides a solid base: digital menu, languages and management. Plus adds the elements that turn TapCarta into a complete commercial tool: bookings, indicative orders, standard website and better visibility.',
+        'plusblock.standard':'A serious base for displaying a clean, multilingual digital menu.',
+        'plusblock.plus':'The most balanced version for a restaurant that really wants to use its QR every day.',
+        'max.kicker':'TapCarta Max',
+        'max.title':'Max, your personal assistant for restaurants',
+        'max.text':'Max is coming soon to support restaurant owners with time-consuming tasks: better menu translations, improved descriptions, content ideas, performance analysis and stronger restaurant visibility.',
+        'max.item1':'Specialised translations',
+        'max.item2':'Better-presented menu',
+        'max.item3':'Monthly reports',
+        'max.item4':'Assisted social media posts',
+        'max.soon':'Coming soon',
+        'demo.kicker':'Demo video',
+        'demo.title':'See TapCarta in action',
+        'demo.text':'This area is ready for the future demo video, without breaking the pack selection path.',
+        'demo.soon':'Video coming soon',
+        'final.title':'The right choice: start with a useful offer, not just a visible one.',
+        'final.text':'TapCarta is designed to evolve without changing your QR code. You can start properly, then activate more features according to your needs and contract.',
+        'final.plus':'I choose Plus',
+        'final.standard':'I choose Standard',
+        'final.question':'I have a question',
+        'footer.privacy':'Privacy'
+      },
+      nl:{
+        'brand.sub':'Digitaal menu, bestellingen en reservaties',
+        'nav.back':'Terug naar site',
+        'nav.join':'Ik sluit me aan bij TapCarta',
+        'hero.kicker':'Vergelijking van pakketten',
+        'hero.title':'Kies het <span>meest rendabele</span> pakket voor uw restaurant',
+        'hero.text':'Met TapCarta start u met een duurzame QR-code en voegt u functies toe die echt tellen: digitaal menu, talen, reservaties, bestellingen en zichtbaarheid.',
+        'hero.cta1':'Aanbevolen pakket kiezen',
+        'hero.cta2':'Vergelijking bekijken',
+        'table.title':'Een <span>duidelijke</span> vergelijking van de formules',
+        'table.text':'Light houdt uw QR actief in een minimale versie. Standard maakt uw menu echt bruikbaar. Plus is de beste balans voor verkopen, reserveren en vertrouwen. Max kan worden geactiveerd zodra het wordt gelanceerd.',
+        'col.feature':'Functie',
+        'price.month':'/ maand excl. btw',
+        'price.month.simple':'/ maand',
+        'price.soon.short':'Binnenkort',
+        'price.soon':'Prijs in voorbereiding',
+        'f.qr':'Duurzame QR behouden',
+        'f.light':'Naam, locatie, bellen/contact',
+        'f.menu':'Volledig digitaal menu',
+        'f.lang':'Automatische detectie van de taal van de klant',
+        'f.admin':'Beheertoegang voor het restaurant',
+        'f.web':'Standaard website gekoppeld aan het restaurant',
+        'f.seo':'TapCarta- en webzichtbaarheid',
+        'f.webseo':'Webadres met betere online zichtbaarheid',
+        'f.booking':'Reservaties',
+        'f.order':'Bestelling / indicatieve voorbestelling',
+        'f.assistant':'Persoonlijke assistent voor de restauranthouder',
+        'level.basic':'Basis',
+        'level.normal':'Normaal',
+        'level.advanced':'Geavanceerd',
+        'level.assistant':'Versterkt door de assistent',
+        'light.title':'Light houdt uw QR actief, maar blijft bewust beperkt.',
+        'light.text':'Light dient vooral voor een minimale aanwezigheid: restaurantnaam, locatie en contact. Het is geen echte digitale menukaart.',
+        'light.cta':'Light kiezen',
+        'plus.title':'Plus is de meest logische formule om TapCarta echt te gebruiken.',
+        'plus.text':'Voor een beperkte meerprijs tegenover Standard krijgt u de functies met de meeste commerciële waarde: reservatie, bestelling, standaard website en betere conversie.',
+        'plus.li1':'Nuttiger voor klanten',
+        'plus.li2':'Geruststellender voor het restaurant',
+        'plus.li3':'Logischer voor Google-zichtbaarheid',
+        'plus.cta':'Ik kies Plus',
+        'plusblock.kicker':'Waarom Plus vanzelf opvalt',
+        'plusblock.title':'Voor €15 meer dan Standard voegt u functies toe die het dagelijkse gebruik echt veranderen.',
+        'plusblock.text':'Standard geeft een degelijke basis: digitaal menu, talen en beheer. Plus voegt de elementen toe die TapCarta omvormen tot een complete commerciële tool: reservaties, indicatieve bestellingen, standaard website en betere zichtbaarheid.',
+        'plusblock.standard':'Een serieuze basis om een nette, meertalige digitale menukaart te tonen.',
+        'plusblock.plus':'De meest evenwichtige versie voor een restaurant dat zijn QR dagelijks echt wil gebruiken.',
+        'max.kicker':'TapCarta Max',
+        'max.title':'Max, uw persoonlijke assistent voor restaurants',
+        'max.text':'Max komt binnenkort om restauranthouders te ondersteunen bij tijdrovende taken: betere vertalingen van de kaart, sterkere beschrijvingen, ideeën voor content, analyse van prestaties en betere zichtbaarheid van het restaurant.',
+        'max.item1':'Gespecialiseerde vertalingen',
+        'max.item2':'Menu beter voorgesteld',
+        'max.item3':'Maandelijkse rapporten',
+        'max.item4':'Ondersteunde socialmediapublicaties',
+        'max.soon':'Binnenkort beschikbaar',
+        'demo.kicker':'Demovideo',
+        'demo.title':'Bekijk TapCarta in actie',
+        'demo.text':'Deze zone is voorzien om later gemakkelijk de demovideo toe te voegen zonder het keuzeproces te breken.',
+        'demo.soon':'Video binnenkort beschikbaar',
+        'final.title':'De juiste keuze: starten met een nuttige formule, niet alleen een zichtbare.',
+        'final.text':'TapCarta is ontworpen om te evolueren zonder uw QR-code te wijzigen. U kunt goed starten en daarna meer functies activeren volgens uw behoeften en contract.',
+        'final.plus':'Ik kies Plus',
+        'final.standard':'Ik kies Standard',
+        'final.question':'Ik heb een vraag',
+        'footer.privacy':'Privacy'
+      }
+    };
+    const buttons=document.querySelectorAll('[data-lang]');
+    function setLang(lang){const data=dict[lang]||dict.fr;document.documentElement.lang=lang;document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n;if(data[key])el.innerHTML=data[key]});buttons.forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));localStorage.setItem('tapcarta_lang',lang)}
+    buttons.forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+    setLang(localStorage.getItem('tapcarta_lang')||'fr');
+  </script>
+</body>
+</html>
