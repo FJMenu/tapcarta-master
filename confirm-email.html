@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TapCarta — Je rejoins TapCarta</title>
+  <meta name="description" content="Rejoignez TapCarta et préparez votre espace restaurant : menu digital, commande, réservation, langues et accompagnement." />
+  <meta name="theme-color" content="#050505" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <style>
+    :root{
+      --bg:#050505;
+      --bg-2:#0a0b0d;
+      --card:#111317;
+      --card-2:#15171c;
+      --line:rgba(255,255,255,.12);
+      --line-gold:rgba(255,190,22,.42);
+      --text:#f7f4ea;
+      --muted:#b7b8bd;
+      --soft:#81848c;
+      --gold:#ffc51b;
+      --gold-2:#ffab00;
+      --gold-3:#ffe38a;
+      --green:#7ee18c;
+      --shadow:0 22px 70px rgba(0,0,0,.55);
+      --glow:0 0 42px rgba(255,190,22,.24);
+      --radius:24px;
+      --font:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      --max:1120px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(circle at 80% 6%, rgba(255,197,27,.19), transparent 30%),
+        radial-gradient(circle at 20% 0%, rgba(255,197,27,.10), transparent 24%),
+        linear-gradient(180deg,#020202 0%,#08090b 45%,#050505 100%);
+      overflow-x:hidden;
+    }
+
+    a{color:inherit;text-decoration:none}
+    button,input,textarea,select{font:inherit}
+
+/* Champs obligatoires — version premium */
+.required{
+  color:var(--gold);
+  margin-left:6px;
+  font-weight:600;
+  font-size:0.9em;
+  opacity:.9;
+}
+    .container{width:min(var(--max), calc(100% - 40px));margin:0 auto}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:40;
+      backdrop-filter:blur(18px);
+      background:rgba(5,5,5,.78);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    .nav{
+      min-height:82px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:13px;
+      min-width:max-content;
+    }
+
+    .brand-mark{
+      width:50px;
+      height:50px;
+      border-radius:17px;
+      border:2px solid var(--gold);
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:5px;
+      padding:10px;
+      box-shadow:var(--glow);
+    }
+
+    .brand-mark span{background:var(--gold);border-radius:3px}
+    .brand-title{font-weight:950;font-size:28px;letter-spacing:-1px;line-height:1}
+    .brand-title strong{color:var(--gold)}
+    .brand-sub{color:var(--muted);font-weight:700;margin-top:4px;font-size:13px}
+
+    .nav-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:flex-end}
+    .lang-switch{display:flex;gap:4px;align-items:center;border:1px solid rgba(255,197,27,.28);background:rgba(255,255,255,.04);padding:5px;border-radius:999px}
+    .lang-btn{border:0;background:transparent;color:var(--text);font-weight:900;padding:10px 13px;border-radius:999px;cursor:pointer;opacity:.78}
+    .lang-btn.active{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#050505;opacity:1;box-shadow:0 8px 24px rgba(255,197,27,.24)}
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border-radius:18px;
+      border:1px solid transparent;
+      padding:14px 20px;
+      font-weight:950;
+      cursor:pointer;
+      transition:.2s ease;
+      text-align:center;
+      min-height:52px;
+    }
+
+    .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#050505;box-shadow:0 16px 42px rgba(255,197,27,.23)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 20px 55px rgba(255,197,27,.30)}
+    .btn-ghost{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.045);color:var(--text)}
+    .btn-ghost:hover{border-color:rgba(255,197,27,.34);background:rgba(255,197,27,.08)}
+
+    .hero{padding:58px 0 28px}
+    .hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(300px,.75fr);gap:26px;align-items:stretch}
+    .hero-card,.side-card,.form-card{
+      background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .hero-card{padding:34px}
+    .hero-card:before,.side-card:before,.form-card:before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 82% 0%, rgba(255,197,27,.12), transparent 32%);
+      pointer-events:none;
+    }
+    .content{position:relative;z-index:1}
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      color:var(--gold-3);
+      border:1px solid rgba(255,197,27,.30);
+      background:rgba(255,197,27,.075);
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:950;
+      font-size:14px;
+      margin-bottom:22px;
+    }
+    .dot{width:10px;height:10px;border-radius:99px;background:var(--gold);box-shadow:0 0 18px rgba(255,197,27,.7)}
+    h1{font-size:clamp(34px,5vw,66px);line-height:.98;margin:0 0 18px;letter-spacing:-2.5px}
+    h1 span{color:var(--gold)}
+    .lead{font-size:clamp(17px,2.2vw,22px);line-height:1.55;color:#e8e1cf;max-width:760px;margin:0}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+
+    .side-card{padding:26px;display:flex;flex-direction:column;justify-content:space-between;min-height:100%}
+    .step-list{display:grid;gap:14px;margin:18px 0 0}
+    .step{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:18px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.08)}
+    .step-num{width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#050505;font-weight:950;display:grid;place-items:center}
+    .step strong{display:block;margin-bottom:3px}
+    .step p{margin:0;color:var(--muted);font-size:14px;line-height:1.45}
+
+    .form-wrap{padding:26px 0 60px}
+    .form-card{padding:30px}
+    .form-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:24px;position:relative;z-index:1}
+    .form-head h2{font-size:32px;margin:0 0 8px;letter-spacing:-1px}
+    .form-head p{margin:0;color:var(--muted);line-height:1.5;max-width:680px}
+    .secure-badge{min-width:max-content;border:1px solid rgba(126,225,140,.28);color:#d9ffe0;background:rgba(126,225,140,.08);border-radius:999px;padding:10px 14px;font-weight:900;font-size:13px}
+
+    form{position:relative;z-index:1;display:grid;gap:22px}
+    .section{border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.20);border-radius:22px;padding:22px}
+    .section-title{display:flex;align-items:center;gap:12px;margin:0 0 18px;font-size:20px;letter-spacing:-.4px}
+    .section-icon{width:34px;height:34px;border-radius:12px;background:rgba(255,197,27,.12);border:1px solid rgba(255,197,27,.25);display:grid;place-items:center;color:var(--gold);font-weight:950}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .full{grid-column:1/-1}
+    label.field{display:grid;gap:8px;color:var(--muted);font-weight:850;font-size:13px}
+    .required{color:var(--gold)}
+    input,select,textarea{
+      width:100%;
+      min-height:50px;
+      border-radius:15px;
+      border:1px solid rgba(255,255,255,.13);
+      background:rgba(255,255,255,.065);
+      color:var(--text);
+      padding:13px 14px;
+      outline:none;
+      transition:.18s ease;
+    }
+    option{color:#111;background:#fff}
+    textarea{min-height:116px;resize:vertical;line-height:1.45}
+    input.field-error,
+select.field-error,
+textarea.field-error{
+  border-color:rgba(255,80,80,.85)!important;
+  box-shadow:0 0 0 4px rgba(255,80,80,.14)!important;
+  background:rgba(255,80,80,.08)!important;
+}
+    input::placeholder,textarea::placeholder{color:rgba(245,245,242,.45)}
+    .hint{color:var(--muted);font-size:13px;line-height:1.5;margin:10px 0 0}
+    .hint strong{color:var(--gold-3)}
+
+    .choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .choice,.checkline{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.045);
+      color:var(--text);
+      font-weight:800;
+      line-height:1.35;
+    }
+    .choice input,.checkline input{width:auto;min-height:auto;margin-top:3px;accent-color:var(--gold)}
+    .legal-list{display:grid;gap:12px}
+
+    .submit-row{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:2px}
+    .submit-note{color:var(--muted);font-size:13px;line-height:1.45;max-width:520px}
+    .success-box{display:none;margin-top:16px;border:1px solid rgba(126,225,140,.30);background:rgba(126,225,140,.08);border-radius:18px;padding:16px;color:#eaffee;font-weight:800;line-height:1.5}
+.success-box.show{display:block}
+    .tapcarta-modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(8px);
+}
+
+.tapcarta-modal.show{display:flex}
+
+.tapcarta-modal-card{
+  width:min(520px,100%);
+  border:1px solid rgba(255,197,27,.35);
+  background:linear-gradient(180deg,#15171c,#0b0c0f);
+  border-radius:24px;
+  box-shadow:0 24px 80px rgba(0,0,0,.65);
+  padding:24px;
+}
+
+.tapcarta-modal-title{
+  color:var(--gold);
+  font-weight:950;
+  font-size:20px;
+  margin-bottom:12px;
+}
+
+.tapcarta-modal-text{
+  color:var(--text);
+  line-height:1.55;
+  font-weight:700;
+}
+
+.tapcarta-modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:22px;
+}
+
+    .footer{padding:24px 0 42px;color:var(--soft);font-size:13px;text-align:center;border-top:1px solid rgba(255,255,255,.07)}
+
+    @media(max-width:860px){
+      .hero-grid{grid-template-columns:1fr}
+      .form-head{align-items:flex-start;flex-direction:column}
+      .grid,.grid-3,.choice-grid{grid-template-columns:1fr}
+      .hero-card,.form-card,.side-card{padding:22px}
+      .nav{align-items:flex-start;flex-direction:column;padding:14px 0;gap:12px}
+      .nav-right{width:100%;justify-content:space-between}
+      .lang-switch{order:1}
+      .nav-right .btn{order:2;flex:1}
+      h1{letter-spacing:-1.4px}
+    }
+
+    @media(max-width:520px){
+      .container{width:min(100% - 24px,var(--max))}
+      .brand-mark{width:44px;height:44px;padding:9px;gap:4px;border-radius:15px}
+      .brand-title{font-size:25px}
+      .brand-sub{font-size:12px}
+      .lang-btn{padding:8px 10px;font-size:13px}
+      .nav-right{gap:10px}
+      .nav-right .btn{width:100%;flex-basis:100%}
+      .hero{padding-top:32px}
+      .hero-actions .btn,.submit-row .btn{width:100%}
+      .section{padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="index.html" aria-label="TapCarta">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div>
+          <div class="brand-title">Tap<strong>Carta</strong></div>
+          <div class="brand-sub">App · Web</div>
+        </div>
+      </a>
+      <div class="nav-right">
+        <div class="lang-switch" aria-label="Language selector">
+          <button class="lang-btn active" type="button" data-lang="fr">FR</button>
+          <button class="lang-btn" type="button" data-lang="es">ES</button>
+          <button class="lang-btn" type="button" data-lang="en">EN</button>
+          <button class="lang-btn" type="button" data-lang="nl">NL</button>
+        </div>
+        <a class="btn btn-ghost" href="index.html" data-i18n="nav.back">Retour au site</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+ <section class="hero">
+  <div class="container" style="max-width:760px;">
+    <div class="hero-card">
+      <div class="content" style="text-align:center; padding:10px 0;">
+
+        <div class="eyebrow">
+          <span class="dot"></span>
+          <span id="confirmEyebrow">
+            Validation TapCarta
+          </span>
+        </div>
+
+        <h1 id="confirmTitle">
+          Vérification de votre <span>email</span>
+        </h1>
+
+        <p class="lead" id="confirmText" style="max-width:620px;margin:0 auto;">
+          Vérification en cours...
+        </p>
+
+        <div style="margin-top:32px;">
+          <a href="index.html" class="btn btn-ghost" id="confirmButton">
+            Retour au site
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+  <footer class="footer">
+    <div class="container">
+      TapCarta · <span data-i18n="footer.text">Espace restaurant, menu digital et outils de demande sans commission.</span>
+      · <a href="mentions-legales.html" data-i18n="footer.legal">Mentions légales</a> · <a href="conditions.html" data-i18n="footer.terms">Conditions générales</a> · <a href="privacy.html" data-i18n="footer.privacy">Confidentialité</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+ <script>
+  const fallbackLang = 'es';
+
+  const translations = {
+    fr: {
+      'nav.back': 'Retour au site',
+      'footer.text': 'Espace restaurant, menu digital et outils de demande sans commission.',
+      'footer.legal': 'Mentions légales',
+      'footer.terms': 'Conditions générales',
+      'footer.privacy': 'Confidentialité'
+    },
+    es: {
+      'nav.back': 'Volver al sitio',
+      'footer.text': 'Espacio restaurante, menú digital y herramientas de solicitud sin comisión.',
+      'footer.legal': 'Aviso legal',
+      'footer.terms': 'Condiciones generales',
+      'footer.privacy': 'Privacidad'
+    },
+    en: {
+      'nav.back': 'Back to site',
+      'footer.text': 'Restaurant space, digital menu and commission-free request tools.',
+      'footer.legal': 'Legal notice',
+      'footer.terms': 'Terms',
+      'footer.privacy': 'Privacy'
+    },
+    nl: {
+      'nav.back': 'Terug naar de site',
+      'footer.text': 'Restaurantomgeving, digitaal menu en commissievrije aanvraagtools.',
+      'footer.legal': 'Wettelijke vermeldingen',
+      'footer.terms': 'Algemene voorwaarden',
+      'footer.privacy': 'Privacy'
+    }
+  };
+
+  const confirmMessages = {
+    fr: {
+      successTitle: 'Email confirmé',
+      successText: 'Votre adresse email a bien été confirmée. Votre demande TapCarta peut maintenant être vérifiée.',
+      errorTitle: 'Lien invalide ou déjà utilisé',
+      errorText: 'Ce lien de confirmation est invalide, expiré ou a déjà été utilisé.',
+      missingTitle: 'Lien incomplet',
+      missingText: 'Aucun token de confirmation n’a été trouvé dans ce lien.'
+    },
+    es: {
+      successTitle: 'Email confirmado',
+      successText: 'Su dirección email ha sido confirmada correctamente. Su solicitud TapCarta puede ahora ser revisada.',
+      errorTitle: 'Enlace inválido o ya utilizado',
+      errorText: 'Este enlace de confirmación no es válido, ha caducado o ya ha sido utilizado.',
+      missingTitle: 'Enlace incompleto',
+      missingText: 'No se ha encontrado ningún token de confirmación en este enlace.'
+    },
+    en: {
+      successTitle: 'Email confirmed',
+      successText: 'Your email address has been confirmed. Your TapCarta request can now be reviewed.',
+      errorTitle: 'Invalid or already used link',
+      errorText: 'This confirmation link is invalid, expired, or has already been used.',
+      missingTitle: 'Incomplete link',
+      missingText: 'No confirmation token was found in this link.'
+    },
+    nl: {
+      successTitle: 'E-mail bevestigd',
+      successText: 'Uw e-mailadres is correct bevestigd. Uw TapCarta-aanvraag kan nu worden gecontroleerd.',
+      errorTitle: 'Ongeldige of reeds gebruikte link',
+      errorText: 'Deze bevestigingslink is ongeldig, verlopen of al gebruikt.',
+      missingTitle: 'Onvolledige link',
+      missingText: 'Er werd geen bevestigingstoken gevonden in deze link.'
+    }
+  };
+
+  function detectLanguage(){
+    const code = (navigator.language || navigator.userLanguage || '').slice(0,2).toLowerCase();
+    return translations[code] ? code : fallbackLang;
+  }
+
+  let activeLang = detectLanguage();
+
+  function applyLang(lang){
+    const dict = translations[lang] || translations[fallbackLang];
+    document.documentElement.lang = lang;
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if(dict[key]) el.innerHTML = dict[key];
+    });
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+  }
+
+  function setConfirmState(type){
+    const dict = confirmMessages[activeLang] || confirmMessages[fallbackLang];
+
+    const title = document.getElementById('confirmTitle');
+    const text = document.getElementById('confirmText');
+    const eyebrow = document.getElementById('confirmEyebrow');
+
+    if(!title || !text || !eyebrow) return;
+
+    eyebrow.textContent = 'TapCarta';
+
+    if(type === 'success'){
+      title.innerHTML = dict.successTitle;
+      text.textContent = dict.successText;
+      return;
+    }
+
+    if(type === 'missing'){
+      title.innerHTML = dict.missingTitle;
+      text.textContent = dict.missingText;
+      return;
+    }
+
+    title.innerHTML = dict.errorTitle;
+    text.textContent = dict.errorText;
+  }
+
+  const SUPABASE_URL = 'https://uzuejudgccpnuzqefjre.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_FUtVznXw3Y0dftgEE7zgHg_aTbK669l';
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    }
+  });
+
+  async function confirmEmailFromToken(){
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    if(!token){
+      setConfirmState('missing');
+      return;
+    }
+
+    const { data, error } = await supabaseClient.rpc('confirm_join_request_email', {
+      p_token: token
+    });
+
+    if(error || !data || data.success !== true){
+      setConfirmState('error');
+      return;
+    }
+
+    setConfirmState('success');
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeLang = btn.dataset.lang;
+      applyLang(activeLang);
+    });
+  });
+
+  applyLang(activeLang);
+  confirmEmailFromToken();
+</script>
+  <div class="tapcarta-modal" id="tapcartaModal" aria-hidden="true">
+  <div class="tapcarta-modal-card">
+    <div class="tapcarta-modal-title" id="tapcartaModalTitle">TapCarta</div>
+    <div class="tapcarta-modal-text" id="tapcartaModalText"></div>
+    <div class="tapcarta-modal-actions">
+      <button class="btn btn-primary" type="button" id="tapcartaModalClose">OK</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
