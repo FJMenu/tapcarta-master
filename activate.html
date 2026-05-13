@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TapCarta — Activation</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#050505" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+
+  <style>
+    :root{
+      --bg:#050505;
+      --card:#111317;
+      --line:rgba(255,255,255,.12);
+      --gold:#ffc51b;
+      --gold-2:#ffab00;
+      --gold-3:#ffe38a;
+      --text:#f7f4ea;
+      --muted:#b7b8bd;
+      --green:#7ee18c;
+      --red:#ff8a7a;
+      --shadow:0 22px 70px rgba(0,0,0,.55);
+      --radius:24px;
+      --font:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      --max:920px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(circle at 80% 4%, rgba(255,197,27,.18), transparent 30%),
+        radial-gradient(circle at 15% 0%, rgba(255,197,27,.10), transparent 24%),
+        linear-gradient(180deg,#020202 0%,#08090b 45%,#050505 100%);
+      min-height:100vh;
+    }
+
+    a{color:inherit}
+    button,input,select{font:inherit}
+
+    .container{
+      width:min(var(--max), calc(100% - 32px));
+      margin:0 auto;
+    }
+
+    .topbar{
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background:rgba(5,5,5,.84);
+      backdrop-filter:blur(18px);
+    }
+
+    .nav{
+      min-height:78px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:13px;
+      text-decoration:none;
+    }
+
+    .brand-mark{
+      width:48px;
+      height:48px;
+      border-radius:17px;
+      border:2px solid var(--gold);
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:5px;
+      padding:10px;
+      box-shadow:0 0 42px rgba(255,190,22,.24);
+    }
+
+    .brand-mark span{
+      background:var(--gold);
+      border-radius:3px;
+    }
+
+    .brand-title{
+      font-weight:950;
+      font-size:27px;
+      line-height:1;
+      letter-spacing:-1px;
+    }
+
+    .brand-title strong{color:var(--gold)}
+
+    .brand-sub{
+      color:var(--muted);
+      font-weight:700;
+      font-size:13px;
+      margin-top:4px;
+    }
+
+    .lang-switch{
+      display:flex;
+      gap:4px;
+      align-items:center;
+      border:1px solid rgba(255,197,27,.28);
+      background:rgba(255,255,255,.04);
+      padding:5px;
+      border-radius:999px;
+    }
+
+    .lang-btn{
+      border:0;
+      background:transparent;
+      color:var(--text);
+      font-weight:900;
+      padding:10px 13px;
+      border-radius:999px;
+      cursor:pointer;
+      opacity:.78;
+    }
+
+    .lang-btn.active{
+      background:linear-gradient(135deg,var(--gold),var(--gold-2));
+      color:#050505;
+      opacity:1;
+    }
+
+    main{padding:46px 0 64px}
+
+    .card{
+      position:relative;
+      overflow:hidden;
+      background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:34px;
+    }
+
+    .card:before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 86% 0%, rgba(255,197,27,.13), transparent 34%);
+      pointer-events:none;
+    }
+
+    .content{
+      position:relative;
+      z-index:1;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      color:var(--gold-3);
+      border:1px solid rgba(255,197,27,.30);
+      background:rgba(255,197,27,.075);
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:950;
+      font-size:14px;
+      margin-bottom:22px;
+    }
+
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:99px;
+      background:var(--gold);
+      box-shadow:0 0 18px rgba(255,197,27,.7);
+    }
+
+    h1{
+      font-size:clamp(34px,5vw,58px);
+      line-height:1;
+      margin:0 0 18px;
+      letter-spacing:-2px;
+    }
+
+    h1 span{color:var(--gold)}
+
+    .lead{
+      font-size:18px;
+      line-height:1.55;
+      color:#e8e1cf;
+      margin:0 0 26px;
+      max-width:780px;
+    }
+
+    .notice{
+      border:1px solid rgba(126,225,140,.28);
+      background:rgba(126,225,140,.075);
+      color:#eaffee;
+      border-radius:18px;
+      padding:16px;
+      font-weight:800;
+      line-height:1.5;
+      margin-bottom:22px;
+    }
+
+    .warning{
+      border:1px solid rgba(255,197,27,.30);
+      background:rgba(255,197,27,.075);
+      border-radius:18px;
+      padding:16px;
+      color:#ffe8a4;
+      font-weight:800;
+      line-height:1.5;
+      margin:20px 0;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      margin:20px 0;
+    }
+
+    .box{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.22);
+      border-radius:20px;
+      padding:18px;
+    }
+
+    .box-title{
+      color:var(--muted);
+      font-weight:900;
+      font-size:13px;
+      margin-bottom:8px;
+    }
+
+    .box-value{
+      font-size:24px;
+      font-weight:950;
+      color:var(--text);
+    }
+
+    .box-value.gold{color:var(--gold)}
+
+    .section{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.20);
+      border-radius:22px;
+      padding:22px;
+      margin-top:18px;
+    }
+
+    .section h2{
+      margin:0 0 14px;
+      font-size:22px;
+      letter-spacing:-.4px;
+    }
+
+    ul{
+      margin:0;
+      padding-left:20px;
+      color:var(--muted);
+      line-height:1.65;
+      font-weight:700;
+    }
+
+    li strong{color:var(--text)}
+
+    label.field{
+      display:grid;
+      gap:8px;
+      color:var(--muted);
+      font-weight:850;
+      font-size:13px;
+      margin-top:14px;
+    }
+
+    input,select{
+      width:100%;
+      min-height:52px;
+      border-radius:15px;
+      border:1px solid rgba(255,255,255,.13);
+      background:rgba(255,255,255,.065);
+      color:var(--text);
+      padding:13px 14px;
+      outline:none;
+    }
+
+    option{
+      color:#111;
+      background:#fff;
+    }
+
+    input::placeholder{color:rgba(245,245,242,.45)}
+
+    .checkline{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.045);
+      color:var(--text);
+      font-weight:800;
+      line-height:1.45;
+      margin-top:12px;
+    }
+
+    .checkline input{
+      width:auto;
+      min-height:auto;
+      margin-top:4px;
+      accent-color:var(--gold);
+    }
+
+    .actions{
+      margin-top:24px;
+      display:grid;
+      gap:12px;
+    }
+
+    .btn{
+      width:100%;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border-radius:18px;
+      border:1px solid transparent;
+      padding:16px 20px;
+      font-weight:950;
+      cursor:pointer;
+      transition:.2s ease;
+      text-align:center;
+      min-height:56px;
+      text-decoration:none;
+    }
+
+    .btn-primary{
+      background:linear-gradient(135deg,var(--gold),var(--gold-2));
+      color:#050505;
+      box-shadow:0 16px 42px rgba(255,197,27,.23);
+    }
+
+    .btn-primary:hover{
+      transform:translateY(-1px);
+      box-shadow:0 20px 55px rgba(255,197,27,.30);
+    }
+
+    .error{
+      display:none;
+      margin-top:14px;
+      border:1px solid rgba(255,138,122,.35);
+      background:rgba(255,138,122,.09);
+      color:#ffd2cc;
+      border-radius:16px;
+      padding:14px;
+      font-weight:850;
+      line-height:1.45;
+    }
+
+    .error.show{display:block}
+
+    .footer{
+      padding:26px 0 42px;
+      color:#81848c;
+      font-size:13px;
+      text-align:center;
+      border-top:1px solid rgba(255,255,255,.07);
+    }
+
+    @media(max-width:720px){
+      .nav{
+        align-items:flex-start;
+        flex-direction:column;
+        padding:14px 0;
+      }
+
+      .lang-switch{
+        width:100%;
+        justify-content:space-between;
+      }
+
+      .lang-btn{
+        flex:1;
+      }
+
+      .card{
+        padding:22px;
+      }
+
+      .grid{
+        grid-template-columns:1fr;
+      }
+
+      h1{
+        letter-spacing:-1.2px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="index.html" aria-label="TapCarta">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <div>
+          <div class="brand-title">Tap<strong>Carta</strong></div>
+          <div class="brand-sub">Activation interne</div>
+        </div>
+      </a>
+
+      <div class="lang-switch" aria-label="Language selector">
+        <button class="lang-btn active" type="button" data-lang="fr">FR</button>
+        <button class="lang-btn" type="button" data-lang="es">ES</button>
+        <button class="lang-btn" type="button" data-lang="en">EN</button>
+        <button class="lang-btn" type="button" data-lang="nl">NL</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section class="card">
+        <div class="content">
+          <div class="eyebrow">
+            <span class="dot"></span>
+            <span data-i18n="eyebrow">Finalisation TapCarta</span>
+          </div>
+
+          <h1 data-i18n-html="title">Finaliser votre <span>activation</span></h1>
+
+          <p class="lead" data-i18n="intro">
+            Validez votre engagement professionnel TapCarta, puis continuez vers GoCardless pour mettre en place le prélèvement mensuel.
+          </p>
+
+          <div class="notice" data-i18n="internalNotice">
+            Cette page est envoyée uniquement après vérification interne par TapCarta.
+          </div>
+
+          <div class="grid">
+            <div class="box">
+              <div class="box-title" data-i18n="packLabel">Pack sélectionné</div>
+              <div class="box-value gold" id="packName">—</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title" data-i18n="priceLabel">Prix mensuel</div>
+              <div class="box-value" id="packPrice">—</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title" data-i18n="debitLabel">Prélèvement</div>
+              <div class="box-value" data-i18n="debitValue">Le 5 du mois</div>
+            </div>
+
+            <div class="box">
+              <div class="box-title" data-i18n="billingLabel">Facturation</div>
+              <div class="box-value" data-i18n="billingValue">Mensuelle</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2 data-i18n="summaryTitle">Résumé essentiel</h2>
+            <ul>
+              <li data-i18n-html="point1"><strong>Abonnement professionnel TapCarta</strong>, avec engagement initial de 12 mois.</li>
+              <li data-i18n-html="point2"><strong>Prix affiché hors TVA uniquement.</strong></li>
+              <li data-i18n-html="point3"><strong>Prélèvement mensuel via GoCardless</strong>, prévu le 5 du mois.</li>
+              <li data-i18n-html="point4">La facturation démarre le mois suivant la validation du contrat et du mandat GoCardless.</li>
+              <li data-i18n-html="point5">Les contenus manquants ne suspendent pas l’engagement.</li>
+              <li data-i18n-html="point6">Le contrat complet est transmis en PDF avec l’email d’activation.</li>
+            </ul>
+          </div>
+
+          <div class="warning" data-i18n="officialContract">
+            La version espagnole du contrat constitue la version juridique officielle. Les versions française, anglaise et néerlandaise sont informatives.
+          </div>
+
+          <div class="section">
+            <h2 data-i18n="signatureTitle">Validation et signature</h2>
+
+            <label class="field">
+              <span data-i18n="signerNameLabel">Nom du signataire *</span>
+              <input id="signerName" type="text" autocomplete="name" data-i18n-placeholder="signerNamePlaceholder" placeholder="Nom et prénom" />
+            </label>
+
+            <label class="field">
+              <span data-i18n="companyLabel">Nom établissement / société *</span>
+              <input id="companyName" type="text" autocomplete="organization" data-i18n-placeholder="companyPlaceholder" placeholder="Nom de l’établissement ou société" />
+            </label>
+
+            <label class="field">
+              <span data-i18n="roleLabel">Fonction du signataire</span>
+              <select id="signerRole">
+                <option value="owner" data-i18n="roleOwner">Propriétaire</option>
+                <option value="manager" data-i18n="roleManager">Gérant</option>
+                <option value="authorized" data-i18n="roleAuthorized">Personne autorisée</option>
+                <option value="other" data-i18n="roleOther">Autre</option>
+              </select>
+            </label>
+
+            <label class="checkline">
+              <input id="acceptContract" type="checkbox" />
+              <span data-i18n="acceptContract">
+                Je confirme avoir reçu le contrat TapCarta complet en PDF et accepter les conditions applicables.
+              </span>
+            </label>
+
+            <label class="checkline">
+              <input id="acceptAuthority" type="checkbox" />
+              <span data-i18n="acceptAuthority">
+                Je confirme être autorisé à engager l’établissement ou la société mentionnée.
+              </span>
+            </label>
+
+            <label class="checkline">
+              <input id="acceptPayment" type="checkbox" />
+              <span data-i18n="acceptPayment">
+                Je comprends que l’activation réelle nécessite la validation du mandat GoCardless correspondant au pack sélectionné.
+              </span>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary" type="button" onclick="continueToGoCardless()" data-i18n="button">
+              Valider et continuer vers GoCardless
+            </button>
+
+            <div class="error" id="errorBox"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      TapCarta · <span data-i18n="footer">Activation interne client</span>
+    </div>
+  </footer>
+
+  <script>
+    const PACKS = {
+      standard: {
+        name: "Standard",
+        price: "30 € HTVA / mois",
+        url: "https://pay.gocardless.com/BRT01KRDV0QDWEKA8W10EFW0GWH18"
+      },
+      plus: {
+        name: "Plus",
+        price: "45 € HTVA / mois",
+        url: "https://pay.gocardless.com/BRT01KRDVJZ98S0PM1Q7N4X38W615"
+      }
+    };
+
+    const translations = {
+      fr: {
+        eyebrow: "Finalisation TapCarta",
+        title: "Finaliser votre <span>activation</span>",
+        intro: "Validez votre engagement professionnel TapCarta, puis continuez vers GoCardless pour mettre en place le prélèvement mensuel.",
+        internalNotice: "Cette page est envoyée uniquement après vérification interne par TapCarta.",
+        packLabel: "Pack sélectionné",
+        priceLabel: "Prix mensuel",
+        debitLabel: "Prélèvement",
+        debitValue: "Le 5 du mois",
+        billingLabel: "Facturation",
+        billingValue: "Mensuelle",
+        summaryTitle: "Résumé essentiel",
+        point1: "<strong>Abonnement professionnel TapCarta</strong>, avec engagement initial de 12 mois.",
+        point2: "<strong>Prix affiché hors TVA uniquement.</strong>",
+        point3: "<strong>Prélèvement mensuel via GoCardless</strong>, prévu le 5 du mois.",
+        point4: "La facturation démarre le mois suivant la validation du contrat et du mandat GoCardless.",
+        point5: "Les contenus manquants ne suspendent pas l’engagement.",
+        point6: "Le contrat complet est transmis en PDF avec l’email d’activation.",
+        officialContract: "La version espagnole du contrat constitue la version juridique officielle. Les versions française, anglaise et néerlandaise sont informatives.",
+        signatureTitle: "Validation et signature",
+        signerNameLabel: "Nom du signataire *",
+        signerNamePlaceholder: "Nom et prénom",
+        companyLabel: "Nom établissement / société *",
+        companyPlaceholder: "Nom de l’établissement ou société",
+        roleLabel: "Fonction du signataire",
+        roleOwner: "Propriétaire",
+        roleManager: "Gérant",
+        roleAuthorized: "Personne autorisée",
+        roleOther: "Autre",
+        acceptContract: "Je confirme avoir reçu le contrat TapCarta complet en PDF et accepter les conditions applicables.",
+        acceptAuthority: "Je confirme être autorisé à engager l’établissement ou la société mentionnée.",
+        acceptPayment: "Je comprends que l’activation réelle nécessite la validation du mandat GoCardless correspondant au pack sélectionné.",
+        button: "Valider et continuer vers GoCardless",
+        footer: "Activation interne client",
+        errorPack: "Pack invalide ou manquant. Le lien doit contenir ?pack=standard ou ?pack=plus.",
+        errorFields: "Veuillez compléter le nom du signataire et le nom de l’établissement/société.",
+        errorChecks: "Veuillez cocher les trois confirmations avant de continuer."
+      },
+      es: {
+        eyebrow: "Finalización TapCarta",
+        title: "Finalizar su <span>activación</span>",
+        intro: "Valide su compromiso profesional TapCarta y continúe hacia GoCardless para configurar el cargo mensual.",
+        internalNotice: "Esta página se envía únicamente después de la verificación interna por TapCarta.",
+        packLabel: "Pack seleccionado",
+        priceLabel: "Precio mensual",
+        debitLabel: "Cargo",
+        debitValue: "El día 5 del mes",
+        billingLabel: "Facturación",
+        billingValue: "Mensual",
+        summaryTitle: "Resumen esencial",
+        point1: "<strong>Suscripción profesional TapCarta</strong>, con compromiso inicial de 12 meses.",
+        point2: "<strong>Precio indicado sin IVA únicamente.</strong>",
+        point3: "<strong>Cargo mensual mediante GoCardless</strong>, previsto el día 5 del mes.",
+        point4: "La facturación empieza el mes siguiente a la validación del contrato y del mandato GoCardless.",
+        point5: "La falta de contenidos no suspende el compromiso.",
+        point6: "El contrato completo se transmite en PDF con el email de activación.",
+        officialContract: "La versión española del contrato constituye la versión jurídica oficial. Las versiones francesa, inglesa y neerlandesa son informativas.",
+        signatureTitle: "Validación y firma",
+        signerNameLabel: "Nombre del firmante *",
+        signerNamePlaceholder: "Nombre y apellidos",
+        companyLabel: "Nombre del establecimiento / empresa *",
+        companyPlaceholder: "Nombre del establecimiento o empresa",
+        roleLabel: "Función del firmante",
+        roleOwner: "Propietario",
+        roleManager: "Gerente",
+        roleAuthorized: "Persona autorizada",
+        roleOther: "Otro",
+        acceptContract: "Confirmo haber recibido el contrato completo de TapCarta en PDF y aceptar las condiciones aplicables.",
+        acceptAuthority: "Confirmo estar autorizado para comprometer al establecimiento o empresa mencionada.",
+        acceptPayment: "Entiendo que la activación real requiere la validación del mandato GoCardless correspondiente al pack seleccionado.",
+        button: "Validar y continuar hacia GoCardless",
+        footer: "Activación interna cliente",
+        errorPack: "Pack inválido o ausente. El enlace debe contener ?pack=standard o ?pack=plus.",
+        errorFields: "Complete el nombre del firmante y el nombre del establecimiento/empresa.",
+        errorChecks: "Marque las tres confirmaciones antes de continuar."
+      },
+      en: {
+        eyebrow: "TapCarta finalisation",
+        title: "Finalise your <span>activation</span>",
+        intro: "Validate your professional TapCarta commitment, then continue to GoCardless to set up the monthly direct debit.",
+        internalNotice: "This page is sent only after internal verification by TapCarta.",
+        packLabel: "Selected pack",
+        priceLabel: "Monthly price",
+        debitLabel: "Collection",
+        debitValue: "On the 5th of the month",
+        billingLabel: "Billing",
+        billingValue: "Monthly",
+        summaryTitle: "Essential summary",
+        point1: "<strong>Professional TapCarta subscription</strong>, with an initial 12-month commitment.",
+        point2: "<strong>Price shown excluding VAT only.</strong>",
+        point3: "<strong>Monthly collection through GoCardless</strong>, scheduled for the 5th of the month.",
+        point4: "Billing starts the month after validation of the contract and GoCardless mandate.",
+        point5: "Missing client content does not suspend the commitment.",
+        point6: "The full contract is sent as a PDF with the activation email.",
+        officialContract: "The Spanish version of the contract is the official legal version. French, English and Dutch versions are informative.",
+        signatureTitle: "Validation and signature",
+        signerNameLabel: "Signer name *",
+        signerNamePlaceholder: "Full name",
+        companyLabel: "Venue / company name *",
+        companyPlaceholder: "Venue or company name",
+        roleLabel: "Signer role",
+        roleOwner: "Owner",
+        roleManager: "Manager",
+        roleAuthorized: "Authorised person",
+        roleOther: "Other",
+        acceptContract: "I confirm that I have received the full TapCarta contract as a PDF and accept the applicable terms.",
+        acceptAuthority: "I confirm that I am authorised to commit the venue or company mentioned.",
+        acceptPayment: "I understand that real activation requires validation of the GoCardless mandate corresponding to the selected pack.",
+        button: "Validate and continue to GoCardless",
+        footer: "Internal client activation",
+        errorPack: "Invalid or missing pack. The link must contain ?pack=standard or ?pack=plus.",
+        errorFields: "Please complete the signer name and venue/company name.",
+        errorChecks: "Please tick the three confirmations before continuing."
+      },
+      nl: {
+        eyebrow: "TapCarta afronding",
+        title: "Uw <span>activatie</span> afronden",
+        intro: "Bevestig uw professionele TapCarta-engagement en ga daarna verder naar GoCardless om de maandelijkse domiciliëring in te stellen.",
+        internalNotice: "Deze pagina wordt uitsluitend verzonden na interne controle door TapCarta.",
+        packLabel: "Geselecteerd pack",
+        priceLabel: "Maandprijs",
+        debitLabel: "Inning",
+        debitValue: "Op de 5e van de maand",
+        billingLabel: "Facturatie",
+        billingValue: "Maandelijks",
+        summaryTitle: "Essentiële samenvatting",
+        point1: "<strong>Professioneel TapCarta-abonnement</strong>, met een initiële verbintenis van 12 maanden.",
+        point2: "<strong>Prijs uitsluitend exclusief btw weergegeven.</strong>",
+        point3: "<strong>Maandelijkse inning via GoCardless</strong>, voorzien op de 5e van de maand.",
+        point4: "De facturatie start de maand na validatie van het contract en het GoCardless-mandaat.",
+        point5: "Ontbrekende klantinhoud schort de verbintenis niet op.",
+        point6: "Het volledige contract wordt als PDF meegestuurd met de activatiemail.",
+        officialContract: "De Spaanse versie van het contract is de officiële juridische versie. De Franse, Engelse en Nederlandse versies zijn informatief.",
+        signatureTitle: "Validatie en handtekening",
+        signerNameLabel: "Naam van de ondertekenaar *",
+        signerNamePlaceholder: "Voor- en achternaam",
+        companyLabel: "Naam zaak / vennootschap *",
+        companyPlaceholder: "Naam van de zaak of vennootschap",
+        roleLabel: "Functie van de ondertekenaar",
+        roleOwner: "Eigenaar",
+        roleManager: "Zaakvoerder",
+        roleAuthorized: "Bevoegde persoon",
+        roleOther: "Andere",
+        acceptContract: "Ik bevestig dat ik het volledige TapCarta-contract als PDF heb ontvangen en de toepasselijke voorwaarden aanvaard.",
+        acceptAuthority: "Ik bevestig dat ik bevoegd ben om de vermelde zaak of vennootschap te verbinden.",
+        acceptPayment: "Ik begrijp dat de echte activatie de validatie vereist van het GoCardless-mandaat dat overeenkomt met het geselecteerde pack.",
+        button: "Valideren en doorgaan naar GoCardless",
+        footer: "Interne klantactivatie",
+        errorPack: "Ongeldig of ontbrekend pack. De link moet ?pack=standard of ?pack=plus bevatten.",
+        errorFields: "Vul de naam van de ondertekenaar en de naam van de zaak/vennootschap in.",
+        errorChecks: "Vink de drie bevestigingen aan voordat u verdergaat."
+      }
+    };
+
+    let activeLang = "fr";
+    let activePackCode = null;
+
+    function getQueryParam(name){
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    function detectInitialLanguage(){
+      const queryLang = (getQueryParam("lang") || "").toLowerCase();
+      const browserLang = (navigator.language || "fr").slice(0,2).toLowerCase();
+
+      if(translations[queryLang]) return queryLang;
+      if(translations[browserLang]) return browserLang;
+      return "fr";
+    }
+
+    function setLang(lang){
+      activeLang = translations[lang] ? lang : "fr";
+      document.documentElement.lang = activeLang;
+
+      document.querySelectorAll(".lang-btn").forEach(function(btn){
+        btn.classList.toggle("active", btn.dataset.lang === activeLang);
+      });
+
+      document.querySelectorAll("[data-i18n]").forEach(function(el){
+        const key = el.getAttribute("data-i18n");
+        if(translations[activeLang][key]){
+          el.textContent = translations[activeLang][key];
+        }
+      });
+
+      document.querySelectorAll("[data-i18n-html]").forEach(function(el){
+        const key = el.getAttribute("data-i18n-html");
+        if(translations[activeLang][key]){
+          el.innerHTML = translations[activeLang][key];
+        }
+      });
+
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(function(el){
+        const key = el.getAttribute("data-i18n-placeholder");
+        if(translations[activeLang][key]){
+          el.setAttribute("placeholder", translations[activeLang][key]);
+        }
+      });
+    }
+
+    function hydratePack(){
+      const packFromUrl = (getQueryParam("pack") || "").toLowerCase();
+
+      if(PACKS[packFromUrl]){
+        activePackCode = packFromUrl;
+        document.getElementById("packName").textContent = PACKS[packFromUrl].name;
+        document.getElementById("packPrice").textContent = PACKS[packFromUrl].price;
+      } else {
+        activePackCode = null;
+        document.getElementById("packName").textContent = "—";
+        document.getElementById("packPrice").textContent = "—";
+        showError(translations[activeLang].errorPack);
+      }
+    }
+
+    function showError(message){
+      const errorBox = document.getElementById("errorBox");
+      errorBox.textContent = message;
+      errorBox.classList.add("show");
+    }
+
+    function hideError(){
+      const errorBox = document.getElementById("errorBox");
+      errorBox.textContent = "";
+      errorBox.classList.remove("show");
+    }
+
+    function continueToGoCardless(){
+      hideError();
+
+      if(!activePackCode || !PACKS[activePackCode]){
+        showError(translations[activeLang].errorPack);
+        return;
+      }
+
+      const signerName = document.getElementById("signerName").value.trim();
+      const companyName = document.getElementById("companyName").value.trim();
+
+      if(!signerName || !companyName){
+        showError(translations[activeLang].errorFields);
+        return;
+      }
+
+      const accepted =
+        document.getElementById("acceptContract").checked &&
+        document.getElementById("acceptAuthority").checked &&
+        document.getElementById("acceptPayment").checked;
+
+      if(!accepted){
+        showError(translations[activeLang].errorChecks);
+        return;
+      }
+
+      window.location.href = PACKS[activePackCode].url;
+    }
+
+    document.querySelectorAll(".lang-btn").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        setLang(btn.dataset.lang);
+        hideError();
+        if(!activePackCode){
+          showError(translations[activeLang].errorPack);
+        }
+      });
+    });
+
+    setLang(detectInitialLanguage());
+    hydratePack();
+  </script>
+</body>
+</html>
