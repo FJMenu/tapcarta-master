@@ -251,7 +251,7 @@ h1 span{color:var(--gold)}
     .language-left{display:flex;gap:24px;align-items:center}.section-icon{width:78px;height:78px;border:1px solid var(--line-gold);border-radius:24px;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,rgba(255,197,27,.22),rgba(255,197,27,.06) 52%,rgba(0,0,0,.22));box-shadow:0 18px 48px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.08);color:var(--gold);flex:none}.section-icon svg{width:48px;height:48px}.section-icon svg,.feature-icon svg,.mini-icon svg{fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
     h2{font-size:clamp(30px,3.5vw,44px);letter-spacing:-1.6px;line-height:1.08;margin:0 0 12px;font-weight:950;text-align:center}h2 span{color:var(--gold)}
     .language-panel h2{text-align:left;font-size:30px;margin-bottom:9px}.language-panel p{margin:0;color:#d0d1d5;line-height:1.55}
-    .langs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.lang{display:grid;gap:8px;place-items:center;text-align:center;color:#d7d8dc;font-size:12px}.flag{width:45px;height:45px;border-radius:50%;display:grid;place-items:center;background:#181a20;border:1px solid rgba(255,255,255,.1);font-size:24px}.plus{color:var(--gold);font-weight:950;font-size:28px}
+    .langs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.lang{display:grid;gap:8px;place-items:center;text-align:center;color:#d7d8dc;font-size:12px}.flag{width:45px;height:45px;border-radius:50%;display:grid;place-items:center;background:#181a20;border:1px solid rgba(255,255,255,.1);font-size:24px}.plus{color:var(--gold);font-weight:950;font-size:28px}.lang-note{grid-column:1/-1;padding:15px 18px;border:1px solid rgba(255,197,27,.28);border-radius:18px;background:linear-gradient(145deg,rgba(255,197,27,.10),rgba(255,255,255,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.08);color:#f4f0dc}.lang-note strong{display:block;color:var(--gold);font-size:14px}.lang-note span{display:block;color:#d6d2c2;font-size:13px;line-height:1.35;margin-top:3px}
 
     section{padding:44px 0}.section-head{text-align:center;max-width:760px;margin:0 auto 28px}.section-head p{color:#c6c7cc;line-height:1.55;font-size:17px;margin:0}
     .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.feature-card{padding:26px 22px;text-align:center;min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:12px}.feature-icon{width:68px;height:68px;border-radius:22px;display:grid;place-items:center;color:var(--gold);background:radial-gradient(circle at 35% 25%,rgba(255,197,27,.24),rgba(255,197,27,.07) 58%,rgba(0,0,0,.18));border:1px solid rgba(255,197,27,.34);box-shadow:0 15px 38px rgba(0,0,0,.32),0 0 28px rgba(255,197,27,.13),inset 0 1px 0 rgba(255,255,255,.08)}.feature-icon svg{width:40px;height:40px}.feature-card h3{margin:0;font-size:19px;line-height:1.12}.feature-card p{margin:0;color:#c7c8cc;font-size:14px;line-height:1.5}
@@ -571,10 +571,14 @@ h1 span{color:var(--gold)}
           </div>
         </div>
         <div class="langs">
-          <div class="lang"><div class="flag">🇫🇷</div><span data-i18n="lang.fr">Bienvenue, votre menu dans votre langue</span></div>
-          <div class="lang"><div class="flag">🇪🇸</div><span data-i18n="lang.es">Bienvenido, su menú en su idioma</span></div>
-          <div class="lang"><div class="flag">🇬🇧</div><span data-i18n="lang.en">Welcome, your menu in your language</span></div>
-          <div class="lang"><div class="flag">🇳🇱</div><span data-i18n="lang.nl">Welkom, uw menu in uw taal</span></div>
+          <div class="lang"><div class="flag">🇫🇷</div><span data-i18n="lang.fr">Français inclus</span></div>
+          <div class="lang"><div class="flag">🇪🇸</div><span data-i18n="lang.es">Espagnol inclus</span></div>
+          <div class="lang"><div class="flag">🇬🇧</div><span data-i18n="lang.en">Anglais inclus</span></div>
+          <div class="lang"><div class="flag">🇳🇱</div><span data-i18n="lang.nl">Néerlandais inclus</span></div>
+          <div class="lang lang-note">
+            <strong data-i18n="lang.included">4 langues incluses : FR · ES · EN · NL.</strong>
+            <span data-i18n="lang.extra">Jusqu’à 2 langues supplémentaires en option payante, prochainement disponible.</span>
+          </div>
         </div>
       </div>
     </div>
@@ -766,7 +770,7 @@ h1 span{color:var(--gold)}
 
   <footer>
     <div class="container footer-row">
-      <div>© 2026 TapCarta — <span data-i18n="footer.rights">Tous droits réservés</span> <span class="version">· Site V2.4.2.7</span></div>
+      <div>© 2026 TapCarta — <span data-i18n="footer.rights">Tous droits réservés</span> <span class="version">· Site V2.4.2.9</span></div>
       <div class="footer-links"><a href="mentions-legales.html" data-i18n="footer.legal">Mentions légales</a><a href="conditions.html" data-i18n="footer.terms">Conditions générales</a><a href="privacy.html" data-i18n="footer.privacy">Confidentialité</a><a href="#contact" data-i18n="footer.support">Support</a></div>
     </div>
   </footer>
