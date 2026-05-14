@@ -538,8 +538,10 @@ textarea.field-error{
       }
     });
 
-    function generateSlug(value){
-      const base = (value || 'restaurant')
+    function generateSlug(...parts){
+      const base = parts
+        .filter(Boolean)
+        .join(' ')
         .toString()
         .trim()
         .toLowerCase()
@@ -547,9 +549,22 @@ textarea.field-error{
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
-        .substring(0, 48) || 'restaurant';
+        .substring(0, 64) || 'restaurant';
 
-      return base + '-' + Date.now().toString(36).slice(-5);
+      const reservedSlugs = [
+        'admin',
+        'join',
+        'activate',
+        'contact',
+        'demo',
+        'conditions',
+        'privacy',
+        'mentions-legales',
+        'confirm-email',
+        'tapcarta-resto'
+      ];
+
+      return reservedSlugs.includes(base) ? `${base}-restaurant` : base;
     }
     function normalizeTaxNumber(value){
       return (value || '')
@@ -850,6 +865,7 @@ textarea.field-error{
         taxValueForPayload = normalizedTaxValue;
       }
       const restaurantName = (formData.get('restaurant_trade_name') || '').toString().trim();
+      const restaurantCity = (formData.get('city') || '').toString().trim();
       const selectedOffer = (formData.get('selected_offer') || '').toString();
 
       if(!selectedOffer){
@@ -873,7 +889,8 @@ textarea.field-error{
         ...extraLanguages
       ];
       const restaurantId = crypto.randomUUID();
-      const restaurantSlug = generateSlug(restaurantName);
+      const restaurantSlug = generateSlug(restaurantName, restaurantCity);
+      const restaurantPublicUrl = `https://tapcarta.com/${restaurantSlug}/`;
       const confirmationToken =
         crypto.randomUUID() +
         '-' +
@@ -891,6 +908,7 @@ textarea.field-error{
             id: restaurantId,
             name: restaurantName,
             slug: restaurantSlug,
+            public_url: restaurantPublicUrl,
             status: 'join_requested',
             pack_code: selectedOffer
           });
