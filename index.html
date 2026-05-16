@@ -216,7 +216,17 @@ h1 span{color:var(--gold)}
 .max-title{font-size:19px;line-height:1.08;font-weight:1000;color:var(--gold);margin-bottom:6px}
 .max-card p{margin:0;color:#f4f4f4;font-size:13.4px;line-height:1.28}
 .max-note{margin-top:8px;display:inline-flex;border:1px solid rgba(255,197,27,.36);border-radius:999px;padding:5px 9px;color:#ffe08a;background:rgba(255,197,27,.08);font-size:12px;font-weight:900;line-height:1.05}
+    .video-anchor{
+      display:block;
+      height:1px;
+      scroll-margin-top:92px;
+    }
 
+    @media (max-width:720px){
+      .video-anchor{
+        scroll-margin-top:18px;
+      }
+    }
     .video-section{padding:10px 0 28px}
     .video-card{position:relative;overflow:hidden;padding:24px;border:1px solid rgba(255,197,27,.28);background:radial-gradient(circle at 18% 12%,rgba(255,197,27,.18),transparent 34%),linear-gradient(145deg,rgba(19,17,12,.94),rgba(5,5,5,.96));border-radius:30px;box-shadow:0 28px 90px rgba(0,0,0,.58),0 0 48px rgba(255,197,27,.13),inset 0 1px 0 rgba(255,255,255,.08)}
     .video-head{display:flex;justify-content:space-between;gap:22px;align-items:flex-end;margin-bottom:18px}
@@ -252,7 +262,64 @@ h1 span{color:var(--gold)}
         0 0 26px rgba(126,225,140,.24),
         0 10px 28px rgba(0,0,0,.28);
     }
-    @media (max-width:720px){.video-section{padding:0 0 24px}.video-card{padding:16px;border-radius:24px}.video-head{display:grid;gap:10px;margin-bottom:14px}.video-play{width:66px;height:66px}.video-caption{position:relative;left:auto;right:auto;bottom:auto;margin-top:12px;display:grid;font-size:12px}}
+    @media (max-width:720px){
+      .video-section{
+        padding:8px 0 28px;
+      }
+
+      .video-card{
+        padding:16px;
+        border-radius:24px;
+        border-color:rgba(255,197,27,.48);
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255,197,27,.24), transparent 46%),
+          radial-gradient(circle at 12% 18%, rgba(255,197,27,.18), transparent 38%),
+          linear-gradient(145deg,rgba(24,18,8,.96),rgba(5,5,5,.96));
+        box-shadow:
+          0 24px 70px rgba(0,0,0,.62),
+          0 0 42px rgba(255,197,27,.18),
+          0 0 0 1px rgba(255,197,27,.12),
+          inset 0 1px 0 rgba(255,255,255,.08);
+      }
+
+      .video-head{
+        display:grid;
+        gap:10px;
+        margin-bottom:14px;
+      }
+
+      .video-frame{
+        border-color:rgba(255,197,27,.46);
+        box-shadow:
+          0 18px 55px rgba(0,0,0,.62),
+          0 0 34px rgba(255,197,27,.24);
+      }
+
+      .video-shade{
+        background:
+          radial-gradient(circle at center, rgba(255,197,27,.16), transparent 42%),
+          linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.66));
+      }
+
+      .video-play{
+        width:66px;
+        height:66px;
+        border-color:rgba(255,197,27,.82);
+        box-shadow:
+          0 0 42px rgba(255,197,27,.46),
+          0 16px 42px rgba(0,0,0,.52);
+      }
+
+      .video-caption{
+        position:relative;
+        left:auto;
+        right:auto;
+        bottom:auto;
+        margin-top:12px;
+        display:grid;
+        font-size:12px;
+      }
+    }
 
     .panel{border:1px solid var(--line);background:linear-gradient(145deg,rgba(22,24,29,.83),rgba(10,11,13,.82));border-radius:var(--radius);box-shadow:var(--shadow)}
     .language-panel{padding:30px 38px;margin:14px 0 34px;display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center}
@@ -672,6 +739,7 @@ h1 span{color:var(--gold)}
     </section>
 
     <section id="video" class="video-section" aria-labelledby="video-title">
+      <div id="video-tapcarta" class="video-anchor" aria-hidden="true"></div>
       <div class="container">
         <div class="video-card">
           <div class="video-head">
@@ -910,7 +978,7 @@ h1 span{color:var(--gold)}
 
   <footer>
     <div class="container footer-row">
-      <div>© 2026 TapCarta — <span data-i18n="footer.rights">Tous droits réservés</span> <span class="version">· Site V2.4.3.3</span></div>
+      <div>© 2026 TapCarta — <span data-i18n="footer.rights">Tous droits réservés</span> <span class="version">· Site V2.4.3.4</span></div>
       <div class="footer-links"><a href="mentions-legales.html" data-i18n="footer.legal">Mentions légales</a><a href="conditions.html" data-i18n="footer.terms">Conditions générales</a><a href="privacy.html" data-i18n="footer.privacy">Confidentialité</a><a href="#contact" data-i18n="footer.support">Support</a></div>
     </div>
   </footer>
@@ -1607,7 +1675,7 @@ h1 span{color:var(--gold)}
 
         shareButton.addEventListener('click', async () => {
 
-          const shareUrl = `${window.location.origin}${window.location.pathname}#video`;
+          const shareUrl = `${window.location.origin}${window.location.pathname}#video-tapcarta`;
 
           if (isMobileDevice && navigator.share) {
 
