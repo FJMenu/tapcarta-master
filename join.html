@@ -965,11 +965,18 @@ textarea.field-error{
               'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
             },
             body: JSON.stringify({
+              restaurantId: restaurantId,
               restaurantName: formData.get('restaurant_trade_name') || '',
+              restaurantCity: formData.get('city') || '',
+              restaurantCountry: formData.get('country') || '',
+              selectedOffer: selectedOffer,
               contactName: formData.get('contact_name') || '',
               contactEmail: formData.get('contact_email') || '',
+              contactPhone: formData.get('contact_phone') || '',
               preferredLanguage: preferredLanguage,
-              confirmationLink: `https://tapcarta.com/confirm-email.html?token=${encodeURIComponent(confirmationToken)}`
+              publicUrl: restaurantPublicUrl,
+              confirmationLink: `https://tapcarta.com/confirm-email.html?token=${encodeURIComponent(confirmationToken)}`,
+              adminAlertEmail: 'admin@tapcarta.com'
             })
           });
         } catch(emailError){

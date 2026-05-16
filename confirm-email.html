@@ -507,6 +507,26 @@ textarea.field-error{
     }
 
     setConfirmState('success');
+
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          adminAlertType: 'email_confirmed',
+          adminAlertEmail: 'admin@tapcarta.com',
+          requestId: data.id || data.request_id || data.join_request_id || '',
+          restaurantName: data.restaurant_name || data.restaurantName || '',
+          contactEmail: data.contact_email || data.contactEmail || ''
+        })
+      });
+    } catch (adminAlertError) {
+      console.error('Erreur alerte admin email confirmé:', adminAlertError);
+    }
   }
 
   document.querySelectorAll('.lang-btn').forEach(btn => {
