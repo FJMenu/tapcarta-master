@@ -157,6 +157,14 @@
       box-shadow:0 0 18px rgba(255,197,27,.22);
     }
 
+    .lang-flag{
+      display:none;
+    }
+
+    .lang-code{
+      display:inline;
+    }
+
     .btn{
       display:inline-flex;
       align-items:center;
@@ -509,8 +517,16 @@ h1 span{color:var(--gold)}
 
       .lang-switch button{
         padding:7px 8px;
-        font-size:12px;
-        min-width:44px;
+        font-size:17px;
+        min-width:42px;
+      }
+
+      .lang-flag{
+        display:inline;
+      }
+
+      .lang-code{
+        display:none;
       }
 
       .nav-actions .btn-primary{
@@ -600,10 +616,10 @@ h1 span{color:var(--gold)}
 
       <div class="nav-actions">
         <div class="lang-switch" aria-label="Choix de la langue">
-          <button type="button" data-lang-btn="fr">🇫🇷 FR</button>
-          <button type="button" data-lang-btn="es">🇪🇸 ES</button>
-          <button type="button" data-lang-btn="en">🇬🇧 EN</button>
-          <button type="button" data-lang-btn="nl">🇳🇱 NL</button>
+          <button type="button" data-lang-btn="fr"><span class="lang-flag">🇫🇷</span><span class="lang-code">FR</span></button>
+          <button type="button" data-lang-btn="es"><span class="lang-flag">🇪🇸</span><span class="lang-code">ES</span></button>
+          <button type="button" data-lang-btn="en"><span class="lang-flag">🇬🇧</span><span class="lang-code">EN</span></button>
+          <button type="button" data-lang-btn="nl"><span class="lang-flag">🇳🇱</span><span class="lang-code">NL</span></button>
         </div>
         <a class="btn btn-ghost btn-small" href="#resto" data-i18n="nav.resto">Espace Restaurant</a>
         <a class="btn btn-primary btn-small" href="join.html" data-i18n="nav.activate">Rejoindre TapCarta</a>
@@ -894,7 +910,7 @@ h1 span{color:var(--gold)}
 
   <footer>
     <div class="container footer-row">
-      <div>© 2026 TapCarta — <span data-i18n="footer.rights">Tous droits réservés</span> <span class="version">· Site V2.4.3.2</span></div>
+      <div>© 2026 TapCarta — <span data-i18n="footer.rights">Tous droits réservés</span> <span class="version">· Site V2.4.3.3</span></div>
       <div class="footer-links"><a href="mentions-legales.html" data-i18n="footer.legal">Mentions légales</a><a href="conditions.html" data-i18n="footer.terms">Conditions générales</a><a href="privacy.html" data-i18n="footer.privacy">Confidentialité</a><a href="#contact" data-i18n="footer.support">Support</a></div>
     </div>
   </footer>
