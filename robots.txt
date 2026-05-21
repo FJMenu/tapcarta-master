@@ -1,9 +1,25 @@
 User-agent: *
 Allow: /
 
+# Pages publiques à indexer
+Allow: /$
+Allow: /restaurants/
+Allow: /alta-cocina-sabinillas/
+Allow: /aroma-del-mar-sabinillas/
+Allow: /bistrobelga/
+
+# Espaces internes / techniques / anciens contenus
 Disallow: /demo/
 Disallow: /tapcarta-resto/
 Disallow: /coming-soon/
 Disallow: /_modele-nouveau-restaurant/
+
+# Fichiers internes ou non destinés à Google
+Disallow: /admin.html
+Disallow: /resto.html
+Disallow: /activate.html
+Disallow: /confirm-email.html
+Disallow: /test.html
+Disallow: /dev.html
 
 Sitemap: https://tapcarta.com/sitemap.xml
