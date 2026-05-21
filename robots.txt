@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin.html
+Disallow: /activate.html
+Disallow: /confirm-email.html
+Disallow: /confirm.html
+Disallow: /success.html
+Disallow: /cancel.html
+Disallow: /demo/
+Disallow: /tapcarta-resto/
+Disallow: /coming-soon/
+Disallow: /_modele-nouveau-restaurant/
+
+Sitemap: https://tapcarta.com/sitemap.xml
