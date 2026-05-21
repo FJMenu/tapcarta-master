@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://tapcarta.com/</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://tapcarta.com/bistrobelga/</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tapcarta.com/aroma-del-mar-sabinillas/</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tapcarta.com/alta-cocina-sabinillas/</loc>
+    <priority>0.8</priority>
+  </url>
+</urlset>
