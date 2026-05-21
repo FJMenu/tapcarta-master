@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Restaurants partenaires TapCarta — Menus digitaux en Espagne</title>
+  <meta name="description" content="Découvrez les restaurants partenaires TapCarta : établissements à Estepona, Manilva, Sabinillas et bientôt dans d’autres villes. Menus digitaux accessibles par QR code." />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://tapcarta.com/restaurants/" />
+
+  <meta name="theme-color" content="#070707" />
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link rel="shortcut icon" type="image/png" href="../favicon.png" />
+  <link rel="apple-touch-icon" href="../favicon.png" />
+
+  <style>
+    :root{
+      --bg:#050505;
+      --card:#111317;
+      --card-2:#15171c;
+      --line:rgba(255,255,255,.12);
+      --line-gold:rgba(255,190,22,.42);
+      --text:#f5f5f2;
+      --muted:#b7b8bd;
+      --soft:#81848c;
+      --gold:#ffc51b;
+      --gold-2:#ffab00;
+      --gold-3:#ffe38a;
+      --green:#7ee18c;
+      --shadow:0 22px 70px rgba(0,0,0,.55);
+      --glow:0 0 42px rgba(255,190,22,.24);
+      --radius:24px;
+      --max:1180px;
+      --font:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    *{box-sizing:border-box}
+
+    html{scroll-behavior:smooth}
+
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(circle at 82% 8%, rgba(255,197,27,.18), transparent 30%),
+        radial-gradient(circle at 22% 0%, rgba(255,197,27,.10), transparent 26%),
+        linear-gradient(180deg,#020202 0%,#08090b 44%,#050505 100%);
+      overflow-x:hidden;
+    }
+
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+
+    .container{
+      width:min(var(--max), calc(100% - 40px));
+      margin:0 auto;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter:blur(18px);
+      background:rgba(5,5,5,.80);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    .nav{
+      min-height:82px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:22px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:13px;
+      min-width:max-content;
+    }
+
+    .brand-logo{
+      width:215px;
+      height:auto;
+      display:block;
+      transform:scale(1.24);
+      transform-origin:left center;
+      margin-right:28px;
+      filter:drop-shadow(0 0 22px rgba(255,197,27,.26));
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:24px;
+      color:#e8e8e8;
+      font-size:14px;
+      font-weight:800;
+      flex:1;
+    }
+
+    .nav-links a{
+      opacity:.88;
+      padding:30px 0 25px;
+      border-bottom:2px solid transparent;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active{
+      color:var(--gold);
+      border-bottom-color:var(--gold);
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:48px;
+      padding:0 22px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      color:var(--text);
+      background:rgba(255,255,255,.045);
+      font-weight:900;
+      cursor:pointer;
+      transition:.18s ease;
+      text-align:center;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      border-color:rgba(255,197,27,.55);
+      box-shadow:var(--glow);
+    }
+
+    .btn-primary{
+      background:linear-gradient(135deg,var(--gold),var(--gold-2));
+      color:#171000;
+      border:0;
+      box-shadow:0 10px 30px rgba(255,197,27,.18);
+    }
+
+    .hero{
+      position:relative;
+      padding:76px 0 34px;
+      overflow:hidden;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:34px;
+      align-items:center;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:9px;
+      border:1px solid var(--line-gold);
+      background:rgba(255,197,27,.08);
+      color:var(--gold-3);
+      padding:9px 13px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:900;
+      margin-bottom:22px;
+    }
+
+    .dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:var(--gold);
+      box-shadow:0 0 18px var(--gold);
+    }
+
+    h1{
+      font-size:clamp(40px,5.4vw,76px);
+      line-height:.96;
+      letter-spacing:-3px;
+      margin:0 0 24px;
+      font-weight:950;
+      max-width:760px;
+    }
+
+    h1 span{color:var(--gold)}
+
+    .hero-text{
+      font-size:20px;
+      line-height:1.6;
+      color:#d5d6db;
+      max-width:690px;
+      margin:0;
+    }
+
+    .hero-card{
+      position:relative;
+      border:1px solid rgba(255,197,27,.28);
+      background:
+        radial-gradient(circle at 18% 12%,rgba(255,197,27,.18),transparent 34%),
+        linear-gradient(145deg,rgba(19,17,12,.94),rgba(5,5,5,.96));
+      border-radius:32px;
+      padding:30px;
+      box-shadow:
+        0 28px 90px rgba(0,0,0,.58),
+        0 0 48px rgba(255,197,27,.13),
+        inset 0 1px 0 rgba(255,255,255,.08);
+      overflow:hidden;
+    }
+
+    .hero-card:before{
+      content:"";
+      position:absolute;
+      right:-80px;
+      top:-80px;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(255,197,27,.24), transparent 64%);
+      pointer-events:none;
+    }
+
+    .hero-stat{
+      position:relative;
+      display:grid;
+      gap:16px;
+    }
+
+    .stat-line{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.25);
+      border-radius:22px;
+      padding:18px;
+    }
+
+    .stat-label{
+      color:var(--soft);
+      font-size:13px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.7px;
+      margin-bottom:8px;
+    }
+
+    .stat-value{
+      color:var(--text);
+      font-size:25px;
+      font-weight:950;
+      letter-spacing:-.6px;
+    }
+
+    .stat-value span{color:var(--gold)}
+
+    .section{
+      padding:44px 0 70px;
+    }
+
+    .section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:24px;
+      margin-bottom:24px;
+    }
+
+    .section-head h2{
+      font-size:clamp(30px,3.6vw,46px);
+      line-height:1.05;
+      letter-spacing:-1.6px;
+      margin:0 0 10px;
+      font-weight:950;
+    }
+
+    .section-head p{
+      color:#c6c7cc;
+      line-height:1.55;
+      font-size:17px;
+      margin:0;
+      max-width:720px;
+    }
+
+    .restaurant-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:18px;
+      align-items:stretch;
+    }
+
+    .restaurant-card{
+      position:relative;
+      min-height:330px;
+      padding:26px;
+      border:1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(circle at 22% 0%,rgba(255,197,27,.14),transparent 36%),
+        linear-gradient(145deg,rgba(25,27,33,.92),rgba(8,9,12,.92));
+      border-radius:28px;
+      box-shadow:0 22px 60px rgba(0,0,0,.42);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .restaurant-card.featured{
+      border-color:rgba(255,197,27,.48);
+      box-shadow:
+        0 0 0 1px rgba(255,197,27,.18),
+        0 30px 82px rgba(0,0,0,.55),
+        0 0 44px rgba(255,197,27,.14);
+    }
+
+    .restaurant-card:before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(135deg,rgba(255,255,255,.10),transparent 32%,rgba(255,197,27,.08));
+      pointer-events:none;
+      opacity:.55;
+    }
+
+    .card-content{
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      height:100%;
+    }
+
+    .monogram{
+      width:68px;
+      height:68px;
+      border-radius:22px;
+      display:grid;
+      place-items:center;
+      color:#080808;
+      background:linear-gradient(135deg,#ffe38a,#ffc51b 58%,#a86f00);
+      font-size:26px;
+      font-weight:1000;
+      letter-spacing:-1px;
+      box-shadow:0 0 32px rgba(255,197,27,.24);
+      margin-bottom:22px;
+    }
+
+    .city{
+      display:inline-flex;
+      width:max-content;
+      max-width:100%;
+      color:var(--gold-3);
+      background:rgba(255,197,27,.08);
+      border:1px solid rgba(255,197,27,.28);
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:12px;
+      font-weight:950;
+      line-height:1.25;
+      margin-bottom:14px;
+    }
+
+    .restaurant-card h3{
+      font-size:28px;
+      line-height:1.05;
+      letter-spacing:-.9px;
+      margin:0 0 10px;
+      font-weight:950;
+    }
+
+    .description{
+      color:#d2d3d7;
+      line-height:1.5;
+      font-size:15px;
+      margin:0 0 22px;
+    }
+
+    .meta{
+      color:var(--soft);
+      font-size:13px;
+      font-weight:800;
+      margin-top:auto;
+      margin-bottom:18px;
+    }
+
+    .restaurant-card .btn{
+      width:100%;
+    }
+
+    .bottom-note{
+      margin-top:26px;
+      border:1px solid rgba(255,197,27,.22);
+      background:rgba(255,197,27,.055);
+      border-radius:24px;
+      padding:22px;
+      color:#d8d9dd;
+      line-height:1.55;
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
+      align-items:center;
+    }
+
+    .bottom-note strong{
+      color:var(--gold);
+    }
+
+    .footer{
+      padding:28px 0 46px;
+      color:var(--soft);
+      font-size:13px;
+      text-align:center;
+      border-top:1px solid rgba(255,255,255,.07);
+    }
+
+    @media(max-width:920px){
+      .hero-grid{
+        grid-template-columns:1fr;
+      }
+
+      .restaurant-grid{
+        grid-template-columns:1fr;
+      }
+
+      .section-head{
+        display:block;
+      }
+
+      .nav{
+        align-items:flex-start;
+        flex-direction:column;
+        padding:14px 0;
+      }
+
+      .nav-links{
+        width:100%;
+        justify-content:flex-start;
+        flex-wrap:wrap;
+        gap:16px;
+      }
+
+      .nav-links a{
+        padding:4px 0 10px;
+      }
+    }
+
+    @media(max-width:560px){
+      .container{
+        width:min(100% - 24px, var(--max));
+      }
+
+      .brand-logo{
+        width:188px;
+        transform:scale(1.16);
+        margin-right:0;
+      }
+
+      .hero{
+        padding:44px 0 24px;
+      }
+
+      h1{
+        letter-spacing:-1.7px;
+      }
+
+      .hero-text{
+        font-size:17px;
+      }
+
+      .hero-card,
+      .restaurant-card{
+        border-radius:24px;
+        padding:22px;
+      }
+
+      .bottom-note{
+        display:block;
+      }
+
+      .bottom-note .btn{
+        width:100%;
+        margin-top:16px;
+      }
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Restaurants partenaires TapCarta",
+    "description": "Liste des restaurants partenaires TapCarta disposant d'une page publique avec menu digital.",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Bistro Belga",
+        "url": "https://tapcarta.com/bistrobelga/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Aroma del Mar",
+        "url": "https://tapcarta.com/aroma-del-mar-sabinillas/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Alta Cocina",
+        "url": "https://tapcarta.com/alta-cocina-sabinillas/"
+      }
+    ]
+  }
+  </script>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="../" aria-label="TapCarta">
+        <img src="../tapcarta-logo-email.png" alt="TapCarta" class="brand-logo">
+      </a>
+
+      <nav class="nav-links" aria-label="Navigation principale">
+        <a href="../">Accueil</a>
+        <a href="./" class="active">Restaurants</a>
+        <a href="../join.html">Rejoindre TapCarta</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow">
+            <span class="dot"></span>
+            <span>Restaurants partenaires TapCarta</span>
+          </div>
+
+          <h1>Découvrez les restaurants accessibles avec <span>TapCarta</span></h1>
+
+          <p class="hero-text">
+            Retrouvez les premiers établissements partenaires TapCarta. Chaque restaurant dispose de sa propre page avec ses informations et son menu digital accessible depuis votre téléphone.
+          </p>
+        </div>
+
+        <aside class="hero-card" aria-label="Informations TapCarta">
+          <div class="hero-stat">
+            <div class="stat-line">
+              <div class="stat-label">Actuellement</div>
+              <div class="stat-value"><span>3</span> restaurants partenaires</div>
+            </div>
+
+            <div class="stat-line">
+              <div class="stat-label">Zones présentes</div>
+              <div class="stat-value">Estepona · Manilva · Sabinillas</div>
+            </div>
+
+            <div class="stat-line">
+              <div class="stat-label">Accès</div>
+              <div class="stat-value">Pages restaurant et menus digitaux</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2>Restaurants à découvrir</h2>
+            <p>
+              TapCarta référence progressivement des restaurants partenaires en Espagne, avec une présentation claire, mobile et facile à consulter.
+            </p>
+          </div>
+        </div>
+
+        <div class="restaurant-grid">
+          <article class="restaurant-card featured">
+            <div class="card-content">
+              <div class="monogram">B</div>
+              <div class="city">Estepona — Málaga, Espagne</div>
+              <h3>Bistro Belga</h3>
+              <p class="description">
+                Restaurant partenaire TapCarta à Estepona, avec une page dédiée pour consulter ses informations et son menu digital.
+              </p>
+              <div class="meta">Restaurant partenaire TapCarta</div>
+              <a class="btn btn-primary" href="../bistrobelga/">Voir ce restaurant</a>
+            </div>
+          </article>
+
+          <article class="restaurant-card">
+            <div class="card-content">
+              <div class="monogram">A</div>
+              <div class="city">Sabinillas, Manilva — Málaga, Espagne</div>
+              <h3>Aroma del Mar</h3>
+              <p class="description">
+                Restaurant partenaire TapCarta situé à Sabinillas, dans la commune de Manilva, avec accès à sa page restaurant.
+              </p>
+              <div class="meta">Restaurant partenaire TapCarta</div>
+              <a class="btn btn-primary" href="../aroma-del-mar-sabinillas/">Voir ce restaurant</a>
+            </div>
+          </article>
+
+          <article class="restaurant-card">
+            <div class="card-content">
+              <div class="monogram">A</div>
+              <div class="city">Sabinillas, Manilva — Málaga, Espagne</div>
+              <h3>Alta Cocina</h3>
+              <p class="description">
+                Restaurant partenaire TapCarta à Sabinillas, Manilva, avec une page publique accessible depuis TapCarta.
+              </p>
+              <div class="meta">Restaurant partenaire TapCarta</div>
+              <a class="btn btn-primary" href="../alta-cocina-sabinillas/">Voir ce restaurant</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="bottom-note">
+          <div>
+            <strong>Vous êtes restaurateur ?</strong><br>
+            TapCarta permet de présenter votre restaurant avec une page moderne, un QR durable et un menu digital adapté au mobile.
+          </div>
+          <a class="btn" href="../join.html">Rejoindre TapCarta</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      © TapCarta — Restaurants partenaires et menus digitaux.
+    </div>
+  </footer>
+</body>
+</html>
