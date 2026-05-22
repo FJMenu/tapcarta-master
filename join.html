@@ -246,6 +246,33 @@ textarea.field-error{
       line-height:1.35;
     }
     .choice input,.checkline input{width:auto;min-height:auto;margin-top:3px;accent-color:var(--gold)}
+        .customer-type-choice{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-top:8px;
+    }
+
+    .customer-choice{
+      cursor:pointer;
+      border-color:rgba(255,197,27,.20);
+      transition:.18s ease;
+    }
+
+    .customer-choice:hover{
+      border-color:rgba(255,197,27,.42);
+      background:rgba(255,197,27,.08);
+    }
+
+    .customer-choice:has(input:checked){
+      border-color:rgba(255,197,27,.65);
+      background:linear-gradient(135deg,rgba(255,197,27,.18),rgba(255,255,255,.055));
+      box-shadow:0 0 0 4px rgba(255,197,27,.08);
+    }
+
+    @media(max-width:860px){
+      .customer-type-choice{grid-template-columns:1fr}
+    }
     .legal-list{display:grid;gap:12px}
 
     .submit-row{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:2px}
@@ -416,13 +443,21 @@ textarea.field-error{
             <section class="section">
   <h3 class="section-title"><span class="section-icon">4</span><span data-i18n="section.legal">Données légales et fiscales</span></h3>
 
-  <label class="field full">
+  <div class="field full">
     <span data-i18n="field.customerType">Vous contractez comme <span class="required">*</span></span>
-    <select name="customer_type" id="customerType" required>
-      <option value="individual" data-i18n="customer.individual">Autónomo / personne physique</option>
-      <option value="company" data-i18n="customer.company">Société / personne morale</option>
-    </select>
-  </label>
+
+    <div class="customer-type-choice">
+      <label class="choice customer-choice">
+        <input type="radio" name="customer_type" value="individual" checked required>
+        <span data-i18n="customer.individual">Autónomo / personne physique</span>
+      </label>
+
+      <label class="choice customer-choice">
+        <input type="radio" name="customer_type" value="company" required>
+        <span data-i18n="customer.company">Société / personne morale</span>
+      </label>
+    </div>
+  </div>
 
   <div class="grid" id="individualLegalFields">
     <label class="field">
@@ -794,7 +829,7 @@ textarea.field-error{
 }
 
 function updateCustomerTypeFields(){
-  const customerType = document.getElementById('customerType');
+  const customerType = document.querySelector('input[name="customer_type"]:checked');
   const individualFields = document.getElementById('individualLegalFields');
   const companyFields = document.getElementById('companyLegalFields');
 
@@ -957,11 +992,10 @@ function updateCustomerTypeFields(){
     }));
 applyLang(activeLang);
 
-const customerTypeSelect = document.getElementById('customerType');
-if(customerTypeSelect){
-  customerTypeSelect.addEventListener('change', updateCustomerTypeFields);
-  updateCustomerTypeFields();
-}
+document.querySelectorAll('input[name="customer_type"]').forEach(input => {
+  input.addEventListener('change', updateCustomerTypeFields);
+});
+updateCustomerTypeFields();
 
 window.addEventListener('load', () => {
       const formStart = document.getElementById('join-form');
