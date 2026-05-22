@@ -610,7 +610,7 @@
         point4: "La facturation démarre selon les conditions prévues au contrat, après validation du dossier et finalisation de l’activation.",
         point5: "Les contenus manquants ne suspendent pas l’engagement.",
         point6: "Le contrat complet est transmis en PDF avec l’email d’activation.",
-        officialContract: "La version espagnole du contrat constitue la version juridique officielle. Les versions française, anglaise et néerlandaise sont informatives.",
+        officialContract: "La version espagnole du contrat constitue la version juridique officielle. Les versions française, anglaise et néerlandaise sont informatives. En cas de divergence, la version espagnole prévaut.",
         signatureTitle: "Validation et signature",
         signerNameLabel: "Nom du signataire *",
         signerNamePlaceholder: "Nom et prénom",
@@ -652,7 +652,7 @@
         point4: "La facturación empieza según las condiciones previstas en el contrato, después de la validación del dossier y la finalización de la activación.",
         point5: "La falta de contenidos no suspende el compromiso.",
         point6: "El contrato completo se transmite en PDF con el email de activación.",
-        officialContract: "La versión española del contrato constituye la versión jurídica oficial. Las versiones francesa, inglesa y neerlandesa son informativas.",
+        officialContract: "La versión española del contrato constituye la versión jurídica oficial.",
         signatureTitle: "Validación y firma",
         signerNameLabel: "Nombre del firmante *",
         signerNamePlaceholder: "Nombre y apellidos",
@@ -694,7 +694,7 @@
         point4: "Billing starts according to the conditions set out in the contract, after file validation and activation finalisation.",
         point5: "Missing client content does not suspend the commitment.",
         point6: "The full contract is sent as a PDF with the activation email.",
-        officialContract: "The Spanish version of the contract is the official legal version. French, English and Dutch versions are informative.",
+        officialContract: "The Spanish version of the contract is the official legal version. French, English and Dutch versions are informative. In case of discrepancy, the Spanish version shall prevail.",
         signatureTitle: "Validation and signature",
         signerNameLabel: "Signer name *",
         signerNamePlaceholder: "Full name",
@@ -736,7 +736,7 @@
         point4: "De facturatie start volgens de voorwaarden in het contract, na controle van het dossier en afronding van de activatie.",
         point5: "Ontbrekende klantinhoud schort de verbintenis niet op.",
         point6: "Het volledige contract wordt als PDF meegestuurd met de activatiemail.",
-        officialContract: "De Spaanse versie van het contract is de officiële juridische versie. De Franse, Engelse en Nederlandse versies zijn informatief.",
+        officialContract: "De Spaanse versie van het contract is de officiële juridische versie. De Franse, Engelse en Nederlandse versies zijn informatief. Bij tegenstrijdigheid heeft de Spaanse versie voorrang.",
         signatureTitle: "Validatie en handtekening",
         signerNameLabel: "Naam van de ondertekenaar *",
         signerNamePlaceholder: "Voor- en achternaam",
@@ -921,6 +921,7 @@
         const contractPayload = {
           restaurant_id: restaurantId,
           status: "signed_pending_activation",
+          contract_type: "initial_paid",
           pack_code: activePackCode,
           monthly_price: PACKS[activePackCode].monthlyPrice,
           signer_name: signerName,
@@ -939,7 +940,13 @@
             payment_flow: PAYMENT_FLOW,
             accepted_contract: true,
             accepted_authority: true,
-            accepted_payment_setup: true,
+            accepted_payment_terms: true,
+            payment_setup_status: PAYMENT_STATUS,
+            future_contract_types_reserved: [
+              "amendment_upgrade",
+              "light_terms",
+              "pilot_agreement"
+            ],
             signed_at: new Date().toISOString(),
             user_agent: navigator.userAgent
           }
