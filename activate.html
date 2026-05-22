@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex,nofollow" />
   <meta name="theme-color" content="#050505" />
   <link rel="icon" type="image/png" href="favicon.png" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root{
@@ -362,6 +363,20 @@
     }
 
     .error.show{display:block}
+
+.success{
+  display:none;
+  margin-top:14px;
+  border:1px solid rgba(126,225,140,.35);
+  background:rgba(126,225,140,.09);
+  color:#eaffee;
+  border-radius:16px;
+  padding:14px;
+  font-weight:850;
+  line-height:1.45;
+}
+
+.success.show{display:block}
 
     .footer{
       padding:26px 0 42px;

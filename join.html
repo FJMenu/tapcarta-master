@@ -382,16 +382,65 @@ textarea.field-error{
             </section>
 
             <section class="section">
-              <h3 class="section-title"><span class="section-icon">4</span><span data-i18n="section.legal">Données légales et fiscales</span></h3>
-              <div class="grid">
-                <label class="field"><span data-i18n="field.legalName">Nom légal / société</span><input name="legal_name" type="text" data-i18n-placeholder="ph.legalName" placeholder="Raison sociale ou nom légal"></label>
-                <label class="field"><span data-i18n="field.tax">Numéro fiscal</span><input name="tax_number" type="text" style="text-transform:uppercase;" data-i18n-placeholder="ph.tax" placeholder="DNI / NIE / NIF en MAJUSCULES — ex. 12345678Z, X1234567L, B12345678"></label>
-                <label class="field full"><span data-i18n="field.billingEmail">Email de facturation</span><input name="billing_email" type="email" data-i18n-placeholder="ph.billingEmail" placeholder="Email de facturation si différent"></label>
-              </div>
-              <p class="hint" data-i18n-html="hint.fiscal"><strong>Important :</strong> ces informations seront nécessaires pour finaliser votre accès complet et la facturation.</p>
-            </section>
+<section class="section">
+  <h3 class="section-title"><span class="section-icon">4</span><span data-i18n="section.legal">Données légales et fiscales</span></h3>
 
-            <section class="section">
+  <label class="field full">
+    <span data-i18n="field.customerType">Vous contractez comme <span class="required">*</span></span>
+    <select name="customer_type" id="customerType" required>
+      <option value="individual" data-i18n="customer.individual">Autónomo / personne physique</option>
+      <option value="company" data-i18n="customer.company">Société / personne morale</option>
+    </select>
+  </label>
+
+  <div class="grid" id="individualLegalFields">
+    <label class="field">
+      <span data-i18n="field.contractingName">Nom légal complet <span class="required">*</span></span>
+      <input name="contracting_name" type="text" required data-i18n-placeholder="ph.contractingName" placeholder="Nom et prénom du titulaire">
+    </label>
+
+    <label class="field">
+      <span data-i18n="field.personalTaxId">DNI / NIE / NIF personnel <span class="required">*</span></span>
+      <input name="personal_tax_id" type="text" required style="text-transform:uppercase;" data-i18n-placeholder="ph.personalTaxId" placeholder="Ex. 12345678Z ou X1234567L">
+    </label>
+  </div>
+
+  <div class="grid" id="companyLegalFields" style="display:none;">
+    <label class="field">
+      <span data-i18n="field.companyLegalName">Raison sociale <span class="required">*</span></span>
+      <input name="company_legal_name" type="text" data-i18n-placeholder="ph.companyLegalName" placeholder="Nom légal de la société">
+    </label>
+
+    <label class="field">
+      <span data-i18n="field.companyTaxId">CIF / NIF société <span class="required">*</span></span>
+      <input name="company_tax_id" type="text" style="text-transform:uppercase;" data-i18n-placeholder="ph.companyTaxId" placeholder="Ex. B12345678">
+    </label>
+
+    <label class="field">
+      <span data-i18n="field.signerName">Nom du signataire <span class="required">*</span></span>
+      <input name="signer_name" type="text" data-i18n-placeholder="ph.signerName" placeholder="Nom et prénom du représentant">
+    </label>
+
+    <label class="field">
+      <span data-i18n="field.signerTaxId">DNI / NIE / NIF du signataire <span class="required">*</span></span>
+      <input name="signer_tax_id" type="text" style="text-transform:uppercase;" data-i18n-placeholder="ph.signerTaxId" placeholder="Ex. 12345678Z ou X1234567L">
+    </label>
+
+    <label class="field full">
+      <span data-i18n="field.signerRole">Fonction du signataire <span class="required">*</span></span>
+      <input name="signer_role" type="text" data-i18n-placeholder="ph.signerRole" placeholder="Administrateur, gérant, personne autorisée…">
+    </label>
+  </div>
+
+  <div class="grid">
+    <label class="field full">
+      <span data-i18n="field.billingEmail">Email de facturation</span>
+      <input name="billing_email" type="email" data-i18n-placeholder="ph.billingEmail" placeholder="Email de facturation si différent">
+    </label>
+  </div>
+
+  <p class="hint" data-i18n-html="hint.fiscal"><strong>Important :</strong> ces informations seront nécessaires pour finaliser votre accès complet, générer correctement le contrat et préparer la facturation.</p>
+</section>
               <h3 class="section-title"><span class="section-icon">5</span><span data-i18n="section.offer">Offre souhaitée</span></h3>
               <label class="field">
                 <span data-i18n="field.offer">Choix actuel</span>
@@ -635,13 +684,34 @@ textarea.field-error{
       return control === String(controlDigit) || control === controlLetter;
     }
 
-    function isValidSpanishTaxNumber(value){
-      return (
-        isValidSpanishDni(value) ||
-        isValidSpanishNie(value) ||
-        isValidSpanishCompanyNif(value)
-      );
-    }
+ function isValidSpanishTaxNumber(value){
+  return (
+    isValidSpanishDni(value) ||
+    isValidSpanishNie(value) ||
+    isValidSpanishCompanyNif(value)
+  );
+}
+
+function updateCustomerTypeFields(){
+  const customerType = document.getElementById('customerType');
+  const individualFields = document.getElementById('individualLegalFields');
+  const companyFields = document.getElementById('companyLegalFields');
+
+  if(!customerType || !individualFields || !companyFields) return;
+
+  const isCompany = customerType.value === 'company';
+
+  individualFields.style.display = isCompany ? 'none' : 'grid';
+  companyFields.style.display = isCompany ? 'grid' : 'none';
+
+  individualFields.querySelectorAll('input').forEach(input => {
+    input.required = !isCompany;
+  });
+
+  companyFields.querySelectorAll('input').forEach(input => {
+    input.required = isCompany;
+  });
+}
     let activeLang = detectLanguage();
 
     const offerMessages = {
@@ -784,10 +854,15 @@ textarea.field-error{
       applyLang(activeLang);
       updateOfferFromNeeds();
     }));
+applyLang(activeLang);
 
-    applyLang(activeLang);
+const customerTypeSelect = document.getElementById('customerType');
+if(customerTypeSelect){
+  customerTypeSelect.addEventListener('change', updateCustomerTypeFields);
+  updateCustomerTypeFields();
+}
 
-    window.addEventListener('load', () => {
+window.addEventListener('load', () => {
       const formStart = document.getElementById('join-form');
       if(formStart){
         formStart.scrollIntoView({ behavior: 'auto', block: 'start' });
@@ -826,46 +901,90 @@ textarea.field-error{
         firstInvalidField.focus({ preventScroll: true });
         return;
       }
-      const countryValue = (formData.get('country') || '').toString().trim();
-      const taxField = form.querySelector('[name="tax_number"]');
-      const taxValue = taxField ? taxField.value : '';
-      let taxValueForPayload = taxValue;
+const countryValue = (formData.get('country') || '').toString().trim();
+const customerType = (formData.get('customer_type') || 'individual').toString();
 
-      if(isSpainCountry(countryValue)){
-        const normalizedTaxValue = normalizeTaxNumber(taxValue);
+const personalTaxField = form.querySelector('[name="personal_tax_id"]');
+const companyTaxField = form.querySelector('[name="company_tax_id"]');
+const signerTaxField = form.querySelector('[name="signer_tax_id"]');
 
-        const { data: isSpanishTaxValid, error: taxValidationError } = await supabaseClient
-          .rpc('validate_spanish_tax_number', {
-            input_tax: normalizedTaxValue
-          });
+let personalTaxIdForPayload = normalizeTaxNumber(formData.get('personal_tax_id'));
+let companyTaxIdForPayload = normalizeTaxNumber(formData.get('company_tax_id'));
+let signerTaxIdForPayload = normalizeTaxNumber(formData.get('signer_tax_id'));
 
-        if(taxValidationError || !isSpanishTaxValid){
-          if(taxField){
-            taxField.classList.add('field-error');
-            taxField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            taxField.focus({ preventScroll: true });
-          }
+function showInvalidTax(field, message){
+  if(field){
+    field.classList.add('field-error');
+    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    field.focus({ preventScroll: true });
+  }
 
-          showTapCartaModal(
-            activeLang === 'es' ? 'Número fiscal español inválido. Use MAYÚSCULAS. Formato esperado: DNI 12345678Z, NIE X1234567L o NIF de empresa B12345678.' :
-            activeLang === 'en' ? 'Invalid Spanish tax number. Use UPPERCASE. Expected format: DNI 12345678Z, NIE X1234567L or company NIF B12345678.' :
-            activeLang === 'nl' ? 'Ongeldig Spaans fiscaal nummer. Gebruik HOOFDLETTERS. Verwacht formaat: DNI 12345678Z, NIE X1234567L of bedrijfs-NIF B12345678.' :
-            'Numéro fiscal espagnol invalide. Utilisez les MAJUSCULES. Format attendu : DNI 12345678Z, NIE X1234567L ou NIF société B12345678.',
-            activeLang === 'es' ? 'Dato fiscal inválido' :
-            activeLang === 'en' ? 'Invalid tax number' :
-            activeLang === 'nl' ? 'Ongeldig fiscaal nummer' :
-            'Numéro fiscal invalide'
-          );
+  showTapCartaModal(
+    message,
+    activeLang === 'es' ? 'Dato fiscal inválido' :
+    activeLang === 'en' ? 'Invalid tax number' :
+    activeLang === 'nl' ? 'Ongeldig fiscaal nummer' :
+    'Numéro fiscal invalide'
+  );
+}
 
-          return;
-        }
+async function validateSpanishTaxWithRpc(value){
+  const { data: isSpanishTaxValid, error: taxValidationError } = await supabaseClient
+    .rpc('validate_spanish_tax_number', {
+      input_tax: value
+    });
 
-        if(taxField){
-          taxField.value = normalizedTaxValue;
-        }
+  return !taxValidationError && !!isSpanishTaxValid;
+}
 
-        taxValueForPayload = normalizedTaxValue;
-      }
+if(isSpainCountry(countryValue)){
+  if(customerType === 'individual'){
+    const validPersonalTax = await validateSpanishTaxWithRpc(personalTaxIdForPayload);
+
+    if(!validPersonalTax || isValidSpanishCompanyNif(personalTaxIdForPayload)){
+      showInvalidTax(
+        personalTaxField,
+        activeLang === 'es' ? 'Número fiscal personal inválido. Para un autónomo/persona física, indique un DNI, NIE o NIF personal válido.' :
+        activeLang === 'en' ? 'Invalid personal tax number. For an individual, please provide a valid DNI, NIE or personal NIF.' :
+        activeLang === 'nl' ? 'Ongeldig persoonlijk fiscaal nummer. Geef voor een natuurlijke persoon een geldige DNI, NIE of persoonlijke NIF op.' :
+        'Numéro fiscal personnel invalide. Pour un autónomo / personne physique, indiquez un DNI, NIE ou NIF personnel valide.'
+      );
+      return;
+    }
+
+    if(personalTaxField) personalTaxField.value = personalTaxIdForPayload;
+  }
+
+  if(customerType === 'company'){
+    const validCompanyTax = await validateSpanishTaxWithRpc(companyTaxIdForPayload);
+    const validSignerTax = await validateSpanishTaxWithRpc(signerTaxIdForPayload);
+
+    if(!validCompanyTax || !isValidSpanishCompanyNif(companyTaxIdForPayload)){
+      showInvalidTax(
+        companyTaxField,
+        activeLang === 'es' ? 'CIF/NIF de sociedad inválido. Para una sociedad española, indique un CIF/NIF de empresa válido.' :
+        activeLang === 'en' ? 'Invalid company CIF/NIF. For a Spanish company, please provide a valid company CIF/NIF.' :
+        activeLang === 'nl' ? 'Ongeldig CIF/NIF van de vennootschap. Geef voor een Spaanse vennootschap een geldige bedrijfs-CIF/NIF op.' :
+        'CIF/NIF société invalide. Pour une société espagnole, indiquez un CIF/NIF d’entreprise valide.'
+      );
+      return;
+    }
+
+    if(!validSignerTax || isValidSpanishCompanyNif(signerTaxIdForPayload)){
+      showInvalidTax(
+        signerTaxField,
+        activeLang === 'es' ? 'Número fiscal personal del firmante inválido. Indique el DNI, NIE o NIF personal de la persona que firma.' :
+        activeLang === 'en' ? 'Invalid signer personal tax number. Please provide the DNI, NIE or personal NIF of the person signing.' :
+        activeLang === 'nl' ? 'Ongeldig persoonlijk fiscaal nummer van de ondertekenaar. Geef de DNI, NIE of persoonlijke NIF van de ondertekenaar op.' :
+        'Numéro fiscal personnel du signataire invalide. Indiquez le DNI, NIE ou NIF personnel de la personne qui signe.'
+      );
+      return;
+    }
+
+    if(companyTaxField) companyTaxField.value = companyTaxIdForPayload;
+    if(signerTaxField) signerTaxField.value = signerTaxIdForPayload;
+  }
+}
       const restaurantName = (formData.get('restaurant_trade_name') || '').toString().trim();
       const restaurantCity = (formData.get('city') || '').toString().trim();
       const selectedOffer = (formData.get('selected_offer') || '').toString();
@@ -932,11 +1051,48 @@ textarea.field-error{
             country: (formData.get('country') || '').toString().trim(),
             address: (formData.get('address') || '').toString().trim(),
             website_social: (formData.get('website_social') || '').toString().trim(),
-            requester_role: (formData.get('requester_role') || '').toString(),
-            legal_name: (formData.get('legal_name') || '').toString().trim(),
-            tax_number: taxValueForPayload.toString().trim(),
-            billing_email: (formData.get('billing_email') || '').toString().trim(),
-            selected_offer: selectedOffer,
+requester_role: (formData.get('requester_role') || '').toString(),
+
+customer_type: customerType,
+
+contracting_name: customerType === 'company'
+  ? (formData.get('company_legal_name') || '').toString().trim()
+  : (formData.get('contracting_name') || '').toString().trim(),
+
+personal_tax_id: customerType === 'individual'
+  ? personalTaxIdForPayload
+  : null,
+
+company_legal_name: customerType === 'company'
+  ? (formData.get('company_legal_name') || '').toString().trim()
+  : null,
+
+company_tax_id: customerType === 'company'
+  ? companyTaxIdForPayload
+  : null,
+
+signer_name: customerType === 'company'
+  ? (formData.get('signer_name') || '').toString().trim()
+  : (formData.get('contracting_name') || '').toString().trim(),
+
+signer_tax_id: customerType === 'company'
+  ? signerTaxIdForPayload
+  : personalTaxIdForPayload,
+
+signer_role: customerType === 'company'
+  ? (formData.get('signer_role') || '').toString().trim()
+  : (formData.get('requester_role') || '').toString(),
+
+legal_name: customerType === 'company'
+  ? (formData.get('company_legal_name') || '').toString().trim()
+  : (formData.get('contracting_name') || '').toString().trim(),
+
+tax_number: customerType === 'company'
+  ? companyTaxIdForPayload
+  : personalTaxIdForPayload,
+
+billing_email: (formData.get('billing_email') || '').toString().trim(),
+selected_offer: selectedOffer,
             needs: needs,
             languages_requested: languagesRequested,
             message: (formData.get('message_original') || '').toString().trim(),
@@ -951,12 +1107,12 @@ textarea.field-error{
           translation_fee: needs.includes('translation') ? 30 : 0
         });
 
-        await supabaseClient.from('billing_setup').insert({
-          restaurant_id: restaurantId,
-          provider: 'gocardless',
-          status: 'pending',
-          currency: 'EUR'
-        });
+   await supabaseClient.from('billing_setup').insert({
+  restaurant_id: restaurantId,
+  provider: 'not_assigned',
+  status: 'setup_pending',
+  currency: 'EUR'
+});
 
         const successBox = document.getElementById('successBox');
         try {
