@@ -453,7 +453,7 @@
           <h1 data-i18n-html="title">Finaliser votre <span>activation</span></h1>
 
           <p class="lead" data-i18n="intro">
-            Validez votre engagement professionnel TapCarta, puis continuez vers GoCardless pour mettre en place le prélèvement mensuel.
+            Validez votre contrat TapCarta. Après validation, TapCarta vérifiera les informations de votre dossier et vous confirmera directement la finalisation de votre activation.
           </p>
 
           <div class="notice" data-i18n="internalNotice">
@@ -472,8 +472,8 @@
             </div>
 
             <div class="box">
-              <div class="box-title" data-i18n="debitLabel">Prélèvement</div>
-              <div class="box-value" data-i18n="debitValue">Le 5 du mois</div>
+              <div class="box-title" data-i18n="debitLabel">Activation</div>
+              <div class="box-value" data-i18n="debitValue">Confirmée par TapCarta</div>
             </div>
 
             <div class="box">
@@ -487,8 +487,8 @@
             <ul>
               <li data-i18n-html="point1"><strong>Abonnement professionnel TapCarta</strong>, avec engagement initial de 12 mois.</li>
               <li data-i18n-html="point2"><strong>Prix affiché hors TVA uniquement.</strong></li>
-              <li data-i18n-html="point3"><strong>Prélèvement mensuel via GoCardless</strong>, prévu le 5 du mois.</li>
-              <li data-i18n-html="point4">La facturation démarre le mois suivant la validation du contrat et du mandat GoCardless.</li>
+              <li data-i18n-html="point3"><strong>Modalités d’activation et de paiement</strong> confirmées directement par TapCarta.</li>
+              <li data-i18n-html="point4">La facturation démarre selon les conditions prévues au contrat, après validation du dossier et finalisation de l’activation.</li>
               <li data-i18n-html="point5">Les contenus manquants ne suspendent pas l’engagement.</li>
               <li data-i18n-html="point6">Le contrat complet est transmis en PDF avec l’email d’activation.</li>
             </ul>
@@ -524,7 +524,7 @@
             <label class="checkline">
               <input id="acceptContract" type="checkbox" />
               <span data-i18n="acceptContract">
-                Je confirme avoir reçu le contrat TapCarta complet en PDF et accepter les conditions applicables.
+                Je confirme avoir reçu le contrat TapCarta complet en PDF, dont la version espagnole constitue la version juridique officielle, et accepter les conditions applicables.
               </span>
             </label>
 
@@ -538,17 +538,18 @@
             <label class="checkline">
               <input id="acceptPayment" type="checkbox" />
               <span data-i18n="acceptPayment">
-                Je comprends que l’activation réelle nécessite la validation du mandat GoCardless correspondant au pack sélectionné.
+                Je comprends que l’activation réelle nécessite la finalisation des informations d’activation et des modalités de paiement applicables.
               </span>
             </label>
           </div>
 
           <div class="actions">
-            <button class="btn btn-primary" type="button" onclick="continueToGoCardless()" data-i18n="button">
-              Valider et continuer vers GoCardless
+            <button class="btn btn-primary" type="button" onclick="validateTapCartaContract()" data-i18n="button">
+              Valider le contrat TapCarta
             </button>
 
             <div class="error" id="errorBox"></div>
+            <div class="success" id="successBox"></div>
           </div>
         </div>
       </section>
@@ -566,32 +567,47 @@
       standard: {
         name: "Standard",
         price: "30 € HTVA / mois",
-        url: "https://pay.gocardless.com/BRT01KRDV0QDWEKA8W10EFW0GWH18"
+        monthlyPrice: 30
       },
       plus: {
         name: "Plus",
         price: "45 € HTVA / mois",
-        url: "https://pay.gocardless.com/BRT01KRDVJZ98S0PM1Q7N4X38W615"
+        monthlyPrice: 45
       }
     };
+
+    const PAYMENT_PROVIDER = "not_assigned";
+    const PAYMENT_STATUS = "setup_pending";
+    const PAYMENT_FLOW = "to_define";
+
+    const SUPABASE_URL = "https://uzuejudgccpnuzqefjre.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_FUtVznXw3Y0dftgEE7zgHg_aTbK669l";
+
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
 
     const translations = {
       fr: {
         eyebrow: "Finalisation TapCarta",
         title: "Finaliser votre <span>activation</span>",
-        intro: "Validez votre engagement professionnel TapCarta, puis continuez vers GoCardless pour mettre en place le prélèvement mensuel.",
+        intro: "Validez votre contrat TapCarta. Après validation, TapCarta vérifiera les informations de votre dossier et vous confirmera directement la finalisation de votre activation.",
         internalNotice: "Cette page est envoyée uniquement après vérification interne par TapCarta.",
         packLabel: "Pack sélectionné",
         priceLabel: "Prix mensuel",
-        debitLabel: "Prélèvement",
-        debitValue: "Le 5 du mois",
+        debitLabel: "Activation",
+        debitValue: "Confirmée par TapCarta",
         billingLabel: "Facturation",
         billingValue: "Mensuelle",
         summaryTitle: "Résumé essentiel",
         point1: "<strong>Abonnement professionnel TapCarta</strong>, avec engagement initial de 12 mois.",
         point2: "<strong>Prix affiché hors TVA uniquement.</strong>",
-        point3: "<strong>Prélèvement mensuel via GoCardless</strong>, prévu le 5 du mois.",
-        point4: "La facturation démarre le mois suivant la validation du contrat et du mandat GoCardless.",
+        point3: "<strong>Modalités d’activation et de paiement</strong> confirmées directement par TapCarta.",
+        point4: "La facturation démarre selon les conditions prévues au contrat, après validation du dossier et finalisation de l’activation.",
         point5: "Les contenus manquants ne suspendent pas l’engagement.",
         point6: "Le contrat complet est transmis en PDF avec l’email d’activation.",
         officialContract: "La version espagnole du contrat constitue la version juridique officielle. Les versions française, anglaise et néerlandaise sont informatives.",
@@ -605,31 +621,35 @@
         roleManager: "Gérant",
         roleAuthorized: "Personne autorisée",
         roleOther: "Autre",
-        acceptContract: "Je confirme avoir reçu le contrat TapCarta complet en PDF et accepter les conditions applicables.",
+        acceptContract: "Je confirme avoir reçu le contrat TapCarta complet en PDF, dont la version espagnole constitue la version juridique officielle, et accepter les conditions applicables.",
         acceptAuthority: "Je confirme être autorisé à engager l’établissement ou la société mentionnée.",
-        acceptPayment: "Je comprends que l’activation réelle nécessite la validation du mandat GoCardless correspondant au pack sélectionné.",
-        button: "Valider et continuer vers GoCardless",
+        acceptPayment: "Je comprends que l’activation réelle nécessite la finalisation des informations d’activation et des modalités de paiement applicables.",
+        button: "Valider le contrat TapCarta",
         footer: "Activation interne client",
         errorPack: "Pack invalide ou manquant. Le lien doit contenir ?pack=standard ou ?pack=plus.",
         errorFields: "Veuillez compléter le nom du signataire et le nom de l’établissement/société.",
-        errorChecks: "Veuillez cocher les trois confirmations avant de continuer."
+        errorChecks: "Veuillez cocher les trois confirmations avant de continuer.",
+        successContract: "Votre contrat TapCarta a bien été enregistré. TapCarta va vérifier les informations de votre dossier et vous confirmera directement la finalisation de votre activation.",
+        errorMissingRestaurant: "Lien d’activation incomplet : l’identifiant restaurant est manquant.",
+        errorDuplicateContract: "Un contrat actif ou en attente existe déjà pour ce restaurant.",
+        errorTechnical: "Une erreur technique empêche l’enregistrement du contrat. Aucun contrat n’a été validé. Veuillez contacter TapCarta."
       },
       es: {
         eyebrow: "Finalización TapCarta",
         title: "Finalizar su <span>activación</span>",
-        intro: "Valide su compromiso profesional TapCarta y continúe hacia GoCardless para configurar el cargo mensual.",
+        intro: "Valide su contrato TapCarta. Después de la validación, TapCarta revisará la información de su dossier y le confirmará directamente la finalización de su activación.",
         internalNotice: "Esta página se envía únicamente después de la verificación interna por TapCarta.",
         packLabel: "Pack seleccionado",
         priceLabel: "Precio mensual",
-        debitLabel: "Cargo",
-        debitValue: "El día 5 del mes",
+        debitLabel: "Activación",
+        debitValue: "Confirmada por TapCarta",
         billingLabel: "Facturación",
         billingValue: "Mensual",
         summaryTitle: "Resumen esencial",
         point1: "<strong>Suscripción profesional TapCarta</strong>, con compromiso inicial de 12 meses.",
         point2: "<strong>Precio indicado sin IVA únicamente.</strong>",
-        point3: "<strong>Cargo mensual mediante GoCardless</strong>, previsto el día 5 del mes.",
-        point4: "La facturación empieza el mes siguiente a la validación del contrato y del mandato GoCardless.",
+        point3: "<strong>Modalidades de activación y pago</strong> confirmadas directamente por TapCarta.",
+        point4: "La facturación empieza según las condiciones previstas en el contrato, después de la validación del dossier y la finalización de la activación.",
         point5: "La falta de contenidos no suspende el compromiso.",
         point6: "El contrato completo se transmite en PDF con el email de activación.",
         officialContract: "La versión española del contrato constituye la versión jurídica oficial. Las versiones francesa, inglesa y neerlandesa son informativas.",
@@ -643,31 +663,35 @@
         roleManager: "Gerente",
         roleAuthorized: "Persona autorizada",
         roleOther: "Otro",
-        acceptContract: "Confirmo haber recibido el contrato completo de TapCarta en PDF y aceptar las condiciones aplicables.",
+        acceptContract: "Confirmo haber recibido el contrato completo de TapCarta en PDF, cuya versión española constituye la versión jurídica oficial, y aceptar las condiciones aplicables.",
         acceptAuthority: "Confirmo estar autorizado para comprometer al establecimiento o empresa mencionada.",
-        acceptPayment: "Entiendo que la activación real requiere la validación del mandato GoCardless correspondiente al pack seleccionado.",
-        button: "Validar y continuar hacia GoCardless",
+        acceptPayment: "Entiendo que la activación real requiere finalizar la información de activación y las modalidades de pago aplicables.",
+        button: "Validar el contrato TapCarta",
         footer: "Activación interna cliente",
         errorPack: "Pack inválido o ausente. El enlace debe contener ?pack=standard o ?pack=plus.",
         errorFields: "Complete el nombre del firmante y el nombre del establecimiento/empresa.",
-        errorChecks: "Marque las tres confirmaciones antes de continuar."
+        errorChecks: "Marque las tres confirmaciones antes de continuar.",
+        successContract: "Su contrato TapCarta se ha registrado correctamente. TapCarta revisará la información de su dossier y le confirmará directamente la finalización de su activación.",
+        errorMissingRestaurant: "Enlace de activación incompleto: falta el identificador del restaurante.",
+        errorDuplicateContract: "Ya existe un contrato activo o pendiente para este restaurante.",
+        errorTechnical: "Un error técnico impide registrar el contrato. Ningún contrato ha sido validado. Contacte con TapCarta."
       },
       en: {
         eyebrow: "TapCarta finalisation",
         title: "Finalise your <span>activation</span>",
-        intro: "Validate your professional TapCarta commitment, then continue to GoCardless to set up the monthly direct debit.",
+        intro: "Validate your TapCarta contract. After validation, TapCarta will review your file information and directly confirm the finalisation of your activation.",
         internalNotice: "This page is sent only after internal verification by TapCarta.",
         packLabel: "Selected pack",
         priceLabel: "Monthly price",
-        debitLabel: "Collection",
-        debitValue: "On the 5th of the month",
+        debitLabel: "Activation",
+        debitValue: "Confirmed by TapCarta",
         billingLabel: "Billing",
         billingValue: "Monthly",
         summaryTitle: "Essential summary",
         point1: "<strong>Professional TapCarta subscription</strong>, with an initial 12-month commitment.",
         point2: "<strong>Price shown excluding VAT only.</strong>",
-        point3: "<strong>Monthly collection through GoCardless</strong>, scheduled for the 5th of the month.",
-        point4: "Billing starts the month after validation of the contract and GoCardless mandate.",
+        point3: "<strong>Activation and payment arrangements</strong> confirmed directly by TapCarta.",
+        point4: "Billing starts according to the conditions set out in the contract, after file validation and activation finalisation.",
         point5: "Missing client content does not suspend the commitment.",
         point6: "The full contract is sent as a PDF with the activation email.",
         officialContract: "The Spanish version of the contract is the official legal version. French, English and Dutch versions are informative.",
@@ -681,31 +705,35 @@
         roleManager: "Manager",
         roleAuthorized: "Authorised person",
         roleOther: "Other",
-        acceptContract: "I confirm that I have received the full TapCarta contract as a PDF and accept the applicable terms.",
+        acceptContract: "I confirm that I have received the full TapCarta contract as a PDF, whose Spanish version is the official legal version, and accept the applicable terms.",
         acceptAuthority: "I confirm that I am authorised to commit the venue or company mentioned.",
-        acceptPayment: "I understand that real activation requires validation of the GoCardless mandate corresponding to the selected pack.",
-        button: "Validate and continue to GoCardless",
+        acceptPayment: "I understand that real activation requires finalising the activation information and applicable payment arrangements.",
+        button: "Validate TapCarta contract",
         footer: "Internal client activation",
         errorPack: "Invalid or missing pack. The link must contain ?pack=standard or ?pack=plus.",
         errorFields: "Please complete the signer name and venue/company name.",
-        errorChecks: "Please tick the three confirmations before continuing."
+        errorChecks: "Please tick the three confirmations before continuing.",
+        successContract: "Your TapCarta contract has been saved. TapCarta will review your file information and directly confirm the finalisation of your activation.",
+        errorMissingRestaurant: "Incomplete activation link: restaurant identifier is missing.",
+        errorDuplicateContract: "An active or pending contract already exists for this restaurant.",
+        errorTechnical: "A technical error prevents the contract from being saved. No contract has been validated. Please contact TapCarta."
       },
       nl: {
         eyebrow: "TapCarta afronding",
         title: "Uw <span>activatie</span> afronden",
-        intro: "Bevestig uw professionele TapCarta-engagement en ga daarna verder naar GoCardless om de maandelijkse domiciliëring in te stellen.",
+        intro: "Valideer uw TapCarta-contract. Na validatie controleert TapCarta de informatie van uw dossier en bevestigt rechtstreeks de afronding van uw activatie.",
         internalNotice: "Deze pagina wordt uitsluitend verzonden na interne controle door TapCarta.",
         packLabel: "Geselecteerd pack",
         priceLabel: "Maandprijs",
-        debitLabel: "Inning",
-        debitValue: "Op de 5e van de maand",
+        debitLabel: "Activatie",
+        debitValue: "Bevestigd door TapCarta",
         billingLabel: "Facturatie",
         billingValue: "Maandelijks",
         summaryTitle: "Essentiële samenvatting",
         point1: "<strong>Professioneel TapCarta-abonnement</strong>, met een initiële verbintenis van 12 maanden.",
         point2: "<strong>Prijs uitsluitend exclusief btw weergegeven.</strong>",
-        point3: "<strong>Maandelijkse inning via GoCardless</strong>, voorzien op de 5e van de maand.",
-        point4: "De facturatie start de maand na validatie van het contract en het GoCardless-mandaat.",
+        point3: "<strong>Activatie- en betalingsmodaliteiten</strong> rechtstreeks bevestigd door TapCarta.",
+        point4: "De facturatie start volgens de voorwaarden in het contract, na controle van het dossier en afronding van de activatie.",
         point5: "Ontbrekende klantinhoud schort de verbintenis niet op.",
         point6: "Het volledige contract wordt als PDF meegestuurd met de activatiemail.",
         officialContract: "De Spaanse versie van het contract is de officiële juridische versie. De Franse, Engelse en Nederlandse versies zijn informatief.",
@@ -719,14 +747,18 @@
         roleManager: "Zaakvoerder",
         roleAuthorized: "Bevoegde persoon",
         roleOther: "Andere",
-        acceptContract: "Ik bevestig dat ik het volledige TapCarta-contract als PDF heb ontvangen en de toepasselijke voorwaarden aanvaard.",
+        acceptContract: "Ik bevestig dat ik het volledige TapCarta-contract als PDF heb ontvangen, waarvan de Spaanse versie de officiële juridische versie is, en de toepasselijke voorwaarden aanvaard.",
         acceptAuthority: "Ik bevestig dat ik bevoegd ben om de vermelde zaak of vennootschap te verbinden.",
-        acceptPayment: "Ik begrijp dat de echte activatie de validatie vereist van het GoCardless-mandaat dat overeenkomt met het geselecteerde pack.",
-        button: "Valideren en doorgaan naar GoCardless",
+        acceptPayment: "Ik begrijp dat de echte activatie vereist dat de activatiegegevens en toepasselijke betalingsmodaliteiten worden afgerond.",
+        button: "TapCarta-contract valideren",
         footer: "Interne klantactivatie",
         errorPack: "Ongeldig of ontbrekend pack. De link moet ?pack=standard of ?pack=plus bevatten.",
         errorFields: "Vul de naam van de ondertekenaar en de naam van de zaak/vennootschap in.",
-        errorChecks: "Vink de drie bevestigingen aan voordat u verdergaat."
+        errorChecks: "Vink de drie bevestigingen aan voordat u verdergaat.",
+        successContract: "Uw TapCarta-contract is correct opgeslagen. TapCarta controleert de informatie van uw dossier en bevestigt rechtstreeks de afronding van uw activatie.",
+        errorMissingRestaurant: "Onvolledige activatielink: restaurant-ID ontbreekt.",
+        errorDuplicateContract: "Er bestaat al een actief of lopend contract voor dit restaurant.",
+        errorTechnical: "Door een technische fout kan het contract niet worden opgeslagen. Er is geen contract gevalideerd. Neem contact op met TapCarta."
       }
     };
 
@@ -803,16 +835,40 @@
       errorBox.classList.remove("show");
     }
 
-    function continueToGoCardless(){
+    function showSuccess(message){
+      const successBox = document.getElementById("successBox");
+      successBox.textContent = message;
+      successBox.classList.add("show");
+    }
+
+    function hideSuccess(){
+      const successBox = document.getElementById("successBox");
+      successBox.textContent = "";
+      successBox.classList.remove("show");
+    }
+
+    async function validateTapCartaContract(){
       hideError();
+      hideSuccess();
 
       if(!activePackCode || !PACKS[activePackCode]){
         showError(translations[activeLang].errorPack);
         return;
       }
 
+      const restaurantId = getQueryParam("restaurant_id") || getQueryParam("rid");
+      const joinRequestId = getQueryParam("join_request_id") || getQueryParam("request_id");
+      const slug = getQueryParam("slug") || null;
+      const activationMode = getQueryParam("mode") === "regularization" ? "regularization" : "standard";
+
+      if(!restaurantId){
+        showError(translations[activeLang].errorMissingRestaurant);
+        return;
+      }
+
       const signerName = document.getElementById("signerName").value.trim();
       const companyName = document.getElementById("companyName").value.trim();
+      const signerRole = document.getElementById("signerRole").value;
 
       if(!signerName || !companyName){
         showError(translations[activeLang].errorFields);
@@ -829,13 +885,89 @@
         return;
       }
 
-      window.location.href = PACKS[activePackCode].url;
+      const submitButton = document.querySelector(".btn-primary");
+      submitButton.disabled = true;
+      submitButton.style.opacity = ".65";
+      submitButton.style.cursor = "not-allowed";
+
+      try{
+        const existingStatuses = [
+          "signed_pending_activation",
+          "signed_pending_payment",
+          "payment_pending",
+          "active",
+          "signed"
+        ];
+
+        const { data: existingContracts, error: existingError } = await supabaseClient
+          .from("contracts")
+          .select("id,status")
+          .eq("restaurant_id", restaurantId)
+          .in("status", existingStatuses)
+          .limit(1);
+
+        if(existingError){
+          throw existingError;
+        }
+
+        if(existingContracts && existingContracts.length > 0){
+          showError(translations[activeLang].errorDuplicateContract);
+          submitButton.disabled = false;
+          submitButton.style.opacity = "1";
+          submitButton.style.cursor = "pointer";
+          return;
+        }
+
+        const contractPayload = {
+          restaurant_id: restaurantId,
+          status: "signed_pending_activation",
+          pack_code: activePackCode,
+          monthly_price: PACKS[activePackCode].monthlyPrice,
+          signer_name: signerName,
+          company_name: companyName,
+          payment_status: PAYMENT_STATUS,
+          payment_provider: PAYMENT_PROVIDER,
+          activation_mode: activationMode,
+          metadata: {
+            source: "activate.html",
+            contract_version: "V2_paiement_neutre",
+            official_contract_language: "es",
+            language: activeLang,
+            slug: slug,
+            join_request_id: joinRequestId || null,
+            signer_role: signerRole,
+            payment_flow: PAYMENT_FLOW,
+            accepted_contract: true,
+            accepted_authority: true,
+            accepted_payment_setup: true,
+            signed_at: new Date().toISOString(),
+            user_agent: navigator.userAgent
+          }
+        };
+
+        const { error: insertError } = await supabaseClient
+          .from("contracts")
+          .insert(contractPayload);
+
+        if(insertError){
+          throw insertError;
+        }
+
+        showSuccess(translations[activeLang].successContract);
+      } catch(error){
+        console.error("TapCarta contract validation error:", error);
+        showError(translations[activeLang].errorTechnical);
+        submitButton.disabled = false;
+        submitButton.style.opacity = "1";
+        submitButton.style.cursor = "pointer";
+      }
     }
 
     document.querySelectorAll(".lang-btn").forEach(function(btn){
       btn.addEventListener("click", function(){
         setLang(btn.dataset.lang);
         hideError();
+        hideSuccess();
         if(!activePackCode){
           showError(translations[activeLang].errorPack);
         }
