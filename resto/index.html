@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.1.2.1';
+        const APP_VERSION = 'V2.1.2.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -698,6 +698,10 @@
         font-size: 0.86rem;
       }
     }
+    #app-wrapper {
+      padding-bottom: calc(120px + env(safe-area-inset-bottom));
+    }
+
     .restaurant-manual-action-bar {
       position: fixed;
       left: 12px;
