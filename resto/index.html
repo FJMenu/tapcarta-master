@@ -14470,7 +14470,11 @@ async function shareRestaurantQrFramedLink() {
     return;
   }
 
-  if (navigator.share) {
+  const isMobileOrTablet =
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '') ||
+    (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && window.innerWidth <= 1024);
+
+  if (isMobileOrTablet && navigator.share) {
     try {
       await navigator.share({
         title: texts.shareText,
