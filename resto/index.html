@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.1.2.5';
+        const APP_VERSION = 'V2.1.2.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -4224,7 +4224,7 @@ function showRestaurantToast(message, variant = 'info') {
   const isDanger = variant === 'danger';
   const toast = document.createElement('div');
   toast.id = 'restaurant-toast-message';
-  toast.className = `fixed left-3 right-3 bottom-4 z-[9999] md:left-auto md:right-6 md:bottom-6 md:w-[380px] rounded-2xl border ${isDanger ? 'border-red-400/45 bg-red-950/90' : 'border-gold/40 bg-black/90'} shadow-[0_18px_60px_rgba(0,0,0,0.45)] px-4 py-4 text-sm font-semibold ${isDanger ? 'text-red-100' : 'text-cream'}`;
+  toast.className = `fixed left-3 right-3 bottom-4 z-[10150] md:left-auto md:right-6 md:bottom-6 md:w-[380px] rounded-2xl border ${isDanger ? 'border-red-400/45 bg-red-950/90' : 'border-gold/40 bg-black/95'} shadow-[0_18px_60px_rgba(0,0,0,0.55)] px-4 py-4 text-sm font-semibold ${isDanger ? 'text-red-100' : 'text-cream'}`;
 
   toast.innerHTML = `
     <div class="flex items-center gap-3">
