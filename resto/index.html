@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.1.1.1';
+        const APP_VERSION = 'V2.1.2.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1592,6 +1592,8 @@ let siteConfig = {
   desktopCollageUrl: "./liege-collage.jpg",
   clientMenuUrl: "#",
   qrMenuUrl: "#",
+  qrFramedUrl: "",
+  qrFramedStoragePath: "",
   experienceUrl: "#",
   orderReservationOptionEnabled: true,
   activationRequestUrl: "#"
@@ -1760,7 +1762,7 @@ async function validateTapCartaRestoAccess() {
 
   const { data: restaurantRow, error: restaurantError } = await supabaseClient
     .from('restaurants')
-    .select('id, name, slug, status, pack_code, public_url, resto_url')
+    .select('id, name, slug, status, pack_code, public_url, resto_url, qr_framed_storage_path, qr_framed_url')
     .eq('id', restaurantId)
     .maybeSingle();
 
@@ -1895,6 +1897,7 @@ siteConfig.orderReservationOptionEnabled =
   siteConfig.modules.ordering || siteConfig.modules.booking;
 
 const resolvedClientMenuUrl =
+  supabaseRestaurant.public_url ||
   restaurantData?.technical?.clientMenuUrl ||
   restaurantData?.portal?.portalPaths?.publicPage ||
   restaurantData?.links?.clientMenuUrl ||
@@ -1907,6 +1910,20 @@ const resolvedQrMenuUrl =
   restaurantData?.technical?.qrMenuUrl ||
   restaurantData?.links?.qrMenuUrl ||
   siteConfig.qrMenuUrl;
+
+const resolvedQrFramedUrl =
+  supabaseRestaurant.qr_framed_url ||
+  restaurantData?.technical?.qrFramedUrl ||
+  restaurantData?.links?.qrFramedUrl ||
+  siteConfig.qrFramedUrl ||
+  '';
+
+const resolvedQrFramedStoragePath =
+  supabaseRestaurant.qr_framed_storage_path ||
+  restaurantData?.technical?.qrFramedStoragePath ||
+  restaurantData?.links?.qrFramedStoragePath ||
+  siteConfig.qrFramedStoragePath ||
+  '';
 
 const resolvedExperienceUrl =
   restaurantData?.technical?.experienceUrl ||
@@ -1930,10 +1947,21 @@ const resolvedReviewWriteUrl =
 
 siteConfig.clientMenuUrl = resolvedClientMenuUrl;
 siteConfig.qrMenuUrl = resolvedQrMenuUrl;
+siteConfig.qrFramedUrl = resolvedQrFramedUrl;
+siteConfig.qrFramedStoragePath = resolvedQrFramedStoragePath;
 siteConfig.experienceUrl = resolvedExperienceUrl;
 siteConfig.activationRequestUrl = resolvedActivationRequestUrl;
 siteConfig.reviewReadUrl = resolvedReviewReadUrl;
 siteConfig.reviewWriteUrl = resolvedReviewWriteUrl;
+
+if (!restaurantData.links || typeof restaurantData.links !== 'object') {
+  restaurantData.links = {};
+}
+
+restaurantData.links.clientMenuUrl = resolvedClientMenuUrl;
+restaurantData.links.qrMenuUrl = resolvedQrMenuUrl;
+restaurantData.links.qrFramedUrl = resolvedQrFramedUrl;
+restaurantData.links.qrFramedStoragePath = resolvedQrFramedStoragePath;
 
 activeRestaurantData = restaurantData;
   return restaurantData;
@@ -10247,6 +10275,21 @@ function renderRequestRow(item, displayMode = 'active') {
                 <i data-lucide="settings" class="w-4 h-4 text-gold"></i>
                 <span>${t.restaurantManageInfo}</span>
               </button>
+
+              <button
+                id="restaurant-qr-framed-toggle"
+                type="button"
+                class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 bg-gold/10 text-sm font-semibold text-gold hover:bg-gold/15 transition-all"
+              >
+                <i data-lucide="qr-code" class="w-4 h-4 text-gold"></i>
+                <span>${currentLang === 'es'
+                  ? 'Mi QR TapCarta'
+                  : currentLang === 'en'
+                    ? 'My TapCarta QR'
+                    : currentLang === 'nl'
+                      ? 'Mijn TapCarta QR'
+                      : 'Mon QR TapCarta'}</span>
+              </button>
             </div>
           </article>
 
@@ -14215,9 +14258,256 @@ async function exportRestaurantJson() {
   }
 }
 
+function getRestaurantQrModalTexts() {
+  return {
+    title: currentLang === 'es'
+      ? 'Mi QR TapCarta'
+      : currentLang === 'en'
+        ? 'My TapCarta QR'
+        : currentLang === 'nl'
+          ? 'Mijn TapCarta QR'
+          : 'Mon QR TapCarta',
+
+    subtitle: currentLang === 'es'
+      ? 'QR oficial del restaurante, preparado por TapCarta.'
+      : currentLang === 'en'
+        ? 'Official restaurant QR, prepared by TapCarta.'
+        : currentLang === 'nl'
+          ? 'Officiële QR van het restaurant, voorbereid door TapCarta.'
+          : 'QR officiel du restaurant, préparé par TapCarta.',
+
+    unavailable: currentLang === 'es'
+      ? 'El QR oficial aún no está disponible para este restaurante.'
+      : currentLang === 'en'
+        ? 'The official QR is not available for this restaurant yet.'
+        : currentLang === 'nl'
+          ? 'De officiële QR is nog niet beschikbaar voor dit restaurant.'
+          : 'Le QR officiel n’est pas encore disponible pour ce restaurant.',
+
+    download: currentLang === 'es'
+      ? 'Descargar QR'
+      : currentLang === 'en'
+        ? 'Download QR'
+        : currentLang === 'nl'
+          ? 'QR downloaden'
+          : 'Télécharger le QR',
+
+    share: currentLang === 'es'
+      ? 'Compartir'
+      : currentLang === 'en'
+        ? 'Share'
+        : currentLang === 'nl'
+          ? 'Delen'
+          : 'Partager',
+
+    copy: currentLang === 'es'
+      ? 'Copiar enlace'
+      : currentLang === 'en'
+        ? 'Copy link'
+        : currentLang === 'nl'
+          ? 'Link kopiëren'
+          : 'Copier le lien',
+
+    close: currentLang === 'es'
+      ? 'Cerrar'
+      : currentLang === 'en'
+        ? 'Close'
+        : currentLang === 'nl'
+          ? 'Sluiten'
+          : 'Fermer',
+
+    copied: currentLang === 'es'
+      ? 'Enlace del QR copiado.'
+      : currentLang === 'en'
+        ? 'QR link copied.'
+        : currentLang === 'nl'
+          ? 'QR-link gekopieerd.'
+          : 'Lien du QR copié.',
+
+    shareText: currentLang === 'es'
+      ? 'QR oficial TapCarta'
+      : currentLang === 'en'
+        ? 'Official TapCarta QR'
+        : currentLang === 'nl'
+          ? 'Officiële TapCarta QR'
+          : 'QR officiel TapCarta'
+  };
+}
+
+function closeRestaurantQrFramedModal() {
+  document.getElementById('restaurant-qr-framed-modal')?.remove();
+}
+
+async function copyRestaurantQrFramedLink() {
+  const qrUrl = siteConfig.qrFramedUrl || activeRestaurantData?.links?.qrFramedUrl || '';
+  const texts = getRestaurantQrModalTexts();
+
+  if (!qrUrl) {
+    showRestaurantToast(texts.unavailable, 'danger');
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(qrUrl);
+    showRestaurantToast(texts.copied, 'info');
+  } catch (error) {
+    console.error('Impossible de copier le lien QR :', error);
+    showRestaurantToast(texts.unavailable, 'danger');
+  }
+}
+
+async function shareRestaurantQrFramedLink() {
+  const qrUrl = siteConfig.qrFramedUrl || activeRestaurantData?.links?.qrFramedUrl || '';
+  const texts = getRestaurantQrModalTexts();
+
+  if (!qrUrl) {
+    showRestaurantToast(texts.unavailable, 'danger');
+    return;
+  }
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: texts.shareText,
+        text: `${texts.shareText} — ${siteConfig.restaurantName || ''}`.trim(),
+        url: qrUrl
+      });
+      return;
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+      console.warn('Partage natif indisponible, copie du lien à la place.', error);
+    }
+  }
+
+  await copyRestaurantQrFramedLink();
+}
+
+function openRestaurantQrFramedModal() {
+  closeRestaurantQrFramedModal();
+
+  const texts = getRestaurantQrModalTexts();
+  const qrUrl = siteConfig.qrFramedUrl || activeRestaurantData?.links?.qrFramedUrl || '';
+  const restaurantName =
+    siteConfig.restaurantName ||
+    activeRestaurantData?.identity?.name ||
+    activeRestaurantData?.name ||
+    'TapCarta';
+
+  const modal = document.createElement('div');
+  modal.id = 'restaurant-qr-framed-modal';
+  modal.className = 'fixed inset-0 z-[10090] flex items-center justify-center bg-black/75 px-4 py-5 backdrop-blur-sm';
+
+  modal.innerHTML = `
+    <div class="w-full max-w-lg overflow-hidden rounded-[28px] border border-gold/35 bg-[#101010] shadow-[0_30px_90px_rgba(0,0,0,0.62)]">
+      <div class="flex items-start justify-between gap-4 border-b border-gold/18 px-5 py-4">
+        <div class="min-w-0">
+          <div class="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-gold">
+            <i data-lucide="qr-code" class="h-3.5 w-3.5"></i>
+            TapCarta
+          </div>
+
+          <h3 class="mt-3 font-display text-2xl font-bold text-cream">
+            ${texts.title}
+          </h3>
+
+          <p class="mt-1 text-sm leading-relaxed text-cream/65">
+            ${texts.subtitle}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          id="restaurant-qr-framed-close"
+          class="btn-action rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-bold text-cream/80"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="space-y-4 px-5 py-5">
+        ${
+          qrUrl
+            ? `
+              <div class="rounded-3xl border border-gold/22 bg-black/30 p-3">
+                <img
+                  src="${qrUrl}"
+                  alt="QR TapCarta ${restaurantName}"
+                  class="mx-auto max-h-[420px] w-full rounded-2xl object-contain"
+                  loading="lazy"
+                >
+              </div>
+
+              <div class="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-xs leading-relaxed text-cream/55">
+                ${qrUrl}
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-3">
+                <a
+                  href="${qrUrl}"
+                  download
+                  target="_blank"
+                  rel="noopener"
+                  class="btn-action inline-flex items-center justify-center gap-2 rounded-xl border border-gold/35 bg-gold/10 px-4 py-3 text-sm font-bold text-gold"
+                >
+                  <i data-lucide="download" class="h-4 w-4"></i>
+                  <span>${texts.download}</span>
+                </a>
+
+                <button
+                  type="button"
+                  id="restaurant-qr-framed-share"
+                  class="btn-action inline-flex items-center justify-center gap-2 rounded-xl border border-gold/25 bg-white/[0.03] px-4 py-3 text-sm font-bold text-cream/85"
+                >
+                  <i data-lucide="share-2" class="h-4 w-4 text-gold"></i>
+                  <span>${texts.share}</span>
+                </button>
+
+                <button
+                  type="button"
+                  id="restaurant-qr-framed-copy"
+                  class="btn-action inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-bold text-cream/80"
+                >
+                  <i data-lucide="copy" class="h-4 w-4 text-gold"></i>
+                  <span>${texts.copy}</span>
+                </button>
+              </div>
+            `
+            : `
+              <div class="rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-4 text-sm leading-relaxed text-amber-100">
+                ${texts.unavailable}
+              </div>
+            `
+        }
+      </div>
+
+      <div class="flex justify-end border-t border-gold/18 px-5 py-4">
+        <button
+          type="button"
+          id="restaurant-qr-framed-close-bottom"
+          class="btn-action rounded-xl border border-gold/25 bg-gold/10 px-5 py-3 text-sm font-bold text-gold"
+        >
+          ${texts.close}
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document.getElementById('restaurant-qr-framed-close')?.addEventListener('click', closeRestaurantQrFramedModal);
+  document.getElementById('restaurant-qr-framed-close-bottom')?.addEventListener('click', closeRestaurantQrFramedModal);
+  document.getElementById('restaurant-qr-framed-copy')?.addEventListener('click', copyRestaurantQrFramedLink);
+  document.getElementById('restaurant-qr-framed-share')?.addEventListener('click', shareRestaurantQrFramedLink);
+
+  if (window.lucide) {
+    requestAnimationFrame(() => lucide.createIcons());
+  }
+}
+
   const editorToggleBtn = document.getElementById('restaurant-menu-editor-toggle');
   const infoEditorToggleBtn = document.getElementById('restaurant-info-editor-toggle');
   const optionsToggleBtn = document.getElementById('restaurant-options-toggle');
+  const qrFramedToggleBtn = document.getElementById('restaurant-qr-framed-toggle');
   const editorSection = document.getElementById('restaurant-menu-editor-section');
   const editorHome = document.getElementById('restaurant-menu-editor-home');
   const editorWorkspace = document.getElementById('restaurant-menu-editor-workspace');
@@ -14327,6 +14617,10 @@ const unsavedBannerSaveBtn = document.getElementById('restaurant-menu-unsaved-sa
 
   if (infoEditorToggleBtn) {
     infoEditorToggleBtn.addEventListener('click', openRestaurantInfoModal);
+  }
+
+  if (qrFramedToggleBtn) {
+    qrFramedToggleBtn.addEventListener('click', openRestaurantQrFramedModal);
   }
 
   if (editorToggleBtn && editorSection) {
