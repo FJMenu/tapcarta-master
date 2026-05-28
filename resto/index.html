@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.2.2';
+        const APP_VERSION = 'V2.2.2.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -13558,11 +13558,7 @@ async function saveRestaurantOptionsModal() {
                       <input
                         type="text"
                         inputmode="decimal"
-                        value="${escapeHtml(
-                          item.price === null || typeof item.price === 'undefined'
-                            ? ''
-                            : String(item.price).replace('.', ',')
-                        )}"
+                        value="${escapeHtml(formatDishPriceForInput(item.price))}"
                         data-category-index="${categoryIndex}"
                         data-item-index="${itemIndex}"
                         data-field="item-price"
