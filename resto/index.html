@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.1.5';
+        const APP_VERSION = 'V2.2.1.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -15552,6 +15552,16 @@ if (dishFinishBtn) {
                   if (action === 'add-subcategory') {
           markMenuEditorDirty();
           createRestaurantSubcategory(categoryIndex);
+          updateMenuEditorDirtyUi();
+          return;
+        }
+
+        if (action === 'add-subcategory-item') {
+          const subcategoryIndex = Number(actionButton.dataset.subcategoryIndex);
+          markMenuEditorDirty();
+          openNewDishEditorScreen(categoryIndex, {
+            subcategoryIndex
+          });
           updateMenuEditorDirtyUi();
           return;
         }
