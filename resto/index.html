@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.1.3';
+        const APP_VERSION = 'V2.2.1.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14194,12 +14194,56 @@ function normalizeDishPriceFromInput(value) {
   return String(parsedPrice).replace('.', ',');
 }
 
+function getDishEditorTarget(context) {
+  if (!context || typeof context.categoryIndex !== 'number') {
+    return null;
+  }
+
+  const category = activeRestaurantData?.menu?.categories?.[context.categoryIndex];
+  if (!category) return null;
+
+  if (typeof context.subcategoryIndex === 'number') {
+    const subcategory = category.subcategories?.[context.subcategoryIndex];
+    const item = subcategory?.items?.[context.itemIndex];
+
+    if (!subcategory || !item) return null;
+
+    return {
+      category,
+      subcategory,
+      item,
+      items: subcategory.items,
+      isSubcategory: true
+    };
+  }
+
+  const item = category.items?.[context.itemIndex];
+  if (!item) return null;
+
+  return {
+    category,
+    subcategory: null,
+    item,
+    items: category.items,
+    isSubcategory: false
+  };
+}
+
 function openDishEditorScreen(categoryIndex, itemIndex, options = {}) {
   const screen = document.getElementById('dishEditorScreen');
   if (!screen) return;
 
-  const item = activeRestaurantData?.menu?.categories?.[categoryIndex]?.items?.[itemIndex];
-  if (!item) return;
+  const context = {
+    categoryIndex,
+    subcategoryIndex: typeof options.subcategoryIndex === 'number' ? options.subcategoryIndex : null,
+    itemIndex,
+    isNew: options.isNew === true
+  };
+
+  const target = getDishEditorTarget(context);
+  if (!target?.item) return;
+
+  const item = target.item;
 
   const nameInput = document.getElementById('dishEditorName');
   const priceInput = document.getElementById('dishEditorPrice');
@@ -14222,11 +14266,7 @@ function openDishEditorScreen(categoryIndex, itemIndex, options = {}) {
   screen.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  window._dishEditorContext = {
-    categoryIndex,
-    itemIndex,
-    isNew: options.isNew === true
-  };
+  window._dishEditorContext = context;
 }
 
 function closeDishEditorScreen() {
@@ -14234,10 +14274,10 @@ function closeDishEditorScreen() {
   if (!screen) return;
 
   const context = window._dishEditorContext;
+  const target = getDishEditorTarget(context);
 
-  if (context?.isNew && activeRestaurantData?.menu?.categories?.[context.categoryIndex]?.items?.[context.itemIndex]) {
-    const category = activeRestaurantData.menu.categories[context.categoryIndex];
-    const item = category.items[context.itemIndex];
+  if (context?.isNew && target?.item && Array.isArray(target.items)) {
+    const item = target.item;
 
     const isStillEmpty =
       !String(item.name || '').trim() &&
@@ -14245,8 +14285,8 @@ function closeDishEditorScreen() {
       (item.price === '' || item.price === null || typeof item.price === 'undefined');
 
     if (isStillEmpty) {
-      category.items.splice(context.itemIndex, 1);
-      syncRestaurantItemOrder(category);
+      target.items.splice(context.itemIndex, 1);
+      syncRestaurantItemOrder(target.subcategory || target.category);
       renderRestaurantMenuEditor();
       updateMenuEditorDirtyUi();
     }
@@ -14261,10 +14301,12 @@ function saveDishEditorScreen(options = {}) {
   if (!activeRestaurantData || !window._dishEditorContext) return null;
 
   const shouldShowFlow = options.showFlow !== false;
-  const { categoryIndex, itemIndex } = window._dishEditorContext;
-  const item = activeRestaurantData?.menu?.categories?.[categoryIndex]?.items?.[itemIndex];
+  const context = window._dishEditorContext;
+  const target = getDishEditorTarget(context);
 
-  if (!item) return null;
+  if (!target?.item) return null;
+
+  const item = target.item;
 
   const nameInput = document.getElementById('dishEditorName');
   const priceInput = document.getElementById('dishEditorPrice');
@@ -14293,12 +14335,13 @@ function saveDishEditorScreen(options = {}) {
   updateMenuEditorDirtyUi();
 
   if (shouldShowFlow) {
-    showDishEditorFlowForCategory(categoryIndex, 'dish');
+    showDishEditorFlowForCategory(context.categoryIndex, 'dish');
   }
 
   return {
-    categoryIndex,
-    itemIndex,
+    categoryIndex: context.categoryIndex,
+    subcategoryIndex: context.subcategoryIndex,
+    itemIndex: context.itemIndex,
     item
   };
 }
@@ -14311,6 +14354,14 @@ function saveDishEditorAndAddAnother() {
   }
 
   closeDishEditorFlow();
+
+  if (typeof saved.subcategoryIndex === 'number') {
+    openNewDishEditorScreen(saved.categoryIndex, {
+      subcategoryIndex: saved.subcategoryIndex
+    });
+    return;
+  }
+
   openNewDishEditorScreen(saved.categoryIndex);
 }
 function closeDishEditorFlow() {
