@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.1.8';
+        const APP_VERSION = 'V2.2.2.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -13447,11 +13447,7 @@ async function saveRestaurantOptionsModal() {
 
                                 <div class="flex flex-wrap items-center gap-2 md:justify-end">
                                   <div class="rounded-xl border border-gold/25 bg-gold/10 px-3 py-2 text-sm font-black text-gold">
-                                    ${escapeHtml(
-                                      item.price === null || typeof item.price === 'undefined' || item.price === ''
-                                        ? '—'
-                                        : String(item.price).replace('.', ',')
-                                    )}
+                                  ${escapeHtml(formatDishPriceForDisplay(item.price))}
                                   </div>
 
                                   <button
@@ -14267,6 +14263,20 @@ function formatDishPriceForInput(value) {
   return String(value).trim().replace('.', ',');
 }
 
+function formatDishPriceForDisplay(value) {
+  if (value === null || typeof value === 'undefined' || value === '') {
+    return '—';
+  }
+
+  const parsedPrice = Number(String(value).replace(',', '.'));
+
+  if (!Number.isFinite(parsedPrice)) {
+    return String(value);
+  }
+
+  return `${parsedPrice.toFixed(2)} €`;
+}
+
 function normalizeDishPriceFromInput(value) {
   const raw = String(value || '').trim();
 
@@ -14281,7 +14291,7 @@ function normalizeDishPriceFromInput(value) {
     return '';
   }
 
-  return String(parsedPrice).replace('.', ',');
+  return parsedPrice.toFixed(2);
 }
 
 function getDishEditorTarget(context) {
