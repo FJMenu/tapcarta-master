@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.1.3.3';
+        const APP_VERSION = 'V2.2.1.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -12891,16 +12891,69 @@ async function saveRestaurantOptionsModal() {
       return bucket;
     }
 
+    function normalizeRestaurantMenuItem(item, fallbackId, fallbackOrder) {
+      const normalizedItem = item && typeof item === 'object' ? item : {};
+
+      if (typeof normalizedItem.id !== 'string' || !normalizedItem.id.trim()) {
+        normalizedItem.id = fallbackId;
+      }
+
+      if (typeof normalizedItem.name !== 'string') {
+        normalizedItem.name = '';
+      }
+
+      if (typeof normalizedItem.subtitle !== 'string') {
+        normalizedItem.subtitle = '';
+      }
+
+      normalizedItem.translations = ensureTranslationBucket(normalizedItem.translations);
+
+      if (
+        typeof normalizedItem.price !== 'number' &&
+        typeof normalizedItem.price !== 'string'
+      ) {
+        normalizedItem.price = '';
+      }
+
+      if (typeof normalizedItem.price === 'string') {
+        normalizedItem.price = normalizedItem.price.trim();
+      }
+
+      if (typeof normalizedItem.visible !== 'boolean') {
+        normalizedItem.visible = true;
+      }
+
+      if (typeof normalizedItem.available !== 'boolean') {
+        normalizedItem.available = true;
+      }
+
+      if (typeof normalizedItem.takeawayEnabled !== 'boolean') {
+        normalizedItem.takeawayEnabled = true;
+      }
+
+      if (typeof normalizedItem.order !== 'number') {
+        normalizedItem.order = fallbackOrder;
+      }
+
+      if (typeof normalizedItem.updatedAt !== 'string') {
+        normalizedItem.updatedAt = activeRestaurantData.menu.updatedAt || '';
+      }
+
+      return normalizedItem;
+    }
+
     activeRestaurantData.menu.categories = activeRestaurantData.menu.categories.map((category, categoryIndex) => {
       const normalizedCategory = category && typeof category === 'object' ? category : {};
 
-      if (typeof normalizedCategory.id !== 'string') {
+      if (typeof normalizedCategory.id !== 'string' || !normalizedCategory.id.trim()) {
         normalizedCategory.id = `categorie-${categoryIndex + 1}`;
       }
 
       if (typeof normalizedCategory.name !== 'string') {
         normalizedCategory.name = '';
       }
+
+      normalizedCategory.translations = ensureTranslationBucket(normalizedCategory.translations);
 
       if (typeof normalizedCategory.order !== 'number') {
         normalizedCategory.order = categoryIndex + 1;
@@ -12918,73 +12971,86 @@ async function saveRestaurantOptionsModal() {
         normalizedCategory.items = [];
       }
 
-      normalizedCategory.items = normalizedCategory.items.map((item, itemIndex) => {
-        const normalizedItem = item && typeof item === 'object' ? item : {};
+      normalizedCategory.items = normalizedCategory.items.map((item, itemIndex) =>
+        normalizeRestaurantMenuItem(
+          item,
+          `item-${categoryIndex + 1}-${itemIndex + 1}`,
+          itemIndex + 1
+        )
+      );
 
-        if (typeof normalizedItem.id !== 'string') {
-          normalizedItem.id = `item-${categoryIndex + 1}-${itemIndex + 1}`;
+      if (!Array.isArray(normalizedCategory.subcategories)) {
+        normalizedCategory.subcategories = [];
+      }
+
+      normalizedCategory.subcategories = normalizedCategory.subcategories.map((subcategory, subcategoryIndex) => {
+        const normalizedSubcategory = subcategory && typeof subcategory === 'object' ? subcategory : {};
+
+        if (typeof normalizedSubcategory.id !== 'string' || !normalizedSubcategory.id.trim()) {
+          normalizedSubcategory.id = `${normalizedCategory.id}-sous-categorie-${subcategoryIndex + 1}`;
         }
 
-        if (typeof normalizedItem.name !== 'string') {
-          normalizedItem.name = '';
+        if (typeof normalizedSubcategory.name !== 'string') {
+          normalizedSubcategory.name = '';
         }
 
-        if (typeof normalizedItem.subtitle !== 'string') {
-          normalizedItem.subtitle = '';
+        normalizedSubcategory.translations = ensureTranslationBucket(normalizedSubcategory.translations);
+
+        if (typeof normalizedSubcategory.order !== 'number') {
+          normalizedSubcategory.order = subcategoryIndex + 1;
         }
 
-        normalizedItem.translations = ensureTranslationBucket(normalizedItem.translations);
-
-        if (
-          typeof normalizedItem.price !== 'number' &&
-          typeof normalizedItem.price !== 'string'
-        ) {
-          normalizedItem.price = '';
+        if (typeof normalizedSubcategory.visible !== 'boolean') {
+          normalizedSubcategory.visible = true;
         }
 
-        if (typeof normalizedItem.price === 'string') {
-          normalizedItem.price = normalizedItem.price.trim();
+        if (typeof normalizedSubcategory.takeawayEnabled !== 'boolean') {
+          normalizedSubcategory.takeawayEnabled = normalizedCategory.takeawayEnabled !== false;
         }
 
-        if (typeof normalizedItem.visible !== 'boolean') {
-          normalizedItem.visible = true;
+        if (!Array.isArray(normalizedSubcategory.items)) {
+          normalizedSubcategory.items = [];
         }
 
-        if (typeof normalizedItem.available !== 'boolean') {
-          normalizedItem.available = true;
-        }
+        normalizedSubcategory.items = normalizedSubcategory.items.map((item, itemIndex) =>
+          normalizeRestaurantMenuItem(
+            item,
+            `${normalizedSubcategory.id}-item-${itemIndex + 1}`,
+            itemIndex + 1
+          )
+        );
 
-        if (typeof normalizedItem.takeawayEnabled !== 'boolean') {
-          normalizedItem.takeawayEnabled = true;
-        }
-
-        if (typeof normalizedItem.order !== 'number') {
-          normalizedItem.order = itemIndex + 1;
-        }
-
-        if (typeof normalizedItem.updatedAt !== 'string') {
-          normalizedItem.updatedAt = activeRestaurantData.menu.updatedAt || '';
-        }
-
-        return normalizedItem;
+        return normalizedSubcategory;
       });
 
       return normalizedCategory;
     });
   }
 
-  function syncRestaurantItemOrder(category) {
-    if (!category || !Array.isArray(category.items)) return;
-    category.items.forEach((item, index) => {
+  function syncRestaurantItemOrder(target) {
+    if (!target || !Array.isArray(target.items)) return;
+
+    target.items.forEach((item, index) => {
       item.order = index + 1;
+    });
+  }
+
+  function syncRestaurantSubcategoryOrder(category) {
+    if (!category || !Array.isArray(category.subcategories)) return;
+
+    category.subcategories.forEach((subcategory, index) => {
+      subcategory.order = index + 1;
+      syncRestaurantItemOrder(subcategory);
     });
   }
 
   function syncRestaurantCategoryOrder() {
     if (!activeRestaurantData?.menu?.categories) return;
+
     activeRestaurantData.menu.categories.forEach((category, index) => {
       category.order = index + 1;
       syncRestaurantItemOrder(category);
+      syncRestaurantSubcategoryOrder(category);
     });
   }
   function renderRestaurantMenuEditor() {
