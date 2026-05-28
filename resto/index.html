@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.1.4';
+        const APP_VERSION = 'V2.2.1.5';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -13812,15 +13812,27 @@ let dishEditorState = null;
     markMenuEditorDirty();
   }
 
-  function addRestaurantItemToCategory(categoryIndex) {
+  function addRestaurantItemToCategory(categoryIndex, options = {}) {
     ensureRestaurantMenuShape();
 
     if (!activeRestaurantData?.menu?.categories?.[categoryIndex]) return null;
 
     const category = activeRestaurantData.menu.categories[categoryIndex];
 
-    if (!Array.isArray(category.items)) {
-      category.items = [];
+    const subcategoryIndex =
+      typeof options.subcategoryIndex === 'number'
+        ? options.subcategoryIndex
+        : null;
+
+    const target =
+      typeof subcategoryIndex === 'number'
+        ? category.subcategories?.[subcategoryIndex]
+        : category;
+
+    if (!target) return null;
+
+    if (!Array.isArray(target.items)) {
+      target.items = [];
     }
 
     const newItem = {
@@ -13835,27 +13847,31 @@ let dishEditorState = null;
       updatedAt: new Date().toISOString()
     };
 
-    category.items.unshift(newItem);
+    target.items.unshift(newItem);
 
     markMenuTranslationWarningNeeded();
-    syncRestaurantItemOrder(category);
+    syncRestaurantItemOrder(target);
     renderRestaurantMenuEditor();
 
     return {
       categoryIndex,
+      subcategoryIndex,
       itemIndex: 0,
       item: newItem
     };
   }
 
-function openNewDishEditorScreen(categoryIndex) {
-  const created = addRestaurantItemToCategory(categoryIndex);
+function openNewDishEditorScreen(categoryIndex, options = {}) {
+  const created = addRestaurantItemToCategory(categoryIndex, options);
 
   if (!created || typeof created.itemIndex !== 'number') {
     return;
   }
 
-  openDishEditorScreen(created.categoryIndex, created.itemIndex, { isNew: true });
+  openDishEditorScreen(created.categoryIndex, created.itemIndex, {
+    isNew: true,
+    subcategoryIndex: created.subcategoryIndex
+  });
 }
 
 function getCategoryFlowText(type) {
