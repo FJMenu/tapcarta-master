@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.1.1';
+        const APP_VERSION = 'V2.2.1.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -13097,6 +13097,27 @@ async function saveRestaurantOptionsModal() {
           : currentLang === 'nl'
             ? '+ Gerecht toevoegen'
             : '+ Ajouter un plat',
+      addSubcategory: currentLang === 'es'
+        ? '+ Añadir subcategoría'
+        : currentLang === 'en'
+          ? '+ Add subcategory'
+          : currentLang === 'nl'
+            ? '+ Subcategorie toevoegen'
+            : '+ Ajouter une sous-catégorie',
+      subcategoryName: currentLang === 'es'
+        ? 'Nombre de la subcategoría'
+        : currentLang === 'en'
+          ? 'Subcategory name'
+          : currentLang === 'nl'
+            ? 'Naam van de subcategorie'
+            : 'Nom de sous-catégorie',
+      subcategories: currentLang === 'es'
+        ? 'Subcategorías'
+        : currentLang === 'en'
+          ? 'Subcategories'
+          : currentLang === 'nl'
+            ? 'Subcategorieën'
+            : 'Sous-catégories',
       dishName: currentLang === 'es'
         ? 'Nombre del plato'
         : currentLang === 'en'
@@ -13352,8 +13373,93 @@ async function saveRestaurantOptionsModal() {
               <i data-lucide="plus-circle" class="w-5 h-5"></i>
               <span>${editorText.addDish}</span>
             </button>
+
+            <button
+              type="button"
+              data-action="add-subcategory"
+              data-category-index="${categoryIndex}"
+              class="col-span-3 rounded-2xl border border-white/14 bg-white/[0.04] px-4 py-4 text-base font-bold text-cream hover:bg-white/[0.08] flex items-center justify-center gap-2"
+            >
+              <i data-lucide="folder-plus" class="w-5 h-5 text-gold"></i>
+              <span>${editorText.addSubcategory}</span>
+            </button>
           </div>
         </div>
+
+        ${Array.isArray(category.subcategories) && category.subcategories.length ? `
+          <div class="mt-5 rounded-2xl border border-gold/18 bg-black/18 p-4">
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <div class="text-sm font-extrabold uppercase tracking-[0.14em] text-gold/85">
+                ${editorText.subcategories}
+              </div>
+              <div class="text-xs text-cream/45">
+                ${category.subcategories.length}
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              ${category.subcategories.map((subcategory, subcategoryIndex) => `
+                <div class="rounded-2xl border border-white/10 bg-[#15110a]/72 p-4">
+                  <div class="grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4 items-start">
+                    <div>
+                      <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">
+                        ${editorText.subcategoryName}
+                      </label>
+                      <input
+                        type="text"
+                        value="${escapeHtml(subcategory.name || '')}"
+                        data-category-index="${categoryIndex}"
+                        data-subcategory-index="${subcategoryIndex}"
+                        data-field="subcategory-name"
+                        class="w-full rounded-xl border border-white/12 bg-black/25 px-4 py-3 text-base font-bold text-cream outline-none focus:border-gold/50"
+                      >
+
+                      <div class="text-xs text-cream/45 mt-3">
+                        ID : ${escapeHtml(subcategory.id || '—')} · ${editorText.order} : ${typeof subcategory.order === 'number' ? subcategory.order : subcategoryIndex + 1}
+                      </div>
+                    </div>
+
+                    <div class="space-y-2">
+                      <label class="flex items-center justify-between gap-3 rounded-2xl border ${subcategory.visible !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+                        <span>${subcategory.visible !== false ? editorText.visible : editorText.hidden}</span>
+                        <input
+                          type="checkbox"
+                          ${subcategory.visible !== false ? 'checked' : ''}
+                          data-category-index="${categoryIndex}"
+                          data-subcategory-index="${subcategoryIndex}"
+                          data-field="subcategory-visible"
+                          class="w-6 h-6 accent-yellow-400"
+                        >
+                      </label>
+
+                      <label class="flex items-center justify-between gap-3 rounded-2xl border ${subcategory.takeawayEnabled !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+                        <span>${subcategory.takeawayEnabled !== false ? editorText.takeawayEnabled : editorText.takeawayDisabled}</span>
+                        <input
+                          type="checkbox"
+                          ${subcategory.takeawayEnabled !== false ? 'checked' : ''}
+                          data-category-index="${categoryIndex}"
+                          data-subcategory-index="${subcategoryIndex}"
+                          data-field="subcategory-takeaway"
+                          class="w-6 h-6 accent-yellow-400"
+                        >
+                      </label>
+
+                      <button
+                        type="button"
+                        data-action="delete-subcategory"
+                        data-category-index="${categoryIndex}"
+                        data-subcategory-index="${subcategoryIndex}"
+                        class="w-full rounded-2xl border border-red-400/35 bg-red-500/14 px-4 py-4 text-sm font-bold text-red-300 hover:bg-red-500/22 flex items-center justify-center gap-2"
+                      >
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
 
         <div class="mt-5 space-y-4">
           ${(category.items || []).length ? (category.items || []).map((item, itemIndex) => `
@@ -13924,7 +14030,7 @@ function addRestaurantCategory() {
   });
 }
 
-function createCategory(categoryName) {
+`function createCategory(categoryName) {
   const menu = activeRestaurantData.menu;
 
   const newCategory = {
@@ -13932,7 +14038,8 @@ function createCategory(categoryName) {
     name: categoryName,
     visible: true,
     takeawayEnabled: true,
-    items: []
+    items: [],
+    subcategories: []
   };
 
   menu.categories.push(newCategory);
@@ -13945,6 +14052,52 @@ function createCategory(categoryName) {
   updateMenuEditorDirtyUi();
 
   showDishEditorFlowForCategory(categoryIndex, 'category');
+}
+
+function createRestaurantSubcategory(categoryIndex) {
+  ensureRestaurantMenuShape();
+
+  const category = activeRestaurantData?.menu?.categories?.[categoryIndex];
+  if (!category) return;
+
+  if (!Array.isArray(category.subcategories)) {
+    category.subcategories = [];
+  }
+
+  const subcategoryName = currentLang === 'es'
+    ? 'Nueva subcategoría'
+    : currentLang === 'en'
+      ? 'New subcategory'
+      : currentLang === 'nl'
+        ? 'Nieuwe subcategorie'
+        : 'Nouvelle sous-catégorie';
+
+  category.subcategories.push({
+    id: `${category.id || 'cat'}_sub_${Date.now()}`,
+    name: subcategoryName,
+    visible: true,
+    takeawayEnabled: category.takeawayEnabled !== false,
+    items: [],
+    order: category.subcategories.length + 1,
+    updatedAt: new Date().toISOString()
+  });
+
+  markMenuTranslationWarningNeeded();
+  syncRestaurantSubcategoryOrder(category);
+  renderRestaurantMenuEditor();
+  updateMenuEditorDirtyUi();
+}
+
+function deleteRestaurantSubcategory(categoryIndex, subcategoryIndex) {
+  const category = activeRestaurantData?.menu?.categories?.[categoryIndex];
+  if (!category || !Array.isArray(category.subcategories) || !category.subcategories[subcategoryIndex]) return;
+
+  category.subcategories.splice(subcategoryIndex, 1);
+
+  markMenuTranslationWarningNeeded();
+  syncRestaurantSubcategoryOrder(category);
+  renderRestaurantMenuEditor();
+  updateMenuEditorDirtyUi();
 }
 
   function scrollToMenuEditorAction(action, categoryIndex, itemIndex = null) {
@@ -15161,6 +15314,17 @@ if (dishFinishBtn) {
         return;
       }
 
+      if (field === 'subcategory-name') {
+        const subcategoryIndex = Number(e.target.dataset.subcategoryIndex);
+        const subcategory = activeRestaurantData.menu?.categories?.[categoryIndex]?.subcategories?.[subcategoryIndex];
+        if (!subcategory) return;
+
+        subcategory.name = e.target.value;
+        subcategory.updatedAt = new Date().toISOString();
+        markMenuTranslationWarningNeeded();
+        return;
+      }
+
       if (field === 'item-name') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
         activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].name = e.target.value;
@@ -15250,6 +15414,32 @@ if (dishFinishBtn) {
         return;
       }
 
+      if (field === 'subcategory-visible') {
+        const subcategoryIndex = Number(e.target.dataset.subcategoryIndex);
+        const subcategory = activeRestaurantData.menu?.categories?.[categoryIndex]?.subcategories?.[subcategoryIndex];
+        if (!subcategory) return;
+
+        subcategory.visible = e.target.checked;
+        subcategory.updatedAt = new Date().toISOString();
+        markMenuEditorDirty();
+        renderRestaurantMenuEditor();
+        updateMenuEditorDirtyUi();
+        return;
+      }
+
+      if (field === 'subcategory-takeaway') {
+        const subcategoryIndex = Number(e.target.dataset.subcategoryIndex);
+        const subcategory = activeRestaurantData.menu?.categories?.[categoryIndex]?.subcategories?.[subcategoryIndex];
+        if (!subcategory) return;
+
+        subcategory.takeawayEnabled = e.target.checked;
+        subcategory.updatedAt = new Date().toISOString();
+        markMenuEditorDirty();
+        renderRestaurantMenuEditor();
+        updateMenuEditorDirtyUi();
+        return;
+      }
+
       if (field === 'item-visible') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
         activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].visible = e.target.checked;
@@ -15292,6 +15482,12 @@ if (dishFinishBtn) {
 
           return;
         }
+                  if (action === 'add-subcategory') {
+          markMenuEditorDirty();
+          createRestaurantSubcategory(categoryIndex);
+          updateMenuEditorDirtyUi();
+          return;
+        }
 
         if (action === 'move-item-up') {
           markMenuEditorDirty();
@@ -15327,7 +15523,13 @@ if (dishFinishBtn) {
           updateMenuEditorDirtyUi();
           return;
         }
-
+        if (action === 'delete-subcategory') {
+          const subcategoryIndex = Number(actionButton.dataset.subcategoryIndex);
+          markMenuEditorDirty();
+          deleteRestaurantSubcategory(categoryIndex, subcategoryIndex);
+          updateMenuEditorDirtyUi();
+          return;
+        }
         if (action === 'delete-category') {
           markMenuEditorDirty();
           deleteRestaurantCategory(categoryIndex);
