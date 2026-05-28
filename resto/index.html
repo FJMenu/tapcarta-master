@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.1.6';
+        const APP_VERSION = 'V2.2.1.7';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -13417,6 +13417,63 @@ async function saveRestaurantOptionsModal() {
                       <div class="text-xs text-cream/45 mt-3">
                         ID : ${escapeHtml(subcategory.id || '—')} · ${editorText.order} : ${typeof subcategory.order === 'number' ? subcategory.order : subcategoryIndex + 1}
                       </div>
+
+                      ${Array.isArray(subcategory.items) && subcategory.items.length ? `
+                        <div class="mt-4 space-y-3">
+                          ${subcategory.items.map((item, itemIndex) => `
+                            <div
+                              data-menu-item-card="true"
+                              data-menu-category-index="${categoryIndex}"
+                              data-menu-subcategory-index="${subcategoryIndex}"
+                              data-menu-item-index="${itemIndex}"
+                              class="rounded-2xl border border-cream/10 bg-black/28 p-3"
+                            >
+                              <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div class="min-w-0">
+                                  <div class="text-base font-extrabold text-cream">
+                                    ${escapeHtml(item.name || editorText.newDish)}
+                                  </div>
+
+                                  ${item.subtitle ? `
+                                    <div class="mt-1 text-sm text-cream/55">
+                                      ${escapeHtml(item.subtitle || '')}
+                                    </div>
+                                  ` : ''}
+
+                                  <div class="mt-2 text-xs text-cream/40">
+                                    ID : ${escapeHtml(item.id || '—')}
+                                  </div>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-2 md:justify-end">
+                                  <div class="rounded-xl border border-gold/25 bg-gold/10 px-3 py-2 text-sm font-black text-gold">
+                                    ${escapeHtml(
+                                      item.price === null || typeof item.price === 'undefined' || item.price === ''
+                                        ? '—'
+                                        : String(item.price).replace('.', ',')
+                                    )}
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    data-action="edit-subcategory-item"
+                                    data-category-index="${categoryIndex}"
+                                    data-subcategory-index="${subcategoryIndex}"
+                                    data-item-index="${itemIndex}"
+                                    class="rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-xs font-bold text-cream hover:bg-white/[0.08]"
+                                  >
+                                    ${editorText.modify}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          `).join('')}
+                        </div>
+                      ` : `
+                        <div class="mt-4 rounded-2xl border border-dashed border-white/10 bg-black/18 px-4 py-3 text-sm text-cream/45">
+                          Aucun plat dans cette sous-catégorie pour le moment.
+                        </div>
+                      `}
                     </div>
 
                     <div class="space-y-2">
@@ -13443,6 +13500,17 @@ async function saveRestaurantOptionsModal() {
                           class="w-6 h-6 accent-yellow-400"
                         >
                       </label>
+
+                      <button
+                        type="button"
+                        data-action="add-subcategory-item"
+                        data-category-index="${categoryIndex}"
+                        data-subcategory-index="${subcategoryIndex}"
+                        class="w-full rounded-2xl border border-gold/35 bg-gold/12 px-4 py-4 text-sm font-bold text-gold hover:bg-gold/18 flex items-center justify-center gap-2"
+                      >
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                        <span>${editorText.addDish}</span>
+                      </button>
 
                       <button
                         type="button"
