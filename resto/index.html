@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.2.1';
+        const APP_VERSION = 'V2.2.2.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14260,7 +14260,13 @@ function formatDishPriceForInput(value) {
     return '';
   }
 
-  return String(value).trim().replace('.', ',');
+  const parsedPrice = Number(String(value).replace(',', '.'));
+
+  if (!Number.isFinite(parsedPrice)) {
+    return String(value).trim().replace('.', ',');
+  }
+
+  return parsedPrice.toFixed(2).replace('.', ',');
 }
 
 function formatDishPriceForDisplay(value) {
