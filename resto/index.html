@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.3.2';
+        const APP_VERSION = 'V2.2.3.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -12616,10 +12616,33 @@ async function saveRestaurantOptionsModal() {
   function normalizeRestaurantComplementaryLinksForSettings(source) {
     const links = source && typeof source === 'object' ? source : {};
 
+    const normalizeUrl = (value) => {
+      let raw = typeof value === 'string' ? value.trim() : '';
+      if (!raw) return '';
+
+      raw = raw.replace(/\s+/g, '');
+
+      if (raw.startsWith('/')) return raw;
+
+      if (/^https?:\/\//i.test(raw)) {
+        return raw;
+      }
+
+      if (/^www\./i.test(raw)) {
+        return `https://${raw}`;
+      }
+
+      if (/^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i.test(raw)) {
+        return `https://${raw}`;
+      }
+
+      return '';
+    };
+
     const normalizeLink = (link) => ({
       enabled: link?.enabled === true,
       label: typeof link?.label === 'string' ? link.label.trim() : '',
-      url: typeof link?.url === 'string' ? link.url.trim() : ''
+      url: normalizeUrl(link?.url)
     });
 
     return {
