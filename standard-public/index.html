@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.2.1';
+    const APP_VERSION = 'V2.3.2.2';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -2481,11 +2481,11 @@ function applyStandardRestaurantSettings(settingsRow) {
 }
 
 function normalizeStandardPublicStatus(value) {
-  if (['waiting_page', 'ready_for_review', 'live', 'suspended'].includes(value)) {
+  if (['construction', 'review', 'live', 'suspended'].includes(value)) {
     return value;
   }
 
-  return 'waiting_page';
+  return 'construction';
 }
 
 function normalizeStandardMenuPublicationStatus(value) {
