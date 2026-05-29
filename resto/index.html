@@ -12747,9 +12747,11 @@ async function saveRestaurantOptionsModal() {
     );
   }
 
-  function renderRestaurantComplementaryLinksScreen() {
+  async function renderRestaurantComplementaryLinksScreen() {
     const overlay = document.getElementById('restaurant-info-modal');
     if (!overlay) return;
+
+    await hydrateRestaurantGeneralInfoDraftFromSupabaseOnce();
 
     const draft = ensureRestaurantGeneralInfoDraft();
     const text = getRestaurantInfoText();
