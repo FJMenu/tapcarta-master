@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.3.5';
+        const APP_VERSION = 'V2.2.3.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -16130,12 +16130,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
   
 
-/* ===== TAPCARTA RESTO DASHBOARD BUTTON FALLBACK =====
-   Les boutons du tableau de bord sont créés après le chargement initial.
-   Ce fallback utilise la délégation d'événement pour éviter les listeners perdus. */
-(function attachRestaurantDashboardDelegatedButtons() {
-  if (window.__tapCartaRestaurantDashboardDelegatedButtonsAttached) return;
-  window.__tapCartaRestaurantDashboardDelegatedButtonsAttached = true;
+/* ===== TAPCARTA RESTO DASHBOARD + SOUS-ÉCRANS FALLBACK =====
+   Délégation globale pour éviter les boutons non branchés après render dynamique. */
+(function attachRestaurantDelegatedButtons() {
+  if (window.__tapCartaRestaurantDelegatedButtonsAttached) return;
+  window.__tapCartaRestaurantDelegatedButtonsAttached = true;
 
   function openRestaurantMenuEditorFromDashboard() {
     const editorSection = document.getElementById('restaurant-menu-editor-section');
@@ -16169,11 +16168,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  function openRestaurantMenuEditorWorkspaceFromDashboard() {
+    const editorHome = document.getElementById('restaurant-menu-editor-home');
+    const editorWorkspace = document.getElementById('restaurant-menu-editor-workspace');
+
+    if (editorHome) editorHome.classList.add('hidden');
+    if (editorWorkspace) editorWorkspace.classList.remove('hidden');
+
+    if (typeof renderRestaurantMenuEditor === 'function') {
+      renderRestaurantMenuEditor();
+    }
+
+    if (typeof updateMenuEditorDirtyUi === 'function') {
+      updateMenuEditorDirtyUi();
+    }
+
+    if (window.lucide) {
+      requestAnimationFrame(() => lucide.createIcons());
+    }
+  }
+
   document.addEventListener('click', (event) => {
     const menuButton = event.target.closest('#restaurant-menu-editor-toggle');
     if (menuButton) {
       event.preventDefault();
       openRestaurantMenuEditorFromDashboard();
+      return;
+    }
+
+    const menuCategoryModeButton = event.target.closest('#restaurant-menu-editor-category-mode-btn');
+    if (menuCategoryModeButton) {
+      event.preventDefault();
+      openRestaurantMenuEditorWorkspaceFromDashboard();
+      return;
+    }
+
+    const menuDishModeButton = event.target.closest('#restaurant-menu-editor-dish-mode-btn');
+    if (menuDishModeButton) {
+      event.preventDefault();
+      openRestaurantMenuEditorWorkspaceFromDashboard();
+      return;
+    }
+
+    const menuHomeBackButton = event.target.closest('#restaurant-menu-editor-home-back-btn');
+    if (menuHomeBackButton) {
+      event.preventDefault();
+
+      const editorSection = document.getElementById('restaurant-menu-editor-section');
+      const manualActionBar = document.getElementById('manualActionBar');
+
+      if (editorSection) editorSection.classList.add('hidden');
+      if (manualActionBar) manualActionBar.style.display = '';
+
+      document.body.classList.remove('menu-editor-open');
+
+      try {
+        const restaurantId = activeRestaurantData?.identity?.id || activeRestaurantData?.id || 'default';
+        localStorage.removeItem(`tapcartaRestoMenuEditorOpen:${restaurantId}`);
+      } catch (error) {
+        console.warn('Impossible de supprimer l’état UI de l’éditeur menu :', error);
+      }
+
       return;
     }
 
@@ -16191,6 +16246,33 @@ document.addEventListener('DOMContentLoaded', async () => {
       event.preventDefault();
       if (typeof openRestaurantInfoModal === 'function') {
         openRestaurantInfoModal();
+      }
+      return;
+    }
+
+    const infoHoursButton = event.target.closest('#restaurant-info-hours-btn');
+    if (infoHoursButton) {
+      event.preventDefault();
+      if (typeof openRestaurantHoursScreen === 'function') {
+        openRestaurantHoursScreen();
+      }
+      return;
+    }
+
+    const infoGeneralButton = event.target.closest('#restaurant-info-general-btn');
+    if (infoGeneralButton) {
+      event.preventDefault();
+      if (typeof openRestaurantGeneralInfoScreen === 'function') {
+        openRestaurantGeneralInfoScreen();
+      }
+      return;
+    }
+
+    const infoLinksButton = event.target.closest('#restaurant-info-complementary-links-btn');
+    if (infoLinksButton) {
+      event.preventDefault();
+      if (typeof renderRestaurantComplementaryLinksScreen === 'function') {
+        renderRestaurantComplementaryLinksScreen();
       }
       return;
     }
