@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.2.6';
+        const APP_VERSION = 'V2.2.3.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -5980,7 +5980,46 @@ function normalizeCustomerMessagesForSettings(messages) {
       : ''
   }));
 }
+function normalizeRestaurantExternalUrlForSettings(value) {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (!raw) return '';
 
+  if (raw.startsWith('/')) return raw;
+  if (/^https?:\/\//i.test(raw)) return raw;
+
+  return '';
+}
+
+function normalizeRestaurantComplementaryLinksForSettings(source) {
+  const links = source && typeof source === 'object' ? source : {};
+
+  return {
+    linkedRestaurant: {
+      enabled: links.linkedRestaurant?.enabled === true,
+      label: typeof links.linkedRestaurant?.label === 'string'
+        ? links.linkedRestaurant.label.trim().slice(0, 40)
+        : '',
+      url: normalizeRestaurantExternalUrlForSettings(links.linkedRestaurant?.url)
+    },
+    website: {
+      enabled: links.website?.enabled === true,
+      label: typeof links.website?.label === 'string'
+        ? links.website.label.trim().slice(0, 40)
+        : '',
+      url: normalizeRestaurantExternalUrlForSettings(links.website?.url)
+    }
+  };
+}
+
+function getRestaurantComplementaryLinkErrorText() {
+  return currentLang === 'es'
+    ? 'Añada una URL válida antes de activar este enlace.'
+    : currentLang === 'en'
+      ? 'Add a valid URL before activating this link.'
+      : currentLang === 'nl'
+        ? 'Voeg een geldige URL toe voordat u deze link activeert.'
+        : 'Ajoutez une URL valide avant d’activer ce lien.';
+}
 async function hydrateRestaurantGeneralInfoDraftFromSupabaseOnce() {
   if (!activeRestaurantData || typeof activeRestaurantData !== 'object') return false;
 
@@ -12144,7 +12183,25 @@ async function saveRestaurantOptionsModal() {
 
       draft.phone = readValue('restaurant-general-phone');
       draft.whatsapp = readValue('restaurant-general-whatsapp');
+draft.complementaryLinks = normalizeRestaurantComplementaryLinksForSettings({
+  linkedRestaurant: {
+    enabled: Boolean(document.getElementById('restaurant-linked-restaurant-enabled')?.checked),
+    label: readValue('restaurant-linked-restaurant-label'),
+    url: readValue('restaurant-linked-restaurant-url')
+  },
+  website: {
+    enabled: Boolean(document.getElementById('restaurant-website-enabled')?.checked),
+    label: readValue('restaurant-website-label'),
+    url: readValue('restaurant-website-url')
+  }
+});
 
+if (
+  (draft.complementaryLinks.linkedRestaurant.enabled && !draft.complementaryLinks.linkedRestaurant.url) ||
+  (draft.complementaryLinks.website.enabled && !draft.complementaryLinks.website.url)
+) {
+  throw new Error('invalid_complementary_link_url');
+}
       draft.customerMessages = [0, 1, 2].map((index) => {
         const textValue = readValue(`restaurant-general-message-${index}`).slice(0, 120);
         const activeValue = Boolean(document.querySelector(`[data-general-message-active="${index}"]`)?.checked);
