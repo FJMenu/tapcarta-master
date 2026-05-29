@@ -3072,6 +3072,9 @@ let orderForm = {
 const VERSION_STORAGE_KEY = 'tapcarta-last-loaded-version';
 const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
 
+window.TAPCARTA_RESTAURANT_REQUESTS_REFRESH_INTERVAL_MS = 30 * 1000;
+window.TAPCARTA_RESTAURANT_GOOGLE_REVIEWS_REFRESH_INTERVAL_MS = 3 * 60 * 60 * 1000;
+
     function isIos() {
       return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
     }
@@ -15863,7 +15866,7 @@ if (dishFinishBtn) {
         lucide.createIcons();
       });
     }
-  }, REQUESTS_REFRESH_INTERVAL_MS);
+  }, window.TAPCARTA_RESTAURANT_REQUESTS_REFRESH_INTERVAL_MS || 30 * 1000);
 
   const googleReviewsRatingEl = document.getElementById('restaurant-google-reviews-rating');
   const googleReviewsCountEl = document.getElementById('restaurant-google-reviews-count');
@@ -15894,7 +15897,7 @@ if (dishFinishBtn) {
 
   window.tapCartaRestaurantRefreshState.googleIntervalId = window.setInterval(() => {
     refreshGoogleReviewsPanel();
-  }, GOOGLE_REVIEWS_REFRESH_INTERVAL_MS);
+  }, window.TAPCARTA_RESTAURANT_GOOGLE_REVIEWS_REFRESH_INTERVAL_MS || 3 * 60 * 60 * 1000);
 
   updateInstallUI();
   updateLangButtons();
