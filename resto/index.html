@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.3.1';
+        const APP_VERSION = 'V2.2.3.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -11163,6 +11163,34 @@ async function saveRestaurantOptionsModal() {
             ? 'Beheer hier de informatie die zichtbaar en nuttig is voor uw klanten.'
             : 'Configurez ici les informations visibles et utiles pour vos clients.',
 
+      hoursTitle: currentLang === 'es' ? 'Horarios' : currentLang === 'en' ? 'Opening hours' : currentLang === 'nl' ? 'Openingsuren' : 'Horaires',
+      hoursText: currentLang === 'es' ? 'Configurar los horarios generales, reservas y para llevar.' : currentLang === 'en' ? 'Configure general hours, bookings and takeaway.' : currentLang === 'nl' ? 'Algemene uren, reservaties en afhalen configureren.' : 'Configurer les horaires généraux, réservations et à emporter.',
+
+      generalTitle: currentLang === 'es' ? 'Información general' : currentLang === 'en' ? 'General information' : currentLang === 'nl' ? 'Algemene informatie' : 'Informations générales',
+      generalText: currentLang === 'es' ? 'Teléfono, WhatsApp, mensajes cliente e información protegida.' : currentLang === 'en' ? 'Phone, WhatsApp, customer messages and protected information.' : currentLang === 'nl' ? 'Telefoon, WhatsApp, klantberichten en beschermde informatie.' : 'Téléphone, WhatsApp, messages client et informations protégées.',
+
+      complementaryLinksTitle: currentLang === 'es' ? 'Enlaces complementarios' : currentLang === 'en' ? 'Additional links' : currentLang === 'nl' ? 'Aanvullende links' : 'Liens complémentaires',
+      complementaryLinksText: currentLang === 'es' ? 'Activar un enlace hacia otro restaurante o hacia una web de eventos.' : currentLang === 'en' ? 'Enable a link to another restaurant or to an events website.' : currentLang === 'nl' ? 'Activeer een link naar een andere zaak of naar een website met events.' : 'Activer un lien vers un autre restaurant ou vers un site web / événements.',
+
+      close: currentLang === 'es' ? 'Cerrar' : currentLang === 'en' ? 'Close' : currentLang === 'nl' ? 'Sluiten' : 'Fermer'
+    };
+  }
+      title: currentLang === 'es'
+        ? 'Gestionar mi información'
+        : currentLang === 'en'
+          ? 'Manage my information'
+          : currentLang === 'nl'
+            ? 'Mijn informatie beheren'
+            : 'Gérer mes informations',
+
+      subtitle: currentLang === 'es'
+        ? 'Configure aquí los datos visibles y útiles para sus clientes.'
+        : currentLang === 'en'
+          ? 'Configure here the information visible and useful to your customers.'
+          : currentLang === 'nl'
+            ? 'Beheer hier de informatie die zichtbaar en nuttig is voor uw klanten.'
+            : 'Configurez ici les informations visibles et utiles pour vos clients.',
+
       hoursTitle: currentLang === 'es'
         ? 'Horarios'
         : currentLang === 'en'
@@ -12563,6 +12591,88 @@ if (
 
 
   function renderRestaurantInfoHome() {
+    const overlay = document.getElementById('restaurant-info-modal');
+    if (!overlay) return;
+
+    const text = getRestaurantInfoText();
+
+    overlay.innerHTML = `
+      <div class="restaurant-options-panel" role="dialog" aria-modal="true">
+        <div class="restaurant-options-header">
+          <div class="min-w-0">
+            <div class="inline-flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gold/14 border border-gold/28 flex items-center justify-center shrink-0">
+                <i data-lucide="settings" class="w-5 h-5 text-gold"></i>
+              </div>
+              <div>
+                <div class="font-display text-2xl font-bold text-cream leading-tight">${text.title}</div>
+                <div class="text-sm text-cream/58 mt-1">${text.subtitle}</div>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" id="restaurant-info-close-btn" class="btn-action w-11 h-11 rounded-2xl border border-white/15 text-cream hover:bg-white/5 inline-flex items-center justify-center shrink-0">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="restaurant-options-body">
+          <div class="grid md:grid-cols-3 gap-4">
+            <button type="button" id="restaurant-info-hours-btn" class="btn-action text-left rounded-[24px] border border-gold/28 bg-white/[0.035] p-5 hover:bg-gold/[0.08] transition-all">
+              <div class="flex items-start gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center shrink-0">
+                  <i data-lucide="clock-3" class="w-5 h-5 text-gold"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="font-display text-xl font-bold text-cream">${text.hoursTitle}</div>
+                  <div class="text-sm text-cream/62 mt-2 leading-relaxed">${text.hoursText}</div>
+                </div>
+              </div>
+            </button>
+
+            <button type="button" id="restaurant-info-general-btn" class="btn-action text-left rounded-[24px] border border-white/12 bg-white/[0.025] p-5 hover:bg-white/[0.045] transition-all">
+              <div class="flex items-start gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-white/6 border border-white/12 flex items-center justify-center shrink-0">
+                  <i data-lucide="info" class="w-5 h-5 text-cream/70"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="font-display text-xl font-bold text-cream">${text.generalTitle}</div>
+                  <div class="text-sm text-cream/52 mt-2 leading-relaxed">${text.generalText}</div>
+                </div>
+              </div>
+            </button>
+
+            <button type="button" id="restaurant-info-complementary-links-btn" class="btn-action text-left rounded-[24px] border border-white/12 bg-white/[0.025] p-5 hover:bg-white/[0.045] transition-all">
+              <div class="flex items-start gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-white/6 border border-white/12 flex items-center justify-center shrink-0">
+                  <i data-lucide="link-2" class="w-5 h-5 text-cream/70"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="font-display text-xl font-bold text-cream">${text.complementaryLinksTitle}</div>
+                  <div class="text-sm text-cream/52 mt-2 leading-relaxed">${text.complementaryLinksText}</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div class="restaurant-options-footer">
+          <button type="button" id="restaurant-info-cancel-btn" class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>${text.close}</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('restaurant-info-close-btn')?.addEventListener('click', closeRestaurantInfoModal);
+    document.getElementById('restaurant-info-cancel-btn')?.addEventListener('click', closeRestaurantInfoModal);
+    document.getElementById('restaurant-info-hours-btn')?.addEventListener('click', openRestaurantHoursScreen);
+    document.getElementById('restaurant-info-general-btn')?.addEventListener('click', openRestaurantGeneralInfoScreen);
+    document.getElementById('restaurant-info-complementary-links-btn')?.addEventListener('click', renderRestaurantComplementaryLinksScreen);
+
+    renderRestaurantInfoIcons();
+  }
     const overlay = document.getElementById('restaurant-info-modal');
     if (!overlay) return;
 
