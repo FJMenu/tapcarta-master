@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.3.3';
+        const APP_VERSION = 'V2.2.3.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -6019,6 +6019,7 @@ async function hydrateRestaurantGeneralInfoDraftFromSupabaseOnce() {
     if (contact && typeof contact === 'object' && !Array.isArray(contact)) {
       const hasPhone = Object.prototype.hasOwnProperty.call(contact, 'phone');
       const hasWhatsapp = Object.prototype.hasOwnProperty.call(contact, 'whatsapp');
+      const hasExternalLinks = Object.prototype.hasOwnProperty.call(contact, 'externalLinks');
 
       if (hasPhone) {
         draft.phone = typeof contact.phone === 'string' ? contact.phone : '';
@@ -6026,6 +6027,16 @@ async function hydrateRestaurantGeneralInfoDraftFromSupabaseOnce() {
 
       if (hasWhatsapp) {
         draft.whatsapp = typeof contact.whatsapp === 'string' ? contact.whatsapp : '';
+      }
+
+      if (hasExternalLinks) {
+        draft.complementaryLinks = normalizeRestaurantComplementaryLinksForSettings(contact.externalLinks);
+
+        if (!activeRestaurantData.contact || typeof activeRestaurantData.contact !== 'object') {
+          activeRestaurantData.contact = {};
+        }
+
+        activeRestaurantData.contact.externalLinks = draft.complementaryLinks;
       }
 
       if (!activeRestaurantData.identity || typeof activeRestaurantData.identity !== 'object') {
@@ -12187,10 +12198,26 @@ async function saveRestaurantOptionsModal() {
       activeRestaurantData.identity.whatsapp = draft.whatsapp;
       activeRestaurantData.customerMessages = draft.customerMessages.map((message) => ({ ...message }));
 
+      const existingExternalLinks = normalizeRestaurantComplementaryLinksForSettings(
+        draft.complementaryLinks ||
+        activeRestaurantData?.contact?.externalLinks ||
+        activeRestaurantData?.links?.externalLinks ||
+        {}
+      );
+
+      draft.complementaryLinks = existingExternalLinks;
+
+      if (!activeRestaurantData.contact || typeof activeRestaurantData.contact !== 'object') {
+        activeRestaurantData.contact = {};
+      }
+
+      activeRestaurantData.contact.externalLinks = existingExternalLinks;
+
       const settingsSaved = await saveRestaurantSettingsToSupabase({
         contact_json: {
           phone: draft.phone,
-          whatsapp: draft.whatsapp
+          whatsapp: draft.whatsapp,
+          externalLinks: existingExternalLinks
         },
         customer_messages_json: normalizeCustomerMessagesForSettings(draft.customerMessages)
       });
