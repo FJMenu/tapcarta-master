@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.3.4';
+        const APP_VERSION = 'V2.2.3.5';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -15827,6 +15827,11 @@ if (dishFinishBtn) {
       }
     });
   }
+
+  window.tapCartaRestaurantRefreshState = window.tapCartaRestaurantRefreshState || {
+    requestsIntervalId: null,
+    googleIntervalId: null
+  };
 
   if (window.tapCartaRestaurantRefreshState.requestsIntervalId) {
     clearInterval(window.tapCartaRestaurantRefreshState.requestsIntervalId);
