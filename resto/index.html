@@ -4841,7 +4841,7 @@ function dismissRestaurantNewRequestNotification() {
 
 window.dismissRestaurantNewRequestNotification = dismissRestaurantNewRequestNotification;
 
-function notifyIfNewActionRequests() {
+window.notifyIfNewActionRequests = function notifyIfNewActionRequests() {
   const popupItems = getRestaurantPopupNotificationRequests();
   const popupKeys = popupItems.map(getRestaurantRequestNotificationKey).filter(Boolean);
   const state = window.tapCartaRestaurantRequestNotificationState;
@@ -15843,7 +15843,9 @@ if (dishFinishBtn) {
   window.tapCartaRestaurantRefreshState.requestsIntervalId = window.setInterval(async () => {
     await syncLiveBookingsToLocalStorage();
     syncRequestsState();
-    notifyIfNewActionRequests();
+    if (typeof window.notifyIfNewActionRequests === 'function') {
+      window.notifyIfNewActionRequests();
+    }
 
     const menuEditorSection = document.getElementById('restaurant-menu-editor-section');
     const isMenuEditorOpen = !!menuEditorSection && !menuEditorSection.classList.contains('hidden');
