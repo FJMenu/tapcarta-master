@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.3.6';
+        const APP_VERSION = 'V2.2.2.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3072,9 +3072,6 @@ let orderForm = {
 const VERSION_STORAGE_KEY = 'tapcarta-last-loaded-version';
 const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
 
-window.TAPCARTA_RESTAURANT_REQUESTS_REFRESH_INTERVAL_MS = 30 * 1000;
-window.TAPCARTA_RESTAURANT_GOOGLE_REVIEWS_REFRESH_INTERVAL_MS = 3 * 60 * 60 * 1000;
-
     function isIos() {
       return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
     }
@@ -4841,7 +4838,7 @@ function dismissRestaurantNewRequestNotification() {
 
 window.dismissRestaurantNewRequestNotification = dismissRestaurantNewRequestNotification;
 
-window.notifyIfNewActionRequests = function notifyIfNewActionRequests() {
+function notifyIfNewActionRequests() {
   const popupItems = getRestaurantPopupNotificationRequests();
   const popupKeys = popupItems.map(getRestaurantRequestNotificationKey).filter(Boolean);
   const state = window.tapCartaRestaurantRequestNotificationState;
@@ -5983,46 +5980,7 @@ function normalizeCustomerMessagesForSettings(messages) {
       : ''
   }));
 }
-function normalizeRestaurantExternalUrlForSettings(value) {
-  const raw = typeof value === 'string' ? value.trim() : '';
-  if (!raw) return '';
 
-  if (raw.startsWith('/')) return raw;
-  if (/^https?:\/\//i.test(raw)) return raw;
-
-  return '';
-}
-
-function normalizeRestaurantComplementaryLinksForSettings(source) {
-  const links = source && typeof source === 'object' ? source : {};
-
-  return {
-    linkedRestaurant: {
-      enabled: links.linkedRestaurant?.enabled === true,
-      label: typeof links.linkedRestaurant?.label === 'string'
-        ? links.linkedRestaurant.label.trim().slice(0, 40)
-        : '',
-      url: normalizeRestaurantExternalUrlForSettings(links.linkedRestaurant?.url)
-    },
-    website: {
-      enabled: links.website?.enabled === true,
-      label: typeof links.website?.label === 'string'
-        ? links.website.label.trim().slice(0, 40)
-        : '',
-      url: normalizeRestaurantExternalUrlForSettings(links.website?.url)
-    }
-  };
-}
-
-function getRestaurantComplementaryLinkErrorText() {
-  return currentLang === 'es'
-    ? 'Añada una URL válida antes de activar este enlace.'
-    : currentLang === 'en'
-      ? 'Add a valid URL before activating this link.'
-      : currentLang === 'nl'
-        ? 'Voeg een geldige URL toe voordat u deze link activeert.'
-        : 'Ajoutez une URL valide avant d’activer ce lien.';
-}
 async function hydrateRestaurantGeneralInfoDraftFromSupabaseOnce() {
   if (!activeRestaurantData || typeof activeRestaurantData !== 'object') return false;
 
@@ -6069,10 +6027,6 @@ async function hydrateRestaurantGeneralInfoDraftFromSupabaseOnce() {
       if (hasWhatsapp) {
         draft.whatsapp = typeof contact.whatsapp === 'string' ? contact.whatsapp : '';
       }
-
-      draft.complementaryLinks = normalizeRestaurantComplementaryLinksForSettings(
-        contact.externalLinks || contact.complementaryLinks || {}
-      );
 
       if (!activeRestaurantData.identity || typeof activeRestaurantData.identity !== 'object') {
         activeRestaurantData.identity = {};
@@ -11152,7 +11106,7 @@ async function saveRestaurantOptionsModal() {
     }
   }
 
-   function getRestaurantInfoText() {
+  function getRestaurantInfoText() {
     return {
       title: currentLang === 'es'
         ? 'Gestionar mi información'
@@ -11170,17 +11124,79 @@ async function saveRestaurantOptionsModal() {
             ? 'Beheer hier de informatie die zichtbaar en nuttig is voor uw klanten.'
             : 'Configurez ici les informations visibles et utiles pour vos clients.',
 
-      hoursTitle: currentLang === 'es' ? 'Horarios' : currentLang === 'en' ? 'Opening hours' : currentLang === 'nl' ? 'Openingsuren' : 'Horaires',
-      hoursText: currentLang === 'es' ? 'Configurar los horarios generales, reservas y para llevar.' : currentLang === 'en' ? 'Configure general hours, bookings and takeaway.' : currentLang === 'nl' ? 'Algemene uren, reservaties en afhalen configureren.' : 'Configurer les horaires généraux, réservations et à emporter.',
+      hoursTitle: currentLang === 'es'
+        ? 'Horarios'
+        : currentLang === 'en'
+          ? 'Opening hours'
+          : currentLang === 'nl'
+            ? 'Openingsuren'
+            : 'Horaires',
 
-      generalTitle: currentLang === 'es' ? 'Información general' : currentLang === 'en' ? 'General information' : currentLang === 'nl' ? 'Algemene informatie' : 'Informations générales',
-      generalText: currentLang === 'es' ? 'Teléfono, WhatsApp, mensajes cliente e información protegida.' : currentLang === 'en' ? 'Phone, WhatsApp, customer messages and protected information.' : currentLang === 'nl' ? 'Telefoon, WhatsApp, klantberichten en beschermde informatie.' : 'Téléphone, WhatsApp, messages client et informations protégées.',
+      hoursText: currentLang === 'es'
+        ? 'Configurar los horarios generales, reservas y para llevar.'
+        : currentLang === 'en'
+          ? 'Configure general hours, bookings and takeaway.'
+          : currentLang === 'nl'
+            ? 'Algemene uren, reservaties en afhalen configureren.'
+            : 'Configurer les horaires généraux, réservations et à emporter.',
 
-      complementaryLinksTitle: currentLang === 'es' ? 'Enlaces complementarios' : currentLang === 'en' ? 'Additional links' : currentLang === 'nl' ? 'Aanvullende links' : 'Liens complémentaires',
-      complementaryLinksText: currentLang === 'es' ? 'Activar un enlace hacia otro restaurante o hacia una web de eventos.' : currentLang === 'en' ? 'Enable a link to another restaurant or to an events website.' : currentLang === 'nl' ? 'Activeer een link naar een andere zaak of naar een website met events.' : 'Activer un lien vers un autre restaurant ou vers un site web / événements.',
+      generalTitle: currentLang === 'es'
+        ? 'Información general'
+        : currentLang === 'en'
+          ? 'General information'
+          : currentLang === 'nl'
+            ? 'Algemene informatie'
+            : 'Informations générales',
 
-      close: currentLang === 'es' ? 'Cerrar' : currentLang === 'en' ? 'Close' : currentLang === 'nl' ? 'Sluiten' : 'Fermer'
+      generalText: currentLang === 'es'
+        ? 'Dirección, teléfono, WhatsApp, enlace Google, idiomas, logo.'
+        : currentLang === 'en'
+          ? 'Address, phone, WhatsApp, Google link, languages, logo.'
+          : currentLang === 'nl'
+            ? 'Adres, telefoon, WhatsApp, Google-link, talen, logo.'
+            : 'Adresse, téléphone, WhatsApp, lien Google, langues, logo.',
+
+      comingSoon: currentLang === 'es'
+        ? 'Próximamente'
+        : currentLang === 'en'
+          ? 'Coming soon'
+          : currentLang === 'nl'
+            ? 'Binnenkort'
+            : 'Prochainement',
+
+      close: currentLang === 'es'
+        ? 'Cerrar'
+        : currentLang === 'en'
+          ? 'Close'
+          : currentLang === 'nl'
+            ? 'Sluiten'
+            : 'Fermer',
+
+      nextStep: currentLang === 'es'
+        ? 'La configuración de horarios se añadirá en el siguiente paso.'
+        : currentLang === 'en'
+          ? 'Opening-hours configuration will be added in the next step.'
+          : currentLang === 'nl'
+            ? 'De configuratie van de openingsuren wordt in de volgende stap toegevoegd.'
+            : 'La configuration des horaires sera ajoutée à l’étape suivante.'
     };
+  }
+
+   function closeRestaurantInfoModal() {
+    document.getElementById('restaurant-info-modal')?.remove();
+
+    const manualActionBar = document.getElementById('manualActionBar');
+    if (manualActionBar) {
+      manualActionBar.style.display = '';
+    }
+  }
+
+  function renderRestaurantInfoIcons() {
+    if (window.lucide) {
+      requestAnimationFrame(() => {
+        lucide.createIcons();
+      });
+    }
   }
 
   function getRestaurantHoursText() {
@@ -12046,16 +12062,6 @@ async function saveRestaurantOptionsModal() {
       draft.whatsapp = identity.whatsapp || activeRestaurantData.whatsapp || siteConfig.whatsapp || '';
     }
 
-    if (!draft.complementaryLinks || typeof draft.complementaryLinks !== 'object') {
-      draft.complementaryLinks = normalizeRestaurantComplementaryLinksForSettings(
-        activeRestaurantData.contact?.externalLinks ||
-        activeRestaurantData.contact?.complementaryLinks ||
-        activeRestaurantData.links?.externalLinks ||
-        activeRestaurantData.links?.complementaryLinks ||
-        {}
-      );
-    }
-
     const existingMessages =
       Array.isArray(activeRestaurantData.customerMessages)
         ? activeRestaurantData.customerMessages
@@ -12139,28 +12145,6 @@ async function saveRestaurantOptionsModal() {
       draft.phone = readValue('restaurant-general-phone');
       draft.whatsapp = readValue('restaurant-general-whatsapp');
 
-      if (document.getElementById('restaurant-linked-restaurant-enabled')) {
-        draft.complementaryLinks = normalizeRestaurantComplementaryLinksForSettings({
-          linkedRestaurant: {
-            enabled: Boolean(document.getElementById('restaurant-linked-restaurant-enabled')?.checked),
-            label: readValue('restaurant-linked-restaurant-label'),
-            url: readValue('restaurant-linked-restaurant-url')
-          },
-          website: {
-            enabled: Boolean(document.getElementById('restaurant-website-enabled')?.checked),
-            label: readValue('restaurant-website-label'),
-            url: readValue('restaurant-website-url')
-          }
-        });
-      }
-
-      if (
-        (draft.complementaryLinks.linkedRestaurant.enabled && !draft.complementaryLinks.linkedRestaurant.url) ||
-        (draft.complementaryLinks.website.enabled && !draft.complementaryLinks.website.url)
-      ) {
-        showRestaurantToast(getRestaurantComplementaryLinkErrorText(), 'error');
-        throw new Error('invalid_complementary_link_url');
-      }
       draft.customerMessages = [0, 1, 2].map((index) => {
         const textValue = readValue(`restaurant-general-message-${index}`).slice(0, 120);
         const activeValue = Boolean(document.querySelector(`[data-general-message-active="${index}"]`)?.checked);
@@ -12182,8 +12166,7 @@ async function saveRestaurantOptionsModal() {
       const settingsSaved = await saveRestaurantSettingsToSupabase({
         contact_json: {
           phone: draft.phone,
-          whatsapp: draft.whatsapp,
-          externalLinks: normalizeRestaurantComplementaryLinksForSettings(draft.complementaryLinks)
+          whatsapp: draft.whatsapp
         },
         customer_messages_json: normalizeCustomerMessagesForSettings(draft.customerMessages)
       });
@@ -12549,7 +12532,7 @@ async function saveRestaurantOptionsModal() {
         </div>
 
         <div class="restaurant-options-body">
-          <div class="grid md:grid-cols-3 gap-4">
+          <div class="grid md:grid-cols-2 gap-4">
             <button type="button" id="restaurant-info-hours-btn" class="btn-action text-left rounded-[24px] border border-gold/28 bg-white/[0.035] p-5 hover:bg-gold/[0.08] transition-all">
               <div class="flex items-start gap-3">
                 <div class="w-11 h-11 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center shrink-0">
@@ -12568,20 +12551,10 @@ async function saveRestaurantOptionsModal() {
                   <i data-lucide="info" class="w-5 h-5 text-cream/70"></i>
                 </div>
                 <div class="min-w-0">
-                  <div class="font-display text-xl font-bold text-cream">${text.generalTitle}</div>
+                  <div class="flex items-center gap-2">
+                    <div class="font-display text-xl font-bold text-cream">${text.generalTitle}</div>
+                  </div>
                   <div class="text-sm text-cream/52 mt-2 leading-relaxed">${text.generalText}</div>
-                </div>
-              </div>
-            </button>
-
-            <button type="button" id="restaurant-info-complementary-links-btn" class="btn-action text-left rounded-[24px] border border-white/12 bg-white/[0.025] p-5 hover:bg-white/[0.045] transition-all">
-              <div class="flex items-start gap-3">
-                <div class="w-11 h-11 rounded-2xl bg-white/6 border border-white/12 flex items-center justify-center shrink-0">
-                  <i data-lucide="link-2" class="w-5 h-5 text-cream/70"></i>
-                </div>
-                <div class="min-w-0">
-                  <div class="font-display text-xl font-bold text-cream">${text.complementaryLinksTitle}</div>
-                  <div class="text-sm text-cream/52 mt-2 leading-relaxed">${text.complementaryLinksText}</div>
                 </div>
               </div>
             </button>
@@ -12601,149 +12574,6 @@ async function saveRestaurantOptionsModal() {
     document.getElementById('restaurant-info-cancel-btn')?.addEventListener('click', closeRestaurantInfoModal);
     document.getElementById('restaurant-info-hours-btn')?.addEventListener('click', openRestaurantHoursScreen);
     document.getElementById('restaurant-info-general-btn')?.addEventListener('click', openRestaurantGeneralInfoScreen);
-    document.getElementById('restaurant-info-complementary-links-btn')?.addEventListener('click', renderRestaurantComplementaryLinksScreen);
-
-    renderRestaurantInfoIcons();
-  }
-
-    // Sauvetage structurel : les fonctions ci-dessous sont déclarées dans renderMenu().
-    // On les expose explicitement pour les boutons délégués du dashboard, sans toucher aux fonctionnalités.
-    window.openRestaurantOptionsModal = openRestaurantOptionsModal;
-    window.closeRestaurantOptionsModal = closeRestaurantOptionsModal;
-    window.openRestaurantInfoModal = typeof openRestaurantInfoModal === 'function' ? openRestaurantInfoModal : window.openRestaurantInfoModal;
-    window.renderRestaurantInfoHome = renderRestaurantInfoHome;
-    window.openRestaurantGeneralInfoScreen = openRestaurantGeneralInfoScreen;
-    window.openRestaurantHoursScreen = openRestaurantHoursScreen;
-    window.renderRestaurantComplementaryLinksScreen = renderRestaurantComplementaryLinksScreen;
-
-  }
-
-
-  function renderRestaurantComplementaryLinksScreen() {
-    const overlay = document.getElementById('restaurant-info-modal');
-    if (!overlay) return;
-
-    const draft = ensureRestaurantGeneralInfoDraft();
-    if (!draft) return;
-
-    const text = getRestaurantInfoText();
-    const links = normalizeRestaurantComplementaryLinksForSettings(draft.complementaryLinks);
-
-    const escapeHtml = (value) => String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-
-    const labels = {
-      title: text.complementaryLinksTitle,
-      subtitle: text.complementaryLinksText,
-      linkedRestaurant: currentLang === 'es' ? 'Otro restaurante' : currentLang === 'en' ? 'Other restaurant' : currentLang === 'nl' ? 'Andere zaak' : 'Autre restaurant',
-      website: currentLang === 'es' ? 'Web / Eventos' : currentLang === 'en' ? 'Website / Events' : currentLang === 'nl' ? 'Website / Events' : 'Site web / Événements',
-      enabled: currentLang === 'es' ? 'Activado' : currentLang === 'en' ? 'Enabled' : currentLang === 'nl' ? 'Actief' : 'Activé',
-      label: currentLang === 'es' ? 'Texto del botón' : currentLang === 'en' ? 'Button text' : currentLang === 'nl' ? 'Knoptekst' : 'Texte du bouton',
-      url: 'URL',
-      save: text.save,
-      back: text.back,
-      close: text.close
-    };
-
-    overlay.innerHTML = `
-      <div class="restaurant-options-panel" role="dialog" aria-modal="true">
-        <div class="restaurant-options-header">
-          <div class="min-w-0">
-            <div class="inline-flex items-center gap-3">
-              <div class="w-11 h-11 rounded-2xl bg-gold/14 border border-gold/28 flex items-center justify-center shrink-0">
-                <i data-lucide="link-2" class="w-5 h-5 text-gold"></i>
-              </div>
-              <div>
-                <div class="font-display text-2xl font-bold text-cream leading-tight">${labels.title}</div>
-                <div class="text-sm text-cream/58 mt-1">${labels.subtitle}</div>
-              </div>
-            </div>
-          </div>
-
-          <button type="button" id="restaurant-info-close-btn" class="btn-action w-11 h-11 rounded-2xl border border-white/15 text-cream hover:bg-white/5 inline-flex items-center justify-center shrink-0">
-            <i data-lucide="x" class="w-5 h-5"></i>
-          </button>
-        </div>
-
-        <div class="restaurant-options-body">
-          <div class="grid gap-4">
-            ${[
-              ['linkedRestaurant', labels.linkedRestaurant, 'store'],
-              ['website', labels.website, 'globe-2']
-            ].map(([key, title, icon]) => `
-              <section class="rounded-[26px] border border-gold/22 bg-white/[0.035] p-5">
-                <div class="flex items-start gap-3 mb-4">
-                  <div class="w-10 h-10 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center shrink-0">
-                    <i data-lucide="${icon}" class="w-5 h-5 text-gold"></i>
-                  </div>
-                  <div class="min-w-0">
-                    <div class="font-display text-xl font-bold text-cream">${title}</div>
-                  </div>
-                </div>
-
-                <div class="grid gap-4">
-                  <label class="inline-flex items-center gap-3 rounded-2xl border border-white/12 bg-black/22 px-4 py-3 text-sm font-bold text-cream/82">
-                    <input
-                      id="${key === 'linkedRestaurant' ? 'restaurant-linked-restaurant-enabled' : 'restaurant-website-enabled'}"
-                      type="checkbox"
-                      ${links[key]?.enabled ? 'checked' : ''}
-                      class="accent-yellow-400"
-                    >
-                    <span>${labels.enabled}</span>
-                  </label>
-
-                  <label class="grid gap-2">
-                    <span class="text-sm font-bold text-cream/78">${labels.label}</span>
-                    <input
-                      id="${key === 'linkedRestaurant' ? 'restaurant-linked-restaurant-label' : 'restaurant-website-label'}"
-                      value="${escapeHtml(links[key]?.label || '')}"
-                      maxlength="40"
-                      class="w-full rounded-2xl border border-white/12 bg-black/28 px-4 py-3 text-cream outline-none focus:border-gold/55"
-                    />
-                  </label>
-
-                  <label class="grid gap-2">
-                    <span class="text-sm font-bold text-cream/78">${labels.url}</span>
-                    <input
-                      id="${key === 'linkedRestaurant' ? 'restaurant-linked-restaurant-url' : 'restaurant-website-url'}"
-                      value="${escapeHtml(links[key]?.url || '')}"
-                      placeholder="https://..."
-                      class="w-full rounded-2xl border border-white/12 bg-black/28 px-4 py-3 text-cream outline-none focus:border-gold/55"
-                    />
-                  </label>
-                </div>
-              </section>
-            `).join('')}
-          </div>
-        </div>
-
-        <div class="restaurant-options-footer">
-          <button type="button" id="restaurant-info-back-btn" class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-            <span>${labels.back}</span>
-          </button>
-
-          <button type="button" id="restaurant-general-save-btn" class="btn-action inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gold/45 bg-gold/15 text-sm font-bold text-cream hover:bg-gold/20 transition-all">
-            <i data-lucide="check" class="w-4 h-4 text-gold"></i>
-            <span>${labels.save}</span>
-          </button>
-
-          <button type="button" id="restaurant-info-cancel-btn" class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
-            <i data-lucide="x" class="w-4 h-4 text-gold"></i>
-            <span>${labels.close}</span>
-          </button>
-        </div>
-      </div>
-    `;
-
-    document.getElementById('restaurant-info-close-btn')?.addEventListener('click', closeRestaurantInfoModal);
-    document.getElementById('restaurant-info-cancel-btn')?.addEventListener('click', closeRestaurantInfoModal);
-    document.getElementById('restaurant-info-back-btn')?.addEventListener('click', renderRestaurantInfoHome);
-    document.getElementById('restaurant-general-save-btn')?.addEventListener('click', saveRestaurantGeneralInfoDraft);
 
     renderRestaurantInfoIcons();
   }
@@ -12998,23 +12828,6 @@ async function saveRestaurantOptionsModal() {
     });
 
     renderRestaurantInfoIcons();
-  }
-
-  function closeRestaurantInfoModal() {
-    document.getElementById('restaurant-info-modal')?.remove();
-
-    const manualActionBar = document.getElementById('manualActionBar');
-    if (manualActionBar) {
-      manualActionBar.style.display = '';
-    }
-  }
-
-  function renderRestaurantInfoIcons() {
-    if (window.lucide) {
-      requestAnimationFrame(() => {
-        lucide.createIcons();
-      });
-    }
   }
 
   function openRestaurantInfoModal() {
@@ -15921,11 +15734,6 @@ if (dishFinishBtn) {
     });
   }
 
-  window.tapCartaRestaurantRefreshState = window.tapCartaRestaurantRefreshState || {
-    requestsIntervalId: null,
-    googleIntervalId: null
-  };
-
   if (window.tapCartaRestaurantRefreshState.requestsIntervalId) {
     clearInterval(window.tapCartaRestaurantRefreshState.requestsIntervalId);
   }
@@ -15933,9 +15741,7 @@ if (dishFinishBtn) {
   window.tapCartaRestaurantRefreshState.requestsIntervalId = window.setInterval(async () => {
     await syncLiveBookingsToLocalStorage();
     syncRequestsState();
-    if (typeof window.notifyIfNewActionRequests === 'function') {
-      window.notifyIfNewActionRequests();
-    }
+    notifyIfNewActionRequests();
 
     const menuEditorSection = document.getElementById('restaurant-menu-editor-section');
     const isMenuEditorOpen = !!menuEditorSection && !menuEditorSection.classList.contains('hidden');
@@ -15958,7 +15764,7 @@ if (dishFinishBtn) {
         lucide.createIcons();
       });
     }
-  }, window.TAPCARTA_RESTAURANT_REQUESTS_REFRESH_INTERVAL_MS || 30 * 1000);
+  }, REQUESTS_REFRESH_INTERVAL_MS);
 
   const googleReviewsRatingEl = document.getElementById('restaurant-google-reviews-rating');
   const googleReviewsCountEl = document.getElementById('restaurant-google-reviews-count');
@@ -15989,11 +15795,12 @@ if (dishFinishBtn) {
 
   window.tapCartaRestaurantRefreshState.googleIntervalId = window.setInterval(() => {
     refreshGoogleReviewsPanel();
-  }, window.TAPCARTA_RESTAURANT_GOOGLE_REVIEWS_REFRESH_INTERVAL_MS || 3 * 60 * 60 * 1000);
+  }, GOOGLE_REVIEWS_REFRESH_INTERVAL_MS);
 
   updateInstallUI();
   updateLangButtons();
   applyDishEditorTranslations();
+}
 
 function ensureFreshHtmlVersion() {
   try {
@@ -16128,165 +15935,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 });
-  
-
-/* ===== TAPCARTA RESTO DASHBOARD + SOUS-ÉCRANS FALLBACK =====
-   Délégation globale pour éviter les boutons non branchés après render dynamique. */
-(function attachRestaurantDelegatedButtons() {
-  if (window.__tapCartaRestaurantDelegatedButtonsAttached) return;
-  window.__tapCartaRestaurantDelegatedButtonsAttached = true;
-
-  function openRestaurantMenuEditorFromDashboard() {
-    const editorSection = document.getElementById('restaurant-menu-editor-section');
-    const editorHome = document.getElementById('restaurant-menu-editor-home');
-    const editorWorkspace = document.getElementById('restaurant-menu-editor-workspace');
-    const manualActionBar = document.getElementById('manualActionBar');
-
-    if (!editorSection) return;
-
-    editorSection.classList.remove('hidden');
-
-    if (editorHome) editorHome.classList.remove('hidden');
-    if (editorWorkspace) editorWorkspace.classList.add('hidden');
-    if (manualActionBar) manualActionBar.style.display = 'none';
-
-    document.body.classList.add('menu-editor-open');
-
-    try {
-      const restaurantId = activeRestaurantData?.identity?.id || activeRestaurantData?.id || 'default';
-      localStorage.setItem(`tapcartaRestoMenuEditorOpen:${restaurantId}`, 'true');
-    } catch (error) {
-      console.warn('Impossible de mémoriser l’état UI de l’éditeur menu :', error);
-    }
-
-    if (window.lucide) {
-      requestAnimationFrame(() => lucide.createIcons());
-    }
-
-    requestAnimationFrame(() => {
-      editorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }
-
-  function openRestaurantMenuEditorWorkspaceFromDashboard() {
-    const editorHome = document.getElementById('restaurant-menu-editor-home');
-    const editorWorkspace = document.getElementById('restaurant-menu-editor-workspace');
-
-    if (editorHome) editorHome.classList.add('hidden');
-    if (editorWorkspace) editorWorkspace.classList.remove('hidden');
-
-    if (typeof renderRestaurantMenuEditor === 'function') {
-      renderRestaurantMenuEditor();
-    }
-
-    if (typeof updateMenuEditorDirtyUi === 'function') {
-      updateMenuEditorDirtyUi();
-    }
-
-    if (window.lucide) {
-      requestAnimationFrame(() => lucide.createIcons());
-    }
-  }
-
-  document.addEventListener('click', (event) => {
-    const menuButton = event.target.closest('#restaurant-menu-editor-toggle');
-    if (menuButton) {
-      event.preventDefault();
-      openRestaurantMenuEditorFromDashboard();
-      return;
-    }
-
-    const menuCategoryModeButton = event.target.closest('#restaurant-menu-editor-category-mode-btn');
-    if (menuCategoryModeButton) {
-      event.preventDefault();
-      openRestaurantMenuEditorWorkspaceFromDashboard();
-      return;
-    }
-
-    const menuDishModeButton = event.target.closest('#restaurant-menu-editor-dish-mode-btn');
-    if (menuDishModeButton) {
-      event.preventDefault();
-      openRestaurantMenuEditorWorkspaceFromDashboard();
-      return;
-    }
-
-    const menuHomeBackButton = event.target.closest('#restaurant-menu-editor-home-back-btn');
-    if (menuHomeBackButton) {
-      event.preventDefault();
-
-      const editorSection = document.getElementById('restaurant-menu-editor-section');
-      const manualActionBar = document.getElementById('manualActionBar');
-
-      if (editorSection) editorSection.classList.add('hidden');
-      if (manualActionBar) manualActionBar.style.display = '';
-
-      document.body.classList.remove('menu-editor-open');
-
-      try {
-        const restaurantId = activeRestaurantData?.identity?.id || activeRestaurantData?.id || 'default';
-        localStorage.removeItem(`tapcartaRestoMenuEditorOpen:${restaurantId}`);
-      } catch (error) {
-        console.warn('Impossible de supprimer l’état UI de l’éditeur menu :', error);
-      }
-
-      return;
-    }
-
-    const optionsButton = event.target.closest('#restaurant-options-toggle');
-    if (optionsButton) {
-      event.preventDefault();
-      if (typeof openRestaurantOptionsModal === 'function') {
-        openRestaurantOptionsModal();
-      }
-      return;
-    }
-
-    const infoButton = event.target.closest('#restaurant-info-editor-toggle');
-    if (infoButton) {
-      event.preventDefault();
-      if (typeof openRestaurantInfoModal === 'function') {
-        openRestaurantInfoModal();
-      }
-      return;
-    }
-
-    const infoHoursButton = event.target.closest('#restaurant-info-hours-btn');
-    if (infoHoursButton) {
-      event.preventDefault();
-      if (typeof openRestaurantHoursScreen === 'function') {
-        openRestaurantHoursScreen();
-      }
-      return;
-    }
-
-    const infoGeneralButton = event.target.closest('#restaurant-info-general-btn');
-    if (infoGeneralButton) {
-      event.preventDefault();
-      if (typeof openRestaurantGeneralInfoScreen === 'function') {
-        openRestaurantGeneralInfoScreen();
-      }
-      return;
-    }
-
-    const infoLinksButton = event.target.closest('#restaurant-info-complementary-links-btn');
-    if (infoLinksButton) {
-      event.preventDefault();
-      if (typeof renderRestaurantComplementaryLinksScreen === 'function') {
-        renderRestaurantComplementaryLinksScreen();
-      }
-      return;
-    }
-
-    const qrButton = event.target.closest('#restaurant-qr-framed-toggle');
-    if (qrButton) {
-      event.preventDefault();
-      if (typeof openRestaurantQrFramedModal === 'function') {
-        openRestaurantQrFramedModal();
-      }
-    }
-  });
-})();
-</script>
+  </script>
   <!-- FICHE PLAT (édition plein écran) -->
   <div id="dishEditorScreen" class="dish-editor-screen hidden">
         <div id="dishEditorFlow" class="dish-editor-flow hidden">
