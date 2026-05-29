@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.3.1';
+        const APP_VERSION = 'V2.2.3.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -12613,11 +12613,120 @@ async function saveRestaurantOptionsModal() {
     renderRestaurantInfoIcons();
   }
 
+  function normalizeRestaurantComplementaryLinksForSettings(source) {
+    const links = source && typeof source === 'object' ? source : {};
+
+    const normalizeLink = (link) => ({
+      enabled: link?.enabled === true,
+      label: typeof link?.label === 'string' ? link.label.trim() : '',
+      url: typeof link?.url === 'string' ? link.url.trim() : ''
+    });
+
+    return {
+      linkedRestaurant: normalizeLink(links.linkedRestaurant),
+      website: normalizeLink(links.website)
+    };
+  }
+
+  async function saveRestaurantComplementaryLinksDraft() {
+    const draft = ensureRestaurantGeneralInfoDraft();
+    if (!draft) return;
+
+    const readValue = (id) => document.getElementById(id)?.value?.trim() || '';
+
+    const complementaryLinks = normalizeRestaurantComplementaryLinksForSettings({
+      linkedRestaurant: {
+        enabled: Boolean(document.getElementById('restaurant-linked-restaurant-enabled')?.checked),
+        label: readValue('restaurant-linked-restaurant-label'),
+        url: readValue('restaurant-linked-restaurant-url')
+      },
+      website: {
+        enabled: Boolean(document.getElementById('restaurant-website-enabled')?.checked),
+        label: readValue('restaurant-website-label'),
+        url: readValue('restaurant-website-url')
+      }
+    });
+
+    if (
+      (complementaryLinks.linkedRestaurant.enabled && !complementaryLinks.linkedRestaurant.url) ||
+      (complementaryLinks.website.enabled && !complementaryLinks.website.url)
+    ) {
+      showRestaurantToast(
+        currentLang === 'es' ? 'Añade una URL para cada enlace activado.' :
+        currentLang === 'en' ? 'Add a URL for each enabled link.' :
+        currentLang === 'nl' ? 'Voeg een URL toe voor elke actieve link.' :
+        'Ajoute une URL pour chaque lien activé.',
+        'error'
+      );
+      return;
+    }
+
+    draft.complementaryLinks = complementaryLinks;
+
+    if (!activeRestaurantData.contact || typeof activeRestaurantData.contact !== 'object') {
+      activeRestaurantData.contact = {};
+    }
+
+    activeRestaurantData.contact.externalLinks = complementaryLinks;
+
+    const saved = await saveRestaurantSettingsToSupabase({
+      contact_json: {
+        phone: draft.phone || '',
+        whatsapp: draft.whatsapp || '',
+        externalLinks: complementaryLinks
+      }
+    });
+
+    if (!saved) {
+      showRestaurantToast(
+        currentLang === 'es' ? 'No se han podido guardar los enlaces.' :
+        currentLang === 'en' ? 'Links could not be saved.' :
+        currentLang === 'nl' ? 'Links konden niet worden opgeslagen.' :
+        'Les liens n’ont pas pu être enregistrés.',
+        'error'
+      );
+      return;
+    }
+
+    showRestaurantToast(
+      currentLang === 'es' ? 'Enlaces guardados.' :
+      currentLang === 'en' ? 'Links saved.' :
+      currentLang === 'nl' ? 'Links opgeslagen.' :
+      'Liens enregistrés.',
+      'success'
+    );
+  }
+
   function renderRestaurantComplementaryLinksScreen() {
     const overlay = document.getElementById('restaurant-info-modal');
     if (!overlay) return;
 
+    const draft = ensureRestaurantGeneralInfoDraft();
     const text = getRestaurantInfoText();
+    const links = normalizeRestaurantComplementaryLinksForSettings(
+      draft?.complementaryLinks ||
+      activeRestaurantData?.contact?.externalLinks ||
+      activeRestaurantData?.links?.externalLinks ||
+      {}
+    );
+
+    const escapeHtml = (value) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+    const labels = {
+      linkedRestaurantTitle: currentLang === 'es' ? 'Otro restaurante TapCarta' : currentLang === 'en' ? 'Other TapCarta restaurant' : currentLang === 'nl' ? 'Ander TapCarta-restaurant' : 'Autre restaurant TapCarta',
+      linkedRestaurantText: currentLang === 'es' ? 'Para un segundo restaurante del mismo propietario.' : currentLang === 'en' ? 'For a second restaurant from the same owner.' : currentLang === 'nl' ? 'Voor een tweede restaurant van dezelfde eigenaar.' : 'Pour un deuxième restaurant du même patron.',
+      websiteTitle: currentLang === 'es' ? 'Sitio web externo' : currentLang === 'en' ? 'External website' : currentLang === 'nl' ? 'Externe website' : 'Site web externe',
+      websiteText: currentLang === 'es' ? 'Para conservar un sitio promocional separado de TapCarta.' : currentLang === 'en' ? 'To keep a promotional website separate from TapCarta.' : currentLang === 'nl' ? 'Om een promotionele website apart van TapCarta te behouden.' : 'Pour garder un site promotionnel séparé de TapCarta.',
+      enabled: currentLang === 'es' ? 'Activé' : currentLang === 'en' ? 'Enabled' : currentLang === 'nl' ? 'Actief' : 'Activé',
+      buttonText: currentLang === 'es' ? 'Texto del botón' : currentLang === 'en' ? 'Button text' : currentLang === 'nl' ? 'Knoptekst' : 'Texte du bouton',
+      url: 'URL',
+      save: currentLang === 'es' ? 'Guardar' : currentLang === 'en' ? 'Save' : currentLang === 'nl' ? 'Opslaan' : 'Enregistrer'
+    };
 
     overlay.innerHTML = `
       <div class="restaurant-options-panel" role="dialog" aria-modal="true">
@@ -12640,16 +12749,44 @@ async function saveRestaurantOptionsModal() {
         </div>
 
         <div class="restaurant-options-body">
-          <div class="rounded-[24px] border border-gold/25 bg-gold/10 p-5">
-            <div class="flex items-start gap-3">
-              <div class="w-11 h-11 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center shrink-0">
-                <i data-lucide="construction" class="w-5 h-5 text-gold"></i>
+          <div class="space-y-4">
+            <section class="rounded-[24px] border border-gold/25 bg-gold/10 p-5">
+              <label class="flex items-center gap-3">
+                <input id="restaurant-linked-restaurant-enabled" type="checkbox" ${links.linkedRestaurant.enabled ? 'checked' : ''} class="h-5 w-5 accent-gold">
+                <span class="font-display text-xl font-bold text-cream">${labels.linkedRestaurantTitle}</span>
+              </label>
+              <p class="mt-2 text-sm text-cream/60">${labels.linkedRestaurantText}</p>
+
+              <div class="mt-4 grid md:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">${labels.buttonText}</label>
+                  <input id="restaurant-linked-restaurant-label" type="text" value="${escapeHtml(links.linkedRestaurant.label)}" placeholder="${escapeHtml(labels.linkedRestaurantTitle)}" class="w-full rounded-xl border border-white/12 bg-black/30 px-3 py-3 text-cream outline-none focus:border-gold/50">
+                </div>
+                <div>
+                  <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">${labels.url}</label>
+                  <input id="restaurant-linked-restaurant-url" type="url" value="${escapeHtml(links.linkedRestaurant.url)}" placeholder="https://tapcarta.com/..." class="w-full rounded-xl border border-white/12 bg-black/30 px-3 py-3 text-cream outline-none focus:border-gold/50">
+                </div>
               </div>
-              <div class="min-w-0">
-                <div class="font-display text-xl font-bold text-cream">${text.comingSoon}</div>
-                <div class="text-sm text-cream/62 mt-2 leading-relaxed">${text.nextStep}</div>
+            </section>
+
+            <section class="rounded-[24px] border border-white/12 bg-white/[0.025] p-5">
+              <label class="flex items-center gap-3">
+                <input id="restaurant-website-enabled" type="checkbox" ${links.website.enabled ? 'checked' : ''} class="h-5 w-5 accent-gold">
+                <span class="font-display text-xl font-bold text-cream">${labels.websiteTitle}</span>
+              </label>
+              <p class="mt-2 text-sm text-cream/60">${labels.websiteText}</p>
+
+              <div class="mt-4 grid md:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">${labels.buttonText}</label>
+                  <input id="restaurant-website-label" type="text" value="${escapeHtml(links.website.label)}" placeholder="${escapeHtml(labels.websiteTitle)}" class="w-full rounded-xl border border-white/12 bg-black/30 px-3 py-3 text-cream outline-none focus:border-gold/50">
+                </div>
+                <div>
+                  <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">${labels.url}</label>
+                  <input id="restaurant-website-url" type="url" value="${escapeHtml(links.website.url)}" placeholder="https://..." class="w-full rounded-xl border border-white/12 bg-black/30 px-3 py-3 text-cream outline-none focus:border-gold/50">
+                </div>
               </div>
-            </div>
+            </section>
           </div>
         </div>
 
@@ -12659,8 +12796,13 @@ async function saveRestaurantOptionsModal() {
             <span>${text.back}</span>
           </button>
 
-          <button type="button" id="restaurant-info-cancel-btn" class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
-            <i data-lucide="x" class="w-4 h-4 text-gold"></i>
+          <button type="button" id="restaurant-links-save-btn" class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 bg-gold/12 text-sm font-semibold text-gold hover:bg-gold/18 transition-all">
+            <i data-lucide="save" class="w-4 h-4 text-gold"></i>
+            <span>${labels.save}</span>
+          </button>
+
+          <button type="button" id="restaurant-info-cancel-btn" class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
+            <i data-lucide="x" class="w-4 h-4"></i>
             <span>${text.close}</span>
           </button>
         </div>
@@ -12670,6 +12812,7 @@ async function saveRestaurantOptionsModal() {
     document.getElementById('restaurant-info-close-btn')?.addEventListener('click', closeRestaurantInfoModal);
     document.getElementById('restaurant-info-cancel-btn')?.addEventListener('click', closeRestaurantInfoModal);
     document.getElementById('restaurant-info-back-btn')?.addEventListener('click', renderRestaurantInfoHome);
+    document.getElementById('restaurant-links-save-btn')?.addEventListener('click', saveRestaurantComplementaryLinksDraft);
 
     renderRestaurantInfoIcons();
   }
