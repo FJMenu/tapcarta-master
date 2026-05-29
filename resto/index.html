@@ -6070,6 +6070,10 @@ async function hydrateRestaurantGeneralInfoDraftFromSupabaseOnce() {
         draft.whatsapp = typeof contact.whatsapp === 'string' ? contact.whatsapp : '';
       }
 
+      draft.complementaryLinks = normalizeRestaurantComplementaryLinksForSettings(
+        contact.externalLinks || contact.complementaryLinks || {}
+      );
+
       if (!activeRestaurantData.identity || typeof activeRestaurantData.identity !== 'object') {
         activeRestaurantData.identity = {};
       }
@@ -12042,6 +12046,16 @@ async function saveRestaurantOptionsModal() {
       draft.whatsapp = identity.whatsapp || activeRestaurantData.whatsapp || siteConfig.whatsapp || '';
     }
 
+    if (!draft.complementaryLinks || typeof draft.complementaryLinks !== 'object') {
+      draft.complementaryLinks = normalizeRestaurantComplementaryLinksForSettings(
+        activeRestaurantData.contact?.externalLinks ||
+        activeRestaurantData.contact?.complementaryLinks ||
+        activeRestaurantData.links?.externalLinks ||
+        activeRestaurantData.links?.complementaryLinks ||
+        {}
+      );
+    }
+
     const existingMessages =
       Array.isArray(activeRestaurantData.customerMessages)
         ? activeRestaurantData.customerMessages
@@ -12124,25 +12138,29 @@ async function saveRestaurantOptionsModal() {
 
       draft.phone = readValue('restaurant-general-phone');
       draft.whatsapp = readValue('restaurant-general-whatsapp');
-draft.complementaryLinks = normalizeRestaurantComplementaryLinksForSettings({
-  linkedRestaurant: {
-    enabled: Boolean(document.getElementById('restaurant-linked-restaurant-enabled')?.checked),
-    label: readValue('restaurant-linked-restaurant-label'),
-    url: readValue('restaurant-linked-restaurant-url')
-  },
-  website: {
-    enabled: Boolean(document.getElementById('restaurant-website-enabled')?.checked),
-    label: readValue('restaurant-website-label'),
-    url: readValue('restaurant-website-url')
-  }
-});
 
-if (
-  (draft.complementaryLinks.linkedRestaurant.enabled && !draft.complementaryLinks.linkedRestaurant.url) ||
-  (draft.complementaryLinks.website.enabled && !draft.complementaryLinks.website.url)
-) {
-  throw new Error('invalid_complementary_link_url');
-}
+      if (document.getElementById('restaurant-linked-restaurant-enabled')) {
+        draft.complementaryLinks = normalizeRestaurantComplementaryLinksForSettings({
+          linkedRestaurant: {
+            enabled: Boolean(document.getElementById('restaurant-linked-restaurant-enabled')?.checked),
+            label: readValue('restaurant-linked-restaurant-label'),
+            url: readValue('restaurant-linked-restaurant-url')
+          },
+          website: {
+            enabled: Boolean(document.getElementById('restaurant-website-enabled')?.checked),
+            label: readValue('restaurant-website-label'),
+            url: readValue('restaurant-website-url')
+          }
+        });
+      }
+
+      if (
+        (draft.complementaryLinks.linkedRestaurant.enabled && !draft.complementaryLinks.linkedRestaurant.url) ||
+        (draft.complementaryLinks.website.enabled && !draft.complementaryLinks.website.url)
+      ) {
+        showRestaurantToast(getRestaurantComplementaryLinkErrorText(), 'error');
+        throw new Error('invalid_complementary_link_url');
+      }
       draft.customerMessages = [0, 1, 2].map((index) => {
         const textValue = readValue(`restaurant-general-message-${index}`).slice(0, 120);
         const activeValue = Boolean(document.querySelector(`[data-general-message-active="${index}"]`)?.checked);
@@ -12164,7 +12182,8 @@ if (
       const settingsSaved = await saveRestaurantSettingsToSupabase({
         contact_json: {
           phone: draft.phone,
-          whatsapp: draft.whatsapp
+          whatsapp: draft.whatsapp,
+          externalLinks: normalizeRestaurantComplementaryLinksForSettings(draft.complementaryLinks)
         },
         customer_messages_json: normalizeCustomerMessagesForSettings(draft.customerMessages)
       });
@@ -12654,6 +12673,136 @@ if (
     document.getElementById('restaurant-info-cancel-btn')?.addEventListener('click', closeRestaurantInfoModal);
     document.getElementById('restaurant-info-hours-btn')?.addEventListener('click', openRestaurantHoursScreen);
     document.getElementById('restaurant-info-general-btn')?.addEventListener('click', openRestaurantGeneralInfoScreen);
+
+    renderRestaurantInfoIcons();
+  }
+
+
+  function renderRestaurantComplementaryLinksScreen() {
+    const overlay = document.getElementById('restaurant-info-modal');
+    if (!overlay) return;
+
+    const draft = ensureRestaurantGeneralInfoDraft();
+    if (!draft) return;
+
+    const text = getRestaurantInfoText();
+    const links = normalizeRestaurantComplementaryLinksForSettings(draft.complementaryLinks);
+
+    const escapeHtml = (value) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+    const labels = {
+      title: text.complementaryLinksTitle,
+      subtitle: text.complementaryLinksText,
+      linkedRestaurant: currentLang === 'es' ? 'Otro restaurante' : currentLang === 'en' ? 'Other restaurant' : currentLang === 'nl' ? 'Andere zaak' : 'Autre restaurant',
+      website: currentLang === 'es' ? 'Web / Eventos' : currentLang === 'en' ? 'Website / Events' : currentLang === 'nl' ? 'Website / Events' : 'Site web / Événements',
+      enabled: currentLang === 'es' ? 'Activado' : currentLang === 'en' ? 'Enabled' : currentLang === 'nl' ? 'Actief' : 'Activé',
+      label: currentLang === 'es' ? 'Texto del botón' : currentLang === 'en' ? 'Button text' : currentLang === 'nl' ? 'Knoptekst' : 'Texte du bouton',
+      url: 'URL',
+      save: text.save,
+      back: text.back,
+      close: text.close
+    };
+
+    overlay.innerHTML = `
+      <div class="restaurant-options-panel" role="dialog" aria-modal="true">
+        <div class="restaurant-options-header">
+          <div class="min-w-0">
+            <div class="inline-flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gold/14 border border-gold/28 flex items-center justify-center shrink-0">
+                <i data-lucide="link-2" class="w-5 h-5 text-gold"></i>
+              </div>
+              <div>
+                <div class="font-display text-2xl font-bold text-cream leading-tight">${labels.title}</div>
+                <div class="text-sm text-cream/58 mt-1">${labels.subtitle}</div>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" id="restaurant-info-close-btn" class="btn-action w-11 h-11 rounded-2xl border border-white/15 text-cream hover:bg-white/5 inline-flex items-center justify-center shrink-0">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="restaurant-options-body">
+          <div class="grid gap-4">
+            ${[
+              ['linkedRestaurant', labels.linkedRestaurant, 'store'],
+              ['website', labels.website, 'globe-2']
+            ].map(([key, title, icon]) => `
+              <section class="rounded-[26px] border border-gold/22 bg-white/[0.035] p-5">
+                <div class="flex items-start gap-3 mb-4">
+                  <div class="w-10 h-10 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center shrink-0">
+                    <i data-lucide="${icon}" class="w-5 h-5 text-gold"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <div class="font-display text-xl font-bold text-cream">${title}</div>
+                  </div>
+                </div>
+
+                <div class="grid gap-4">
+                  <label class="inline-flex items-center gap-3 rounded-2xl border border-white/12 bg-black/22 px-4 py-3 text-sm font-bold text-cream/82">
+                    <input
+                      id="${key === 'linkedRestaurant' ? 'restaurant-linked-restaurant-enabled' : 'restaurant-website-enabled'}"
+                      type="checkbox"
+                      ${links[key]?.enabled ? 'checked' : ''}
+                      class="accent-yellow-400"
+                    >
+                    <span>${labels.enabled}</span>
+                  </label>
+
+                  <label class="grid gap-2">
+                    <span class="text-sm font-bold text-cream/78">${labels.label}</span>
+                    <input
+                      id="${key === 'linkedRestaurant' ? 'restaurant-linked-restaurant-label' : 'restaurant-website-label'}"
+                      value="${escapeHtml(links[key]?.label || '')}"
+                      maxlength="40"
+                      class="w-full rounded-2xl border border-white/12 bg-black/28 px-4 py-3 text-cream outline-none focus:border-gold/55"
+                    />
+                  </label>
+
+                  <label class="grid gap-2">
+                    <span class="text-sm font-bold text-cream/78">${labels.url}</span>
+                    <input
+                      id="${key === 'linkedRestaurant' ? 'restaurant-linked-restaurant-url' : 'restaurant-website-url'}"
+                      value="${escapeHtml(links[key]?.url || '')}"
+                      placeholder="https://..."
+                      class="w-full rounded-2xl border border-white/12 bg-black/28 px-4 py-3 text-cream outline-none focus:border-gold/55"
+                    />
+                  </label>
+                </div>
+              </section>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="restaurant-options-footer">
+          <button type="button" id="restaurant-info-back-btn" class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>${labels.back}</span>
+          </button>
+
+          <button type="button" id="restaurant-general-save-btn" class="btn-action inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gold/45 bg-gold/15 text-sm font-bold text-cream hover:bg-gold/20 transition-all">
+            <i data-lucide="check" class="w-4 h-4 text-gold"></i>
+            <span>${labels.save}</span>
+          </button>
+
+          <button type="button" id="restaurant-info-cancel-btn" class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
+            <i data-lucide="x" class="w-4 h-4 text-gold"></i>
+            <span>${labels.close}</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('restaurant-info-close-btn')?.addEventListener('click', closeRestaurantInfoModal);
+    document.getElementById('restaurant-info-cancel-btn')?.addEventListener('click', closeRestaurantInfoModal);
+    document.getElementById('restaurant-info-back-btn')?.addEventListener('click', renderRestaurantInfoHome);
+    document.getElementById('restaurant-general-save-btn')?.addEventListener('click', saveRestaurantGeneralInfoDraft);
 
     renderRestaurantInfoIcons();
   }
