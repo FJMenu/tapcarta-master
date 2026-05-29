@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.2.6';
+        const APP_VERSION = 'V2.2.3.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -11156,6 +11156,22 @@ async function saveRestaurantOptionsModal() {
             ? 'Adres, telefoon, WhatsApp, Google-link, talen, logo.'
             : 'Adresse, téléphone, WhatsApp, lien Google, langues, logo.',
 
+      complementaryLinksTitle: currentLang === 'es'
+        ? 'Enlaces complementarios'
+        : currentLang === 'en'
+          ? 'Additional links'
+          : currentLang === 'nl'
+            ? 'Aanvullende links'
+            : 'Liens complémentaires',
+
+      complementaryLinksText: currentLang === 'es'
+        ? 'Añadir enlaces útiles relacionados con el restaurante.'
+        : currentLang === 'en'
+          ? 'Add useful links related to the restaurant.'
+          : currentLang === 'nl'
+            ? 'Nuttige links toevoegen die met het restaurant te maken hebben.'
+            : 'Ajouter des liens utiles liés à l’établissement.',
+
       comingSoon: currentLang === 'es'
         ? 'Próximamente'
         : currentLang === 'en'
@@ -11172,13 +11188,21 @@ async function saveRestaurantOptionsModal() {
             ? 'Sluiten'
             : 'Fermer',
 
-      nextStep: currentLang === 'es'
-        ? 'La configuración de horarios se añadirá en el siguiente paso.'
+      back: currentLang === 'es'
+        ? 'Volver'
         : currentLang === 'en'
-          ? 'Opening-hours configuration will be added in the next step.'
+          ? 'Back'
           : currentLang === 'nl'
-            ? 'De configuratie van de openingsuren wordt in de volgende stap toegevoegd.'
-            : 'La configuration des horaires sera ajoutée à l’étape suivante.'
+            ? 'Terug'
+            : 'Retour',
+
+      nextStep: currentLang === 'es'
+        ? 'Esta sección se configurará después de validar la navegación.'
+        : currentLang === 'en'
+          ? 'This section will be configured after validating the navigation.'
+          : currentLang === 'nl'
+            ? 'Deze sectie wordt geconfigureerd nadat de navigatie is gevalideerd.'
+            : 'Cette section sera configurée après validation de la navigation.'
     };
   }
 
@@ -12532,7 +12556,19 @@ async function saveRestaurantOptionsModal() {
         </div>
 
         <div class="restaurant-options-body">
-          <div class="grid md:grid-cols-2 gap-4">
+          <div class="grid md:grid-cols-3 gap-4">
+            <button type="button" id="restaurant-info-general-btn" class="btn-action text-left rounded-[24px] border border-white/12 bg-white/[0.025] p-5 hover:bg-white/[0.045] transition-all">
+              <div class="flex items-start gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-white/6 border border-white/12 flex items-center justify-center shrink-0">
+                  <i data-lucide="info" class="w-5 h-5 text-cream/70"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="font-display text-xl font-bold text-cream">${text.generalTitle}</div>
+                  <div class="text-sm text-cream/52 mt-2 leading-relaxed">${text.generalText}</div>
+                </div>
+              </div>
+            </button>
+
             <button type="button" id="restaurant-info-hours-btn" class="btn-action text-left rounded-[24px] border border-gold/28 bg-white/[0.035] p-5 hover:bg-gold/[0.08] transition-all">
               <div class="flex items-start gap-3">
                 <div class="w-11 h-11 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center shrink-0">
@@ -12545,16 +12581,14 @@ async function saveRestaurantOptionsModal() {
               </div>
             </button>
 
-            <button type="button" id="restaurant-info-general-btn" class="btn-action text-left rounded-[24px] border border-white/12 bg-white/[0.025] p-5 hover:bg-white/[0.045] transition-all">
+            <button type="button" id="restaurant-info-links-btn" class="btn-action text-left rounded-[24px] border border-white/12 bg-white/[0.025] p-5 hover:bg-white/[0.045] transition-all">
               <div class="flex items-start gap-3">
                 <div class="w-11 h-11 rounded-2xl bg-white/6 border border-white/12 flex items-center justify-center shrink-0">
-                  <i data-lucide="info" class="w-5 h-5 text-cream/70"></i>
+                  <i data-lucide="link" class="w-5 h-5 text-cream/70"></i>
                 </div>
                 <div class="min-w-0">
-                  <div class="flex items-center gap-2">
-                    <div class="font-display text-xl font-bold text-cream">${text.generalTitle}</div>
-                  </div>
-                  <div class="text-sm text-cream/52 mt-2 leading-relaxed">${text.generalText}</div>
+                  <div class="font-display text-xl font-bold text-cream">${text.complementaryLinksTitle}</div>
+                  <div class="text-sm text-cream/52 mt-2 leading-relaxed">${text.complementaryLinksText}</div>
                 </div>
               </div>
             </button>
@@ -12574,6 +12608,68 @@ async function saveRestaurantOptionsModal() {
     document.getElementById('restaurant-info-cancel-btn')?.addEventListener('click', closeRestaurantInfoModal);
     document.getElementById('restaurant-info-hours-btn')?.addEventListener('click', openRestaurantHoursScreen);
     document.getElementById('restaurant-info-general-btn')?.addEventListener('click', openRestaurantGeneralInfoScreen);
+    document.getElementById('restaurant-info-links-btn')?.addEventListener('click', renderRestaurantComplementaryLinksScreen);
+
+    renderRestaurantInfoIcons();
+  }
+
+  function renderRestaurantComplementaryLinksScreen() {
+    const overlay = document.getElementById('restaurant-info-modal');
+    if (!overlay) return;
+
+    const text = getRestaurantInfoText();
+
+    overlay.innerHTML = `
+      <div class="restaurant-options-panel" role="dialog" aria-modal="true">
+        <div class="restaurant-options-header">
+          <div class="min-w-0">
+            <div class="inline-flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gold/14 border border-gold/28 flex items-center justify-center shrink-0">
+                <i data-lucide="link" class="w-5 h-5 text-gold"></i>
+              </div>
+              <div>
+                <div class="font-display text-2xl font-bold text-cream leading-tight">${text.complementaryLinksTitle}</div>
+                <div class="text-sm text-cream/58 mt-1">${text.complementaryLinksText}</div>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" id="restaurant-info-close-btn" class="btn-action w-11 h-11 rounded-2xl border border-white/15 text-cream hover:bg-white/5 inline-flex items-center justify-center shrink-0">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="restaurant-options-body">
+          <div class="rounded-[24px] border border-gold/25 bg-gold/10 p-5">
+            <div class="flex items-start gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center shrink-0">
+                <i data-lucide="construction" class="w-5 h-5 text-gold"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="font-display text-xl font-bold text-cream">${text.comingSoon}</div>
+                <div class="text-sm text-cream/62 mt-2 leading-relaxed">${text.nextStep}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="restaurant-options-footer">
+          <button type="button" id="restaurant-info-back-btn" class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>${text.back}</span>
+          </button>
+
+          <button type="button" id="restaurant-info-cancel-btn" class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
+            <i data-lucide="x" class="w-4 h-4 text-gold"></i>
+            <span>${text.close}</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('restaurant-info-close-btn')?.addEventListener('click', closeRestaurantInfoModal);
+    document.getElementById('restaurant-info-cancel-btn')?.addEventListener('click', closeRestaurantInfoModal);
+    document.getElementById('restaurant-info-back-btn')?.addEventListener('click', renderRestaurantInfoHome);
 
     renderRestaurantInfoIcons();
   }
