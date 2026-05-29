@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.3.2';
+        const APP_VERSION = 'V2.2.3.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -11145,7 +11145,7 @@ async function saveRestaurantOptionsModal() {
     }
   }
 
-  function getRestaurantInfoText() {
+   function getRestaurantInfoText() {
     return {
       title: currentLang === 'es'
         ? 'Gestionar mi información'
@@ -11167,103 +11167,13 @@ async function saveRestaurantOptionsModal() {
       hoursText: currentLang === 'es' ? 'Configurar los horarios generales, reservas y para llevar.' : currentLang === 'en' ? 'Configure general hours, bookings and takeaway.' : currentLang === 'nl' ? 'Algemene uren, reservaties en afhalen configureren.' : 'Configurer les horaires généraux, réservations et à emporter.',
 
       generalTitle: currentLang === 'es' ? 'Información general' : currentLang === 'en' ? 'General information' : currentLang === 'nl' ? 'Algemene informatie' : 'Informations générales',
-      generalText: currentLang === 'es' ? 'Teléfono, WhatsApp, mensajes cliente e información protegida.' : currentLang === 'en' ? 'Phone, WhatsApp, customer messages and protected information.' : currentLang === 'nl' ? 'Telefoon, WhatsApp, klantberichten en beschermde informatie.' : 'Téléphone, WhatsApp, messages client et informations protégées.',
+      generalText: currentLang === 'es' ? 'Teléfono, WhatsApp, mensajes client et informations protégées.' : currentLang === 'en' ? 'Phone, WhatsApp, customer messages and protected information.' : currentLang === 'nl' ? 'Telefoon, WhatsApp, klantberichten en beschermde informatie.' : 'Téléphone, WhatsApp, messages client et informations protégées.',
 
       complementaryLinksTitle: currentLang === 'es' ? 'Enlaces complementarios' : currentLang === 'en' ? 'Additional links' : currentLang === 'nl' ? 'Aanvullende links' : 'Liens complémentaires',
       complementaryLinksText: currentLang === 'es' ? 'Activar un enlace hacia otro restaurante o hacia una web de eventos.' : currentLang === 'en' ? 'Enable a link to another restaurant or to an events website.' : currentLang === 'nl' ? 'Activeer een link naar een andere zaak of naar een website met events.' : 'Activer un lien vers un autre restaurant ou vers un site web / événements.',
 
       close: currentLang === 'es' ? 'Cerrar' : currentLang === 'en' ? 'Close' : currentLang === 'nl' ? 'Sluiten' : 'Fermer'
     };
-  }
-      title: currentLang === 'es'
-        ? 'Gestionar mi información'
-        : currentLang === 'en'
-          ? 'Manage my information'
-          : currentLang === 'nl'
-            ? 'Mijn informatie beheren'
-            : 'Gérer mes informations',
-
-      subtitle: currentLang === 'es'
-        ? 'Configure aquí los datos visibles y útiles para sus clientes.'
-        : currentLang === 'en'
-          ? 'Configure here the information visible and useful to your customers.'
-          : currentLang === 'nl'
-            ? 'Beheer hier de informatie die zichtbaar en nuttig is voor uw klanten.'
-            : 'Configurez ici les informations visibles et utiles pour vos clients.',
-
-      hoursTitle: currentLang === 'es'
-        ? 'Horarios'
-        : currentLang === 'en'
-          ? 'Opening hours'
-          : currentLang === 'nl'
-            ? 'Openingsuren'
-            : 'Horaires',
-
-      hoursText: currentLang === 'es'
-        ? 'Configurar los horarios generales, reservas y para llevar.'
-        : currentLang === 'en'
-          ? 'Configure general hours, bookings and takeaway.'
-          : currentLang === 'nl'
-            ? 'Algemene uren, reservaties en afhalen configureren.'
-            : 'Configurer les horaires généraux, réservations et à emporter.',
-
-      generalTitle: currentLang === 'es'
-        ? 'Información general'
-        : currentLang === 'en'
-          ? 'General information'
-          : currentLang === 'nl'
-            ? 'Algemene informatie'
-            : 'Informations générales',
-
-      generalText: currentLang === 'es'
-        ? 'Dirección, teléfono, WhatsApp, enlace Google, idiomas, logo.'
-        : currentLang === 'en'
-          ? 'Address, phone, WhatsApp, Google link, languages, logo.'
-          : currentLang === 'nl'
-            ? 'Adres, telefoon, WhatsApp, Google-link, talen, logo.'
-            : 'Adresse, téléphone, WhatsApp, lien Google, langues, logo.',
-
-      comingSoon: currentLang === 'es'
-        ? 'Próximamente'
-        : currentLang === 'en'
-          ? 'Coming soon'
-          : currentLang === 'nl'
-            ? 'Binnenkort'
-            : 'Prochainement',
-
-      close: currentLang === 'es'
-        ? 'Cerrar'
-        : currentLang === 'en'
-          ? 'Close'
-          : currentLang === 'nl'
-            ? 'Sluiten'
-            : 'Fermer',
-
-      nextStep: currentLang === 'es'
-        ? 'La configuración de horarios se añadirá en el siguiente paso.'
-        : currentLang === 'en'
-          ? 'Opening-hours configuration will be added in the next step.'
-          : currentLang === 'nl'
-            ? 'De configuratie van de openingsuren wordt in de volgende stap toegevoegd.'
-            : 'La configuration des horaires sera ajoutée à l’étape suivante.'
-    };
-  }
-
-   function closeRestaurantInfoModal() {
-    document.getElementById('restaurant-info-modal')?.remove();
-
-    const manualActionBar = document.getElementById('manualActionBar');
-    if (manualActionBar) {
-      manualActionBar.style.display = '';
-    }
-  }
-
-  function renderRestaurantInfoIcons() {
-    if (window.lucide) {
-      requestAnimationFrame(() => {
-        lucide.createIcons();
-      });
-    }
   }
 
   function getRestaurantHoursText() {
