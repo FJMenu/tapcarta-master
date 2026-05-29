@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.2.3';
+        const APP_VERSION = 'V2.2.2.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1777,6 +1777,13 @@ async function validateTapCartaRestoAccess() {
 
   if (!restaurantRow?.id) {
     throw new Error('Restaurant introuvable.');
+  }
+
+  try {
+    const cleanUrl = `${window.location.pathname}?restaurant_id=${encodeURIComponent(restaurantId)}`;
+    window.history.replaceState({}, document.title, cleanUrl);
+  } catch (error) {
+    console.warn('TapCarta Resto: impossible de nettoyer l’URL après validation du token.', error);
   }
 
   return {
