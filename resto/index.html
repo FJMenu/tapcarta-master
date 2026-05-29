@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.2.2.5';
+        const APP_VERSION = 'V2.2.2.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1969,15 +1969,7 @@ restaurantData.links.qrFramedUrl = resolvedQrFramedUrl;
 restaurantData.links.qrFramedStoragePath = resolvedQrFramedStoragePath;
 
 activeRestaurantData = restaurantData;
-
-try {
-  const cleanUrl = `${window.location.pathname}?restaurant_id=${encodeURIComponent(resolvedSupabaseRestaurantId)}`;
-  window.history.replaceState({}, document.title, cleanUrl);
-} catch (error) {
-  console.warn('TapCarta Resto: impossible de nettoyer l’URL après chargement.', error);
-}
-
-  return restaurantData;
+ return restaurantData;
 }
 
     const menuData = {
