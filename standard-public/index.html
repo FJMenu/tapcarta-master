@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.2.2';
+    const APP_VERSION = 'V2.3.2.3';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -8505,8 +8505,7 @@ function renderStandardPublicGate(t, wrapper) {
     siteConfig.publicRestaurant &&
     typeof siteConfig.publicRestaurant === 'object';
 
-  const publicPageStatus = siteConfig.publicPageStatus || 'waiting_page';
-  const menuPublicationStatus = siteConfig.menuPublicationStatus || 'not_started';
+  const publicPageStatus = siteConfig.publicPageStatus || 'construction';
 
   if (hasPublicRestaurantRow && isStandardPublicMenuLive()) {
     return false;
@@ -8519,59 +8518,82 @@ function renderStandardPublicGate(t, wrapper) {
     'TapCarta';
 
   const statusTexts = {
-    suspended: {
+    construction: {
       fr: {
-        title: 'Page temporairement suspendue',
-        body: 'Cette page TapCarta est temporairement indisponible. Vous pouvez contacter directement le restaurant.',
-        badge: 'Suspendue'
+        title: 'Votre menu est en préparation',
+        body: 'Le restaurant finalise actuellement son espace TapCarta. Merci de votre patience.',
+        badge: 'En préparation'
       },
       es: {
-        title: 'Página temporalmente suspendida',
-        body: 'Esta página TapCarta no está disponible temporalmente. Puedes contactar directamente con el restaurante.',
-        badge: 'Suspendida'
+        title: 'Tu menú está en preparación',
+        body: 'El restaurante está finalizando actualmente su espacio TapCarta. Gracias por tu paciencia.',
+        badge: 'En preparación'
       },
       en: {
-        title: 'Page temporarily suspended',
-        body: 'This TapCarta page is temporarily unavailable. You can contact the restaurant directly.',
+        title: 'Your menu is being prepared',
+        body: 'The restaurant is currently finalizing its TapCarta space. Thank you for your patience.',
+        badge: 'In preparation'
+      },
+      nl: {
+        title: 'Uw menu wordt voorbereid',
+        body: 'Het restaurant rondt momenteel zijn TapCarta-ruimte af. Bedankt voor uw geduld.',
+        badge: 'In voorbereiding'
+      }
+    },
+    review: {
+      fr: {
+        title: 'Menu en attente de publication',
+        body: 'Le contenu du restaurant est actuellement en cours de vérification avant publication.',
+        badge: 'À vérifier'
+      },
+      es: {
+        title: 'Menú pendiente de publicación',
+        body: 'El contenido del restaurante se está revisando actualmente antes de su publicación.',
+        badge: 'En revisión'
+      },
+      en: {
+        title: 'Menu awaiting publication',
+        body: 'The restaurant content is currently being reviewed before publication.',
+        badge: 'Under review'
+      },
+      nl: {
+        title: 'Menu wacht op publicatie',
+        body: 'De inhoud van het restaurant wordt momenteel gecontroleerd vóór publicatie.',
+        badge: 'Ter controle'
+      }
+    },
+    suspended: {
+      fr: {
+        title: 'Service temporairement indisponible',
+        body: 'L’accès à ce menu est actuellement suspendu. Veuillez contacter directement le restaurant pour toute information.',
+        badge: 'Suspendu'
+      },
+      es: {
+        title: 'Servicio temporalmente no disponible',
+        body: 'El acceso a este menú está suspendido actualmente. Contacta directamente con el restaurante para cualquier información.',
+        badge: 'Suspendido'
+      },
+      en: {
+        title: 'Service temporarily unavailable',
+        body: 'Access to this menu is currently suspended. Please contact the restaurant directly for any information.',
         badge: 'Suspended'
       },
       nl: {
-        title: 'Pagina tijdelijk onderbroken',
-        body: 'Deze TapCarta-pagina is tijdelijk niet beschikbaar. Je kunt rechtstreeks contact opnemen met het restaurant.',
-        badge: 'Onderbroken'
-      }
-    },
-    waiting: {
-      fr: {
-        title: 'Page en préparation',
-        body: 'Le menu digital de ce restaurant est en cours de préparation. Il sera disponible prochainement.',
-        badge: 'Bientôt disponible'
-      },
-      es: {
-        title: 'Página en preparación',
-        body: 'El menú digital de este restaurante está en preparación. Estará disponible próximamente.',
-        badge: 'Próximamente'
-      },
-      en: {
-        title: 'Page in preparation',
-        body: 'This restaurant’s digital menu is being prepared. It will be available soon.',
-        badge: 'Coming soon'
-      },
-      nl: {
-        title: 'Pagina in voorbereiding',
-        body: 'Het digitale menu van dit restaurant wordt voorbereid. Het is binnenkort beschikbaar.',
-        badge: 'Binnenkort'
+        title: 'Service tijdelijk niet beschikbaar',
+        body: 'De toegang tot dit menu is momenteel opgeschort. Neem rechtstreeks contact op met het restaurant voor meer informatie.',
+        badge: 'Opgeschort'
       }
     }
   };
 
   let statusKey = 'construction';
 
-if (publicPageStatus === 'suspended') {
-  statusKey = 'suspended';
-} else if (publicPageStatus === 'review') {
-  statusKey = 'review';
-}
+  if (publicPageStatus === 'suspended') {
+    statusKey = 'suspended';
+  } else if (publicPageStatus === 'review') {
+    statusKey = 'review';
+  }
+
   const texts = statusTexts[statusKey]?.[currentLang] || statusTexts[statusKey].fr;
 
   wrapper.innerHTML = `
