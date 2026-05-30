@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.2.3';
+    const APP_VERSION = 'V2.3.2.4';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -2504,10 +2504,7 @@ function normalizeStandardMenuPublicationStatus(value) {
 }
 
 function isStandardPublicMenuLive() {
-  return (
-    siteConfig.publicPageStatus === 'live' &&
-    siteConfig.menuPublicationStatus === 'published'
-  );
+  return siteConfig.publicPageStatus === 'live';
 }
 
 async function fetchStandardPublicRestaurant(restaurantId) {
