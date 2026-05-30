@@ -8565,7 +8565,13 @@ function renderStandardPublicGate(t, wrapper) {
     }
   };
 
-  const statusKey = publicPageStatus === 'suspended' ? 'suspended' : 'waiting';
+  let statusKey = 'construction';
+
+if (publicPageStatus === 'suspended') {
+  statusKey = 'suspended';
+} else if (publicPageStatus === 'review') {
+  statusKey = 'review';
+}
   const texts = statusTexts[statusKey]?.[currentLang] || statusTexts[statusKey].fr;
 
   wrapper.innerHTML = `
