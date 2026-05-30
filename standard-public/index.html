@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.2.4';
+    const APP_VERSION = 'V2.3.2.5';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -8448,50 +8448,9 @@ function renderOrderCategoryFilter(visibleCategoryKeys, t) {
       `;
     }
 
-    function renderDesktopStorySection(t) {
-      return `
-        <section class="hidden lg:block px-6 pt-3 pb-10 animate-fade-up delay-1">
-          <div class="desktop-story-wrap">
-            <div class="desktop-story-card rounded-[30px] overflow-hidden">
-              <div class="grid lg:grid-cols-[1.02fr_.98fr] items-stretch">
-                <div class="p-12 xl:p-16 2xl:p-[4.5rem]">
-                  <div class="desktop-story-kicker mb-4">${t.storyKicker}</div>
-
-                  <h2 class="font-display text-[3.05rem] xl:text-[3.55rem] leading-[1.03] text-gold mb-3 max-w-[12ch]">
-                    ${t.storyTitle}
-                  </h2>
-
-                  <div class="desktop-story-signature">
-                    <span>${t.storySignature}</span>
-                  </div>
-
-                  <p class="desktop-story-text mb-5">${t.storyP1}</p>
-                  <p class="desktop-story-text mb-5">${t.storyP2}</p>
-                  <p class="desktop-story-text mb-8">${t.storyP3}</p>
-
-                  <button class="desktop-story-cta" onclick="scrollToMenuStart()">
-                    <i data-lucide="book-open" class="w-5 h-5 text-gold"></i>
-                    <span>${t.seeMenu}</span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 text-gold"></i>
-                  </button>
-                </div>
-
-                <div class="desktop-story-image-wrap">
-                  <img
-                    src="${siteConfig.desktopCollageUrl}"
-                    alt="TapCarta Demo"
-                    class="desktop-story-image"
-                    loading="lazy"
-                    decoding="async"
-                  >
-                  <div class="desktop-story-image-overlay"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      `;
-    }
+function renderDesktopStorySection(t) {
+  return '';
+}
 
 function renderStandardPublicGate(t, wrapper) {
   if (!LIVE_RESTAURANT_ID) {
