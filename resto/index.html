@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.3.1.2';
+        const APP_VERSION = 'V2.3.1.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14749,6 +14749,32 @@ function saveDishEditorScreen(options = {}) {
   };
 }
 
+function removeEmptyGeneratedDishesFromTarget(categoryIndex, subcategoryIndex = null, exceptItemId = null) {
+  const category = activeRestaurantData?.menu?.categories?.[categoryIndex];
+  if (!category) return;
+
+  const target =
+    typeof subcategoryIndex === 'number'
+      ? category.subcategories?.[subcategoryIndex]
+      : category;
+
+  if (!target || !Array.isArray(target.items)) return;
+
+  target.items = target.items.filter((item) => {
+    if (!item) return false;
+    if (exceptItemId && item.id === exceptItemId) return true;
+
+    const isGeneratedDish = String(item.id || '').startsWith('plat-');
+    const hasName = String(item.name || '').trim();
+    const hasSubtitle = String(item.subtitle || '').trim();
+    const hasPrice = String(item.price || '').trim();
+
+    return !isGeneratedDish || hasName || hasSubtitle || hasPrice;
+  });
+
+  syncRestaurantItemOrder(target);
+}
+
 function saveDishEditorAndAddAnother() {
   const saved = saveDishEditorScreen({ showFlow: false });
 
@@ -14756,6 +14782,14 @@ function saveDishEditorAndAddAnother() {
     return;
   }
 
+  removeEmptyGeneratedDishesFromTarget(
+    saved.categoryIndex,
+    saved.subcategoryIndex,
+    saved.item?.id || null
+  );
+
+  renderRestaurantMenuEditor();
+  updateMenuEditorDirtyUi();
   closeDishEditorFlow();
 
   if (typeof saved.subcategoryIndex === 'number') {
