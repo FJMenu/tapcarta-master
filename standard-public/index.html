@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.2.5';
+    const APP_VERSION = 'V2.3.2.7';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -3883,7 +3883,7 @@ function roundTimeToQuarter(timeStr) {
 
 function initializeBookingForm() {
   const firstSlot = getFirstStandardServiceSlot('booking');
-  const preorderEnabled = siteConfig.modules?.preorderIndicative !== false;
+  const preorderEnabled = siteConfig.modules?.preorderIndicative === true;
 
   bookingForm = {
     name: bookingForm.name || '',
@@ -3901,7 +3901,7 @@ function initializeBookingForm() {
 }
 
 function buildBookingRequest() {
-  const preorderEnabled = siteConfig.modules?.preorderIndicative !== false;
+  const preorderEnabled = siteConfig.modules?.preorderIndicative === true;
   const preorderItems = preorderEnabled && Array.isArray(bookingForm.preorder)
     ? bookingForm.preorder
         .map((itemId) => {
@@ -8781,7 +8781,7 @@ ${bookingMode ? `
           <textarea rows="3" oninput="bookingForm.note = this.value" placeholder="${getBookingTexts(currentLang).bookingNotePlaceholder}" class="w-full rounded-xl border border-gold/20 bg-black/20 px-3 py-2.5 text-sm text-cream placeholder:text-cream/35 focus:outline-none focus:border-gold/50">${bookingForm.note || ''}</textarea>
         </div>
 
-        ${siteConfig.modules?.preorderIndicative ? `
+        ${siteConfig.modules?.preorderIndicative === true ? `
         <div class="md:col-span-2">
           <label class="block text-xs font-semibold text-gold/90 mb-1">${getBookingTexts(currentLang).bookingPreorder}</label>
           <p class="mb-3 text-xs text-cream/55">${getBookingTexts(currentLang).bookingPreorderHelp}</p>
@@ -8862,28 +8862,10 @@ ${!orderMode ? renderInfoBlocks() : ''}
 ` : ''}
 
 <section class="px-6 py-6 animate-fade-up delay-3" id="menu-start">
-  ${!orderMode ? `
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-      ${visibleCategoryKeys.map(categoryKey => {
-        const categoryLabel = getMenuCategoryLabel(categoryKey);
-
-        return `
-          <button
-            class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all"
-            onclick="scrollToMenuCategory('${categoryKey}')"
-          >
-            ${escapeBookingHtml(categoryLabel)}
-          </button>
-        `;
-      }).join('')}
-    </div>
-  ` : ''}
-
-  ${orderMode && !cartPanelOpen ? `
-    <div class="w-full max-w-3xl mx-auto mt-6">
-      ${menuHTML}
-    </div>
-  ` : ''}
+  <div class="w-full max-w-3xl mx-auto mt-6">
+    ${menuHTML}
+  </div>
+</section>
 
   ${orderMode && cartPanelOpen ? `
     <div class="w-full max-w-3xl mx-auto mt-2 rounded-2xl border border-gold/40 bg-darkCard px-4 py-4 shadow-lg">
