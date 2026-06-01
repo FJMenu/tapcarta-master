@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.3.2';
+    const APP_VERSION = 'V2.3.3.3';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -3558,41 +3558,26 @@ function persistClientActiveView() {
       updateTapCartaPublicSignature();
     }
 
-    function updateInstallUI() {
-      const installBtn = document.getElementById('install-app-btn');
-      const iosHelp = document.getElementById('ios-install-help');
-      const t = translations[currentLang];
+function updateInstallUI() {
+  const installBtn = document.getElementById('install-app-btn');
+  const iosHelp = document.getElementById('ios-install-help');
+  const t = translations[currentLang];
 
-      if (!installBtn) return;
+  if (!installBtn) return;
 
-      if (isInStandaloneMode()) {
-        installBtn.hidden = true;
-        if (iosHelp) iosHelp.hidden = true;
-        return;
-      }
+  if (isInStandaloneMode()) {
+    installBtn.hidden = true;
+    if (iosHelp) iosHelp.hidden = true;
+    return;
+  }
 
-      if (isSamsungInternet()) {
-        installBtn.hidden = false;
-        installBtn.querySelector('span').textContent = t.installApp;
+  installBtn.hidden = false;
+  installBtn.querySelector('span').textContent = t.installApp;
 
-        if (iosHelp) {
-          iosHelp.hidden = true;
-          iosHelp.innerHTML = t.samsungInstallHelp;
-        }
-        return;
-      }
-
-      if (deferredInstallPrompt || isIos()) {
-        installBtn.hidden = false;
-        installBtn.querySelector('span').textContent = t.installApp;
-      } else {
-        installBtn.hidden = true;
-      }
-
-      if (iosHelp) {
-        iosHelp.hidden = true;
-      }
-    }
+  if (iosHelp) {
+    iosHelp.hidden = true;
+  }
+}
 
     function showInstallToast() {
       if (installToastAlreadyShown) return;
@@ -3648,7 +3633,10 @@ function persistClientActiveView() {
     async function handleShareRestaurantClick() {
       const t = translations[currentLang] || translations.fr;
       const restaurantName = siteConfig.restaurantName || siteConfig.identity?.name || siteConfig.productName || 'TapCarta';
-      const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+      const cleanUrl =
+  siteConfig.clientMenuUrl && siteConfig.clientMenuUrl !== '#'
+    ? siteConfig.clientMenuUrl
+    : `${window.location.origin}${window.location.pathname}`;
       const shareTitle = restaurantName;
       const shareText = `${t.shareMenuText} ${restaurantName}`;
 
