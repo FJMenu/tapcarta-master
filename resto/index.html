@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.3.1.3';
+        const APP_VERSION = 'V2.3.1.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14170,54 +14170,82 @@ let dishEditorState = null;
     markMenuEditorDirty();
   }
 
-  function addRestaurantItemToCategory(categoryIndex, options = {}) {
-    ensureRestaurantMenuShape();
+function isEmptyGeneratedRestaurantItem(item) {
+  if (!item) return true;
 
-    if (!activeRestaurantData?.menu?.categories?.[categoryIndex]) return null;
+  const id = String(item.id || '').trim();
+  const name = String(item.name || '').trim();
+  const subtitle = String(item.subtitle || '').trim();
+  const price = String(item.price || '').trim();
 
-    const category = activeRestaurantData.menu.categories[categoryIndex];
+  const isGeneratedDish = id.startsWith('plat-');
 
-    const subcategoryIndex =
-      typeof options.subcategoryIndex === 'number'
-        ? options.subcategoryIndex
-        : null;
+  return isGeneratedDish && !name && !subtitle && (!price || price === '0' || price === '0,00 €' || price === '0.00 €');
+}
 
-    const target =
-      typeof subcategoryIndex === 'number'
-        ? category.subcategories?.[subcategoryIndex]
-        : category;
+function cleanEmptyGeneratedRestaurantItems(target) {
+  if (!target || !Array.isArray(target.items)) return;
 
-    if (!target) return null;
+  const before = target.items.length;
 
-    if (!Array.isArray(target.items)) {
-      target.items = [];
-    }
+  target.items = target.items.filter((item) => !isEmptyGeneratedRestaurantItem(item));
 
-    const newItem = {
-      id: `plat-${Date.now()}`,
-      name: '',
-      subtitle: '',
-      price: '',
-      visible: true,
-      available: true,
-      takeawayEnabled: true,
-      order: 1,
-      updatedAt: new Date().toISOString()
-    };
-
-    target.items.unshift(newItem);
-
-    markMenuTranslationWarningNeeded();
+  if (target.items.length !== before) {
     syncRestaurantItemOrder(target);
-    renderRestaurantMenuEditor();
-
-    return {
-      categoryIndex,
-      subcategoryIndex,
-      itemIndex: 0,
-      item: newItem
-    };
+    markMenuEditorDirty();
   }
+}
+
+function addRestaurantItemToCategory(categoryIndex, options = {}) {
+  ensureRestaurantMenuShape();
+
+  if (!activeRestaurantData?.menu?.categories?.[categoryIndex]) return null;
+
+  const category = activeRestaurantData.menu.categories[categoryIndex];
+
+  const subcategoryIndex =
+    typeof options.subcategoryIndex === 'number'
+      ? options.subcategoryIndex
+      : null;
+
+  const target =
+    typeof subcategoryIndex === 'number'
+      ? category.subcategories?.[subcategoryIndex]
+      : category;
+
+  if (!target) return null;
+
+  if (!Array.isArray(target.items)) {
+    target.items = [];
+  }
+
+  cleanEmptyGeneratedRestaurantItems(target);
+
+  const newItem = {
+    id: `plat-${Date.now()}`,
+    name: '',
+    subtitle: '',
+    price: '',
+    visible: true,
+    available: true,
+    takeawayEnabled: true,
+    order: 1,
+    updatedAt: new Date().toISOString()
+  };
+
+  target.items.unshift(newItem);
+
+  markMenuTranslationWarningNeeded();
+  syncRestaurantItemOrder(target);
+  renderRestaurantMenuEditor();
+
+  return {
+    categoryIndex,
+    subcategoryIndex,
+    itemIndex: 0,
+    item: newItem
+  };
+}
 
 function openNewDishEditorScreen(categoryIndex, options = {}) {
   const created = addRestaurantItemToCategory(categoryIndex, options);
@@ -14782,14 +14810,15 @@ function saveDishEditorAndAddAnother() {
     return;
   }
 
-  removeEmptyGeneratedDishesFromTarget(
-    saved.categoryIndex,
-    saved.subcategoryIndex,
-    saved.item?.id || null
-  );
+  const category = activeRestaurantData?.menu?.categories?.[saved.categoryIndex];
 
-  renderRestaurantMenuEditor();
-  updateMenuEditorDirtyUi();
+  const target =
+    typeof saved.subcategoryIndex === 'number'
+      ? category?.subcategories?.[saved.subcategoryIndex]
+      : category;
+
+  cleanEmptyGeneratedRestaurantItems(target);
+
   closeDishEditorFlow();
 
   if (typeof saved.subcategoryIndex === 'number') {
