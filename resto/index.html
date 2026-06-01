@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.3.1.8';
+        const APP_VERSION = 'V2.3.1.9';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14693,7 +14693,42 @@ function getDishEditorTarget(context) {
     isSubcategory: false
   };
 }
+function getDishEditorTranslationLang() {
+  return ['fr', 'es', 'en', 'nl'].includes(currentLang) ? currentLang : 'fr';
+}
 
+function getDishEditorTranslatedValue(item, field) {
+  const lang = getDishEditorTranslationLang();
+
+  if (item?.translations?.[lang]?.[field]) {
+    return item.translations[lang][field];
+  }
+
+  return item?.[field] || '';
+}
+
+function setDishEditorTranslatedValue(item, field, value) {
+  const lang = getDishEditorTranslationLang();
+  const cleanValue = String(value || '').trim();
+
+  if (lang === 'fr') {
+    item[field] = cleanValue;
+  }
+
+  if (!item.translations || typeof item.translations !== 'object') {
+    item.translations = {};
+  }
+
+  if (!item.translations[lang] || typeof item.translations[lang] !== 'object') {
+    item.translations[lang] = {};
+  }
+
+  item.translations[lang][field] = cleanValue;
+
+  if (!item[field] && cleanValue) {
+    item[field] = cleanValue;
+  }
+}
 function openDishEditorScreen(categoryIndex, itemIndex, options = {}) {
   const screen = document.getElementById('dishEditorScreen');
   if (!screen) return;
@@ -14716,13 +14751,13 @@ function openDishEditorScreen(categoryIndex, itemIndex, options = {}) {
   const visibleInput = document.getElementById('dishEditorVisible');
   const availableInput = document.getElementById('dishEditorAvailable');
 
-  if (nameInput) nameInput.value = item.name || '';
+  if (nameInput) nameInput.value = getDishEditorTranslatedValue(item, 'name');
 
   if (priceInput) {
     priceInput.value = formatDishPriceForInput(item.price);
   }
 
-  if (descriptionInput) descriptionInput.value = item.subtitle || '';
+  if (descriptionInput) descriptionInput.value = getDishEditorTranslatedValue(item, 'subtitle');
   if (visibleInput) visibleInput.checked = item.visible !== false;
   if (availableInput) availableInput.checked = item.available !== false;
 
@@ -14803,8 +14838,8 @@ function saveDishEditorScreen(options = {}) {
   const visibleInput = document.getElementById('dishEditorVisible');
   const availableInput = document.getElementById('dishEditorAvailable');
 
-  if (nameInput) item.name = nameInput.value.trim();
-  if (descriptionInput) item.subtitle = descriptionInput.value.trim();
+ if (nameInput) setDishEditorTranslatedValue(item, 'name', nameInput.value);
+if (descriptionInput) setDishEditorTranslatedValue(item, 'subtitle', descriptionInput.value);
 
   if (priceInput) {
     item.price = normalizeDishPriceFromInput(priceInput.value);
