@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.3.3';
+    const APP_VERSION = 'V2.3.3.4';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -1926,7 +1926,7 @@ function renderStandardComplementaryLinksSection() {
 function renderStandardInstallShareRow(t) {
   return renderStandardActionRow([
     `
-      <button id="install-app-btn" hidden onclick="handleInstallClick()" class="${getStandardSmallButtonClass()}">
+      <button id="install-app-btn" onclick="handleInstallClick()" class="${getStandardSmallButtonClass()}">
         <i data-lucide="download" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
         <span class="text-xs font-medium tracking-wide">${t.installApp}</span>
       </button>
@@ -3634,9 +3634,10 @@ function updateInstallUI() {
       const t = translations[currentLang] || translations.fr;
       const restaurantName = siteConfig.restaurantName || siteConfig.identity?.name || siteConfig.productName || 'TapCarta';
       const cleanUrl =
-  siteConfig.clientMenuUrl && siteConfig.clientMenuUrl !== '#'
-    ? siteConfig.clientMenuUrl
-    : `${window.location.origin}${window.location.pathname}`;
+  siteConfig.publicUrl ||
+  siteConfig.publicRestaurant?.public_url ||
+  (siteConfig.slug ? `${window.location.origin}/${siteConfig.slug}/` : '') ||
+  `${window.location.origin}${window.location.pathname}`;
       const shareTitle = restaurantName;
       const shareText = `${t.shareMenuText} ${restaurantName}`;
 
@@ -3677,71 +3678,55 @@ function updateInstallUI() {
       }
     }
 
-    async function handleInstallClick() {
-      const iosHelp = document.getElementById('ios-install-help');
-      const t = translations[currentLang];
+async function handleInstallClick() {
+  const iosHelp = document.getElementById('ios-install-help');
+  const t = translations[currentLang];
 
-      if (isSamsungInternet()) {
-        if (iosHelp) {
-          if (!iosHelp.hidden) {
-            clearTimeout(installHelpTimeout);
-            iosHelp.hidden = true;
-            return;
-          }
+  const showInstallHelp = (html) => {
+    if (!iosHelp) return;
 
-          clearTimeout(installHelpTimeout);
-          iosHelp.hidden = false;
-          iosHelp.innerHTML = t.samsungInstallHelp;
-          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-          installHelpTimeout = setTimeout(() => {
-            iosHelp.hidden = true;
-          }, 15000);
-        }
-        return;
-      }
-
-      if (deferredInstallPrompt) {
-        installToastAlreadyShown = false;
-        deferredInstallPrompt.prompt();
-
-        try {
-          const choiceResult = await deferredInstallPrompt.userChoice;
-
-          if (choiceResult && choiceResult.outcome === 'accepted') {
-            clearTimeout(installFallbackTimeout);
-            installFallbackTimeout = setTimeout(() => {
-              if (isInStandaloneMode()) {
-                showInstallToast();
-              }
-            }, 1200);
-          }
-        } catch (_) {}
-
-        deferredInstallPrompt = null;
-        updateInstallUI();
-        return;
-      }
-
-      if (isIos() && !isInStandaloneMode()) {
-        if (iosHelp) {
-          if (!iosHelp.hidden) {
-            clearTimeout(installHelpTimeout);
-            iosHelp.hidden = true;
-            return;
-          }
-
-          clearTimeout(installHelpTimeout);
-          iosHelp.hidden = false;
-          iosHelp.innerHTML = t.iosInstallHelp;
-          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-          installHelpTimeout = setTimeout(() => {
-            iosHelp.hidden = true;
-          }, 15000);
-        }
-      }
+    if (!iosHelp.hidden) {
+      clearTimeout(installHelpTimeout);
+      iosHelp.hidden = true;
+      return;
     }
+
+    clearTimeout(installHelpTimeout);
+    iosHelp.hidden = false;
+    iosHelp.innerHTML = html || t.iosInstallHelp || t.installApp;
+    iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    installHelpTimeout = setTimeout(() => {
+      iosHelp.hidden = true;
+    }, 15000);
+  };
+
+  if (isSamsungInternet()) {
+    showInstallHelp(t.samsungInstallHelp);
+    return;
+  }
+
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+
+    const choiceResult = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    updateInstallUI();
+
+    if (choiceResult.outcome === 'accepted') {
+      showInstallToast();
+    }
+
+    return;
+  }
+
+  if (isIos() && !isInStandaloneMode()) {
+    showInstallHelp(t.iosInstallHelp);
+    return;
+  }
+
+  showInstallHelp(t.iosInstallHelp || t.installApp);
+}
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
