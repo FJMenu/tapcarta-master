@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.3.1.7';
+        const APP_VERSION = 'V2.3.1.8';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14176,11 +14176,22 @@ function isEmptyGeneratedRestaurantItem(item) {
   const id = String(item.id || '').trim();
   const name = String(item.name || '').trim();
   const subtitle = String(item.subtitle || '').trim();
+  const description = String(item.description || '').trim();
   const price = String(item.price || '').trim();
 
   const isGeneratedDish = id.startsWith('plat-');
 
-  return isGeneratedDish && !name && !subtitle && (!price || price === '0' || price === '0,00 €' || price === '0.00 €');
+  const emptyPrice =
+    !price ||
+    price === '-' ||
+    price === '—' ||
+    price === '–' ||
+    price === '0' ||
+    price === '0 €' ||
+    price === '0,00 €' ||
+    price === '0.00 €';
+
+  return isGeneratedDish && !name && !subtitle && !description && emptyPrice;
 }
 
 function cleanEmptyGeneratedRestaurantItems(target) {
