@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.2.7';
+    const APP_VERSION = 'V2.3.2.8';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -8631,11 +8631,11 @@ function renderMenu() {
     return;
   }
 
-const visibleCategoryKeys = Object.keys(menuData)
+const visibleCategoryKeys = [...new Set(Object.keys(menuData))]
   .filter(categoryKey =>
     menuMeta.categories[categoryKey]?.visible !== false &&
     Array.isArray(menuData[categoryKey]) &&
-    menuData[categoryKey].length > 0
+    menuData[categoryKey].some(item => item && item.visible !== false)
   )
   .sort((a, b) => {
     const orderA = menuMeta.categories[a]?.order ?? 9999;
