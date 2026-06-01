@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.3.1.4';
+        const APP_VERSION = 'V2.3.1.5';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14804,6 +14804,46 @@ function removeEmptyGeneratedDishesFromTarget(categoryIndex, subcategoryIndex = 
 }
 
 function saveDishEditorAndAddAnother() {
+  const context = window._dishEditorContext;
+
+  if (!context || typeof context.categoryIndex !== 'number') {
+    return;
+  }
+
+  const target = getDishEditorTarget(context);
+  const item = target?.item;
+
+  const nameInput = document.getElementById('dishEditorName');
+  const priceInput = document.getElementById('dishEditorPrice');
+  const descriptionInput = document.getElementById('dishEditorDescription');
+
+  const name = String(nameInput?.value || '').trim();
+  const price = String(priceInput?.value || '').trim();
+  const description = String(descriptionInput?.value || '').trim();
+
+  const isEmptyDish = !name && !price && !description;
+
+  if (isEmptyDish) {
+    if (item && Array.isArray(target.items)) {
+      target.items = target.items.filter((existingItem) => existingItem !== item);
+      syncRestaurantItemOrder(target.subcategory || target.category);
+      renderRestaurantMenuEditor();
+      updateMenuEditorDirtyUi();
+    }
+
+    closeDishEditorFlow();
+
+    if (typeof context.subcategoryIndex === 'number') {
+      openNewDishEditorScreen(context.categoryIndex, {
+        subcategoryIndex: context.subcategoryIndex
+      });
+      return;
+    }
+
+    openNewDishEditorScreen(context.categoryIndex);
+    return;
+  }
+
   const saved = saveDishEditorScreen({ showFlow: false });
 
   if (!saved || typeof saved.categoryIndex !== 'number') {
@@ -14812,12 +14852,12 @@ function saveDishEditorAndAddAnother() {
 
   const category = activeRestaurantData?.menu?.categories?.[saved.categoryIndex];
 
-  const target =
+  const cleanTarget =
     typeof saved.subcategoryIndex === 'number'
       ? category?.subcategories?.[saved.subcategoryIndex]
       : category;
 
-  cleanEmptyGeneratedRestaurantItems(target);
+  cleanEmptyGeneratedRestaurantItems(cleanTarget);
 
   closeDishEditorFlow();
 
