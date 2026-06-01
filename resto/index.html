@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.3.2.1';
+        const APP_VERSION = 'V2.3.2.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -13852,7 +13852,7 @@ async function saveRestaurantOptionsModal() {
                       data-action="move-item-up"
                       data-category-index="${categoryIndex}"
                       data-item-index="${itemIndex}"
-                      class="rounded-2xl border border-white/12 bg-black/30 px-4 py-5 text-3xl font-bold text-cream hover:bg-white/8"
+                      class="rounded-xl border border-white/12 bg-black/30 px-3 py-2 text-xl font-bold text-cream hover:bg-white/8"
                       title="Monter"
                     >
                       ↑
@@ -13862,14 +13862,14 @@ async function saveRestaurantOptionsModal() {
                       data-action="move-item-down"
                       data-category-index="${categoryIndex}"
                       data-item-index="${itemIndex}"
-                      class="rounded-2xl border border-white/12 bg-black/30 px-4 py-5 text-3xl font-bold text-cream hover:bg-white/8"
+                      class="rounded-xl border border-white/12 bg-black/30 px-3 py-2 text-xl font-bold text-cream hover:bg-white/8"
                       title="Descendre"
                     >
                       ↓
                     </button>
                   </div>
 
-                  <label class="flex items-center justify-between gap-3 rounded-2xl border ${item.visible !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+                  <label class="flex items-center justify-between gap-3 rounded-xl border ${item.visible !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-3 py-2 text-sm font-bold">
                     <span>${item.visible !== false ? editorText.visible : editorText.hidden}</span>
                     <input
                       type="checkbox"
@@ -13881,7 +13881,7 @@ async function saveRestaurantOptionsModal() {
                     >
                   </label>
 
-                  <label class="flex items-center justify-between gap-3 rounded-2xl border ${item.available !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+                  <label class="flex items-center justify-between gap-3 rounded-xl border ${item.available !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-3 py-2 text-sm font-bold">
                     <span>${item.available !== false ? editorText.available : editorText.unavailable}</span>
                     <input
                       type="checkbox"
@@ -13893,7 +13893,7 @@ async function saveRestaurantOptionsModal() {
                     >
                   </label>
 
-                  <label class="flex items-center justify-between gap-3 rounded-2xl border ${item.takeawayEnabled !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+                  <label class="flex items-center justify-between gap-3 rounded-xl border ${item.takeawayEnabled !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-3 py-2 text-sm font-bold">
                     <span>${item.takeawayEnabled !== false ? editorText.takeawayEnabled : editorText.takeawayDisabled}</span>
                     <input
                       type="checkbox"
@@ -13910,7 +13910,7 @@ async function saveRestaurantOptionsModal() {
                     data-action="delete-item"
                     data-category-index="${categoryIndex}"
                     data-item-index="${itemIndex}"
-                    class="w-full rounded-2xl border border-red-400/35 bg-red-500/14 px-4 py-4 text-sm font-bold text-red-300 hover:bg-red-500/22 flex items-center justify-center gap-2"
+                    class="w-full rounded-xl border border-red-400/35 bg-red-500/14 px-3 py-2 text-sm font-bold text-red-300 hover:bg-red-500/22 flex items-center justify-center gap-2"
                   >
                     <i data-lucide="trash-2" class="w-5 h-5"></i>
                   </button>
