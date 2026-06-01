@@ -30,7 +30,7 @@
       .filter(Boolean)
       .pop() || '';
 
-    const target = '/standard-public/?slug=' + encodeURIComponent(slug);
+    const target = '/standard-public/?slug=' + encodeURIComponent(slug) + '&v=' + Date.now();
 
     const iframe = document.createElement('iframe');
     iframe.id = 'tapcarta-standard-frame';
