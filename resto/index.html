@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.3.1.5';
+        const APP_VERSION = 'V2.3.1.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14740,6 +14740,30 @@ function saveDishEditorScreen(options = {}) {
   const nameInput = document.getElementById('dishEditorName');
   const priceInput = document.getElementById('dishEditorPrice');
   const descriptionInput = document.getElementById('dishEditorDescription');
+
+  const inputName = String(nameInput?.value || '').trim();
+  const inputPrice = String(priceInput?.value || '').trim();
+  const inputDescription = String(descriptionInput?.value || '').trim();
+
+  if (context.isNew && !inputName && !inputPrice && !inputDescription) {
+    if (Array.isArray(target.items)) {
+      target.items = target.items.filter((existingItem) => existingItem !== item);
+      syncRestaurantItemOrder(target.subcategory || target.category);
+      renderRestaurantMenuEditor();
+      updateMenuEditorDirtyUi();
+    }
+
+    closeDishEditorScreen();
+
+    return {
+      categoryIndex: context.categoryIndex,
+      subcategoryIndex: context.subcategoryIndex,
+      itemIndex: null,
+      item: null,
+      emptyNewDishRemoved: true
+    };
+  }
+
   const visibleInput = document.getElementById('dishEditorVisible');
   const availableInput = document.getElementById('dishEditorAvailable');
 
