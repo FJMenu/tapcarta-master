@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.2.9';
+    const APP_VERSION = 'V2.3.3.1';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -3791,6 +3791,20 @@ function persistClientActiveView() {
   }
 }
 
+let tapCartaMenuHistoryActive = false;
+
+function pushTapCartaMenuHistoryState(view, payload = {}) {
+  tapCartaMenuHistoryActive = true;
+  history.pushState(
+    {
+      tapcartaMenuView: view,
+      ...payload
+    },
+    '',
+    window.location.href
+  );
+}
+
 window.openMenuCategory = function(categoryKey) {
   selectedMenuCategory = categoryKey;
   selectedMenuSubcategory = null;
@@ -3799,12 +3813,20 @@ window.openMenuCategory = function(categoryKey) {
     activeOrderCategory = categoryKey;
   }
 
+  pushTapCartaMenuHistoryState('category', { categoryKey });
+
   renderMenu();
   setTimeout(() => scrollToMenuStart(), 80);
 };
 
 window.openMenuSubcategory = function(subcategoryId) {
   selectedMenuSubcategory = subcategoryId;
+
+  pushTapCartaMenuHistoryState('subcategory', {
+    categoryKey: selectedMenuCategory,
+    subcategoryId
+  });
+
   renderMenu();
   setTimeout(() => scrollToMenuStart(), 80);
 };
@@ -3826,6 +3848,28 @@ window.backToMenuSubcategories = function() {
   renderMenu();
   setTimeout(() => scrollToMenuStart(), 80);
 };
+
+window.addEventListener('popstate', () => {
+  if (!tapCartaMenuHistoryActive) return;
+
+  if (selectedMenuSubcategory) {
+    selectedMenuSubcategory = null;
+    renderMenu();
+    setTimeout(() => scrollToMenuStart(), 80);
+    return;
+  }
+
+  if (selectedMenuCategory) {
+    selectedMenuCategory = null;
+
+    if (orderMode) {
+      activeOrderCategory = 'all';
+    }
+
+    renderMenu();
+    setTimeout(() => scrollToMenuStart(), 80);
+  }
+});
 
     const allergenVisuals = [
       { key: 'gluten', color: '#B08A22' },
@@ -8621,7 +8665,9 @@ function renderMenu() {
     return;
   }
 
-const visibleCategoryKeys = [...new Set(Object.keys(menuData))]
+const seenCategoryLabels = new Set();
+
+const visibleCategoryKeys = Object.keys(menuData)
   .filter(categoryKey =>
     menuMeta.categories[categoryKey]?.visible !== false &&
     Array.isArray(menuData[categoryKey]) &&
@@ -8631,6 +8677,20 @@ const visibleCategoryKeys = [...new Set(Object.keys(menuData))]
     const orderA = menuMeta.categories[a]?.order ?? 9999;
     const orderB = menuMeta.categories[b]?.order ?? 9999;
     return orderA - orderB;
+  })
+  .filter(categoryKey => {
+    const labelKey = String(getMenuCategoryLabel(categoryKey) || categoryKey)
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    if (seenCategoryLabels.has(labelKey)) {
+      return false;
+    }
+
+    seenCategoryLabels.add(labelKey);
+    return true;
   });
 
 if (activeOrderCategory !== 'all' && !visibleCategoryKeys.includes(activeOrderCategory)) {
