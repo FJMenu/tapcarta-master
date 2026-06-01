@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.3.4';
+    const APP_VERSION = 'V2.3.3.5';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -3725,7 +3725,15 @@ async function handleInstallClick() {
     return;
   }
 
-  showInstallHelp(t.iosInstallHelp || t.installApp);
+  showInstallHelp(
+    currentLang === 'es'
+      ? 'En Android: toca el menú ⋮ del navegador y elige “Añadir a pantalla de inicio” o “Instalar aplicación”.'
+      : currentLang === 'en'
+        ? 'On Android: tap the browser menu ⋮ and choose “Add to Home screen” or “Install app”.'
+        : currentLang === 'nl'
+          ? 'Op Android: tik op het browsermenu ⋮ en kies “Toevoegen aan startscherm” of “App installeren”.'
+          : 'Sur Android : appuyez sur le menu ⋮ du navigateur, puis choisissez “Ajouter à l’écran d’accueil” ou “Installer l’application”.'
+  );
 }
 
     window.addEventListener('beforeinstallprompt', (e) => {
