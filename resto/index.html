@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.3.1.9';
+        const APP_VERSION = 'V2.3.2.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -10582,6 +10582,21 @@ function renderRequestRow(item, displayMode = 'active') {
                   </button>
 
                   <button
+  id="restaurant-menu-translations-btn"
+  type="button"
+  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
+>
+  <i data-lucide="languages" class="w-4 h-4 text-gold"></i>
+  <span>${currentLang === 'es'
+    ? 'Traducciones'
+    : currentLang === 'en'
+      ? 'Translations'
+      : currentLang === 'nl'
+        ? 'Vertalingen'
+        : 'Traductions'}</span>
+</button>
+
+                  <button
                     id="restaurant-save-menu-json-btn"
                     type="button"
                     class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
@@ -13518,56 +13533,9 @@ async function saveRestaurantOptionsModal() {
         .replaceAll('"', '&quot;');
     }
 
-    function renderTranslationFields(item, categoryIndex, itemIndex) {
-      const translations = item?.translations || {};
-      const targetTranslationLangs = translationLangs.filter((lang) => lang.code !== currentLang);
-
-      return `
-        <details class="mt-4 rounded-2xl border border-white/10 bg-black/20 overflow-hidden">
-          <summary class="cursor-pointer list-none px-4 py-4 flex items-center justify-between gap-3 hover:bg-white/[0.04]">
-            <div>
-              <div class="text-base font-bold text-cream">${editorText.translations}</div>
-              <div class="text-xs text-cream/55 mt-1">${editorText.manualTranslations}</div>
-            </div>
-            <span class="rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 text-xs font-bold text-gold">${targetTranslationLangs.map((lang) => lang.label).join(' · ')}</span>
-          </summary>
-
-          <div class="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${targetTranslationLangs.map((lang) => `
-              <div class="rounded-2xl border border-white/10 bg-black/25 p-4">
-                <div class="text-xs font-bold uppercase tracking-wide text-gold mb-4">${lang.label}</div>
-
-                <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">
-                  ${editorText.dishName}
-                </label>
-                <input
-                  type="text"
-                  value="${escapeHtml(translations?.[lang.code]?.name || '')}"
-                  data-category-index="${categoryIndex}"
-                  data-item-index="${itemIndex}"
-                  data-lang="${lang.code}"
-                  data-field="item-translation-name"
-                  class="w-full rounded-xl border border-white/12 bg-black/25 px-4 py-3 text-base text-cream outline-none focus:border-gold/50"
-                >
-
-                <label class="block text-xs uppercase tracking-wide text-cream/50 mt-4 mb-2">
-                  ${editorText.subtitle}
-                </label>
-                <input
-                  type="text"
-                  value="${escapeHtml(translations?.[lang.code]?.subtitle || '')}"
-                  data-category-index="${categoryIndex}"
-                  data-item-index="${itemIndex}"
-                  data-lang="${lang.code}"
-                  data-field="item-translation-subtitle"
-                  class="w-full rounded-xl border border-white/12 bg-black/25 px-4 py-3 text-base text-cream outline-none focus:border-gold/50"
-                >
-              </div>
-            `).join('')}
-          </div>
-        </details>
-      `;
-    }
+    function renderTranslationFields() {
+  return '';
+}
 
     if (!categories.length) {
       container.innerHTML = `
@@ -13875,7 +13843,6 @@ async function saveRestaurantOptionsModal() {
                     ID : ${escapeHtml(item.id || '—')} · ${editorText.mainValueHint}
                   </div>
 
-                  ${renderTranslationFields(item, categoryIndex, itemIndex)}
                 </div>
 
                 <div class="space-y-2">
@@ -14353,7 +14320,6 @@ function showDishEditorFlowForCategory(categoryIndex, mode = 'dish', options = {
   const subtitle = document.querySelector('[data-dish-flow-subtitle]');
   const addDishBtn = document.getElementById('dishAddAnotherBtn');
   const addCategoryBtn = document.getElementById('dishAddCategoryBtn');
-  const translateCategoryBtn = document.getElementById('dishTranslateNowBtn');
   const finishBtn = document.getElementById('dishFinishBtn');
 
   if (title) {
@@ -14370,7 +14336,6 @@ function showDishEditorFlowForCategory(categoryIndex, mode = 'dish', options = {
 
   if (addDishBtn) addDishBtn.textContent = getCategoryFlowText('addDish');
   if (addCategoryBtn) addCategoryBtn.textContent = getCategoryFlowText('addCategory');
-  if (translateCategoryBtn) translateCategoryBtn.textContent = getCategoryFlowText('translateCategory');
   if (finishBtn) finishBtn.textContent = getCategoryFlowText('finish');
 
   window._dishEditorContext = {
@@ -14693,41 +14658,12 @@ function getDishEditorTarget(context) {
     isSubcategory: false
   };
 }
-function getDishEditorTranslationLang() {
-  return ['fr', 'es', 'en', 'nl'].includes(currentLang) ? currentLang : 'fr';
-}
-
-function getDishEditorTranslatedValue(item, field) {
-  const lang = getDishEditorTranslationLang();
-
-  if (item?.translations?.[lang]?.[field]) {
-    return item.translations[lang][field];
-  }
-
+function getDishEditorBaseValue(item, field) {
   return item?.[field] || '';
 }
 
-function setDishEditorTranslatedValue(item, field, value) {
-  const lang = getDishEditorTranslationLang();
-  const cleanValue = String(value || '').trim();
-
-  if (lang === 'fr') {
-    item[field] = cleanValue;
-  }
-
-  if (!item.translations || typeof item.translations !== 'object') {
-    item.translations = {};
-  }
-
-  if (!item.translations[lang] || typeof item.translations[lang] !== 'object') {
-    item.translations[lang] = {};
-  }
-
-  item.translations[lang][field] = cleanValue;
-
-  if (!item[field] && cleanValue) {
-    item[field] = cleanValue;
-  }
+function setDishEditorBaseValue(item, field, value) {
+  item[field] = String(value || '').trim();
 }
 function openDishEditorScreen(categoryIndex, itemIndex, options = {}) {
   const screen = document.getElementById('dishEditorScreen');
@@ -14751,13 +14687,13 @@ function openDishEditorScreen(categoryIndex, itemIndex, options = {}) {
   const visibleInput = document.getElementById('dishEditorVisible');
   const availableInput = document.getElementById('dishEditorAvailable');
 
-  if (nameInput) nameInput.value = getDishEditorTranslatedValue(item, 'name');
+  if (nameInput) nameInput.value = getDishEditorBaseValue(item, 'name');
 
   if (priceInput) {
     priceInput.value = formatDishPriceForInput(item.price);
   }
 
-  if (descriptionInput) descriptionInput.value = getDishEditorTranslatedValue(item, 'subtitle');
+  if (descriptionInput) descriptionInput.value = getDishEditorBaseValue(item, 'subtitle');
   if (visibleInput) visibleInput.checked = item.visible !== false;
   if (availableInput) availableInput.checked = item.available !== false;
 
@@ -14838,8 +14774,8 @@ function saveDishEditorScreen(options = {}) {
   const visibleInput = document.getElementById('dishEditorVisible');
   const availableInput = document.getElementById('dishEditorAvailable');
 
- if (nameInput) setDishEditorTranslatedValue(item, 'name', nameInput.value);
-if (descriptionInput) setDishEditorTranslatedValue(item, 'subtitle', descriptionInput.value);
+if (nameInput) setDishEditorBaseValue(item, 'name', nameInput.value);
+if (descriptionInput) setDishEditorBaseValue(item, 'subtitle', descriptionInput.value);
 
   if (priceInput) {
     item.price = normalizeDishPriceFromInput(priceInput.value);
@@ -14969,69 +14905,461 @@ function closeDishEditorFlow() {
   const flow = document.getElementById('dishEditorFlow');
   if (flow) flow.classList.add('hidden');
 }
+let restaurantTranslationTargetLang = 'es';
 
-function showDishTranslationLaterDialog() {
-  return new Promise((resolve) => {
-    document.getElementById('dish-translation-later-dialog')?.remove();
+const RESTAURANT_TRANSLATION_LANGS = [
+  { code: 'fr', label: 'FR' },
+  { code: 'es', label: 'ES' },
+  { code: 'en', label: 'EN' },
+  { code: 'nl', label: 'NL' }
+];
 
-    const overlay = document.createElement('div');
-    overlay.id = 'dish-translation-later-dialog';
-    overlay.className = 'fixed inset-0 z-[10080] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4';
+function getRestaurantTranslationBaseLang() {
+  const menu = activeRestaurantData?.menu;
 
-    overlay.innerHTML = `
-      <div class="w-full max-w-md rounded-[28px] border border-gold/35 bg-[#12110d] shadow-[0_28px_90px_rgba(0,0,0,0.55)] p-6">
-        <div class="flex items-start gap-4 mb-5">
-          <div class="w-11 h-11 rounded-2xl bg-gold/15 border border-gold/30 flex items-center justify-center shrink-0">
-            <i data-lucide="languages" class="w-5 h-5 text-gold"></i>
-          </div>
-          <div>
-            <div class="font-display text-xl font-bold text-cream">
-              ${getDishText('translationTitle')}
-            </div>
-            <p class="text-sm text-cream/70 mt-2 leading-relaxed">
-              ${getDishText('translationText')}
-            </p>
-          </div>
-        </div>
+  if (!menu) return 'fr';
 
-        <div class="grid grid-cols-1 gap-3 mt-6">
-          <button type="button" data-validate-without-translation class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all">
-            ${getDishText('confirmWithoutTranslation')}
-          </button>
+  if (!menu.translationBaseLang || !['fr', 'es', 'en', 'nl'].includes(menu.translationBaseLang)) {
+    menu.translationBaseLang = ['fr', 'es', 'en', 'nl'].includes(currentLang) ? currentLang : 'fr';
+  }
 
-          <button type="button" data-translate-now class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
-            ${getDishText('translateNow')}
-          </button>
-        </div>
-      </div>
-    `;
-
-    const close = (result) => {
-      overlay.remove();
-      resolve(result);
-    };
-
-    overlay.querySelector('[data-validate-without-translation]')?.addEventListener('click', () => close(true));
-    overlay.querySelector('[data-translate-now]')?.addEventListener('click', () => close(false));
-
-    document.body.appendChild(overlay);
-
-    if (window.lucide) {
-      requestAnimationFrame(() => lucide.createIcons());
-    }
-  });
+  return menu.translationBaseLang;
 }
 
-async function handleDishTranslateLaterFlow() {
-  if (menuSaveInProgress) return;
+function ensureRestaurantTranslationEntry(target, lang) {
+  if (!target.translations || typeof target.translations !== 'object') {
+    target.translations = {};
+  }
 
-  const validateWithoutTranslation = await showDishTranslationLaterDialog();
+  if (!target.translations[lang] || typeof target.translations[lang] !== 'object') {
+    target.translations[lang] = {};
+  }
 
-  if (!validateWithoutTranslation) {
+  return target.translations[lang];
+}
+
+function getRestaurantTranslationReferenceValue(target, field) {
+  const baseLang = getRestaurantTranslationBaseLang();
+
+  return (
+    target?.translations?.[baseLang]?.[field] ||
+    target?.[field] ||
+    ''
+  );
+}
+
+function getRestaurantTranslationTargetValue(target, field, lang) {
+  const baseLang = getRestaurantTranslationBaseLang();
+
+  if (lang === baseLang) {
+    return target?.[field] || '';
+  }
+
+  return target?.translations?.[lang]?.[field] || '';
+}
+
+function setRestaurantTranslationTargetValue(target, field, lang, value) {
+  const cleanValue = String(value || '').trim();
+  const baseLang = getRestaurantTranslationBaseLang();
+
+  if (lang === baseLang) {
+    target[field] = cleanValue;
+    ensureRestaurantTranslationEntry(target, lang)[field] = cleanValue;
     return;
   }
 
-  await finishDishEditorFlow();
+  ensureRestaurantTranslationEntry(target, lang)[field] = cleanValue;
+}
+
+function escapeRestaurantTranslationHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function getRestaurantTranslationText(key) {
+  const texts = {
+    title: {
+      fr: 'Traductions du menu',
+      es: 'Traducciones del menú',
+      en: 'Menu translations',
+      nl: 'Menuvertalingen'
+    },
+    subtitle: {
+      fr: 'La colonne de gauche est la langue de référence. Modifiez uniquement la langue cible à droite.',
+      es: 'La columna izquierda es el idioma de referencia. Modifique únicamente el idioma de destino a la derecha.',
+      en: 'The left column is the reference language. Edit only the target language on the right.',
+      nl: 'De linkerkolom is de referentietaal. Bewerk alleen de doeltaal rechts.'
+    },
+    reference: {
+      fr: 'Référence',
+      es: 'Referencia',
+      en: 'Reference',
+      nl: 'Referentie'
+    },
+    target: {
+      fr: 'Traduction',
+      es: 'Traducción',
+      en: 'Translation',
+      nl: 'Vertaling'
+    },
+    category: {
+      fr: 'Catégorie',
+      es: 'Categoría',
+      en: 'Category',
+      nl: 'Categorie'
+    },
+    subcategory: {
+      fr: 'Sous-catégorie',
+      es: 'Subcategoría',
+      en: 'Subcategory',
+      nl: 'Subcategorie'
+    },
+    dish: {
+      fr: 'Plat',
+      es: 'Plato',
+      en: 'Dish',
+      nl: 'Gerecht'
+    },
+    description: {
+      fr: 'Description',
+      es: 'Descripción',
+      en: 'Description',
+      nl: 'Beschrijving'
+    },
+    close: {
+      fr: 'Fermer',
+      es: 'Cerrar',
+      en: 'Close',
+      nl: 'Sluiten'
+    },
+    save: {
+      fr: 'Enregistrer les traductions',
+      es: 'Guardar traducciones',
+      en: 'Save translations',
+      nl: 'Vertalingen opslaan'
+    }
+  };
+
+  return texts[key]?.[currentLang] || texts[key]?.fr || key;
+}
+
+function getRestaurantTranslationInputHtml({ type, categoryIndex, subcategoryIndex = '', itemIndex = '', target, field, label }) {
+  const lang = restaurantTranslationTargetLang;
+  const referenceValue = getRestaurantTranslationReferenceValue(target, field);
+  const targetValue = getRestaurantTranslationTargetValue(target, field, lang);
+
+  return `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-2xl border border-white/10 bg-black/22 p-3">
+      <div>
+        <div class="mb-1 text-[11px] font-bold uppercase tracking-[0.16em] text-cream/45">
+          ${label} · ${getRestaurantTranslationText('reference')}
+        </div>
+        <div class="min-h-[46px] rounded-xl border border-white/8 bg-black/25 px-3 py-2 text-sm leading-relaxed text-cream/75">
+          ${escapeRestaurantTranslationHtml(referenceValue || '—')}
+        </div>
+      </div>
+
+      <div>
+        <label class="mb-1 block text-[11px] font-bold uppercase tracking-[0.16em] text-gold">
+          ${label} · ${getRestaurantTranslationText('target')} ${lang.toUpperCase()}
+        </label>
+        <textarea
+          rows="${field === 'subtitle' ? '2' : '1'}"
+          data-translation-type="${type}"
+          data-category-index="${categoryIndex}"
+          data-subcategory-index="${subcategoryIndex}"
+          data-item-index="${itemIndex}"
+          data-translation-field="${field}"
+          class="w-full rounded-xl border border-gold/18 bg-black/30 px-3 py-2 text-sm text-cream outline-none focus:border-gold/60"
+        >${escapeRestaurantTranslationHtml(targetValue)}</textarea>
+      </div>
+    </div>
+  `;
+}
+
+function renderRestaurantTranslationRows() {
+  const menu = activeRestaurantData?.menu;
+  const categories = Array.isArray(menu?.categories) ? menu.categories : [];
+
+  return categories.map((category, categoryIndex) => `
+    <section class="rounded-[24px] border border-gold/18 bg-black/22 p-4">
+      <div class="mb-4 flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-2xl border border-gold/25 bg-gold/10">
+          <i data-lucide="folder" class="h-4 w-4 text-gold"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="text-xs font-bold uppercase tracking-[0.16em] text-gold">
+            ${getRestaurantTranslationText('category')}
+          </div>
+          <div class="font-display text-xl font-bold text-cream">
+            ${escapeRestaurantTranslationHtml(getRestaurantTranslationReferenceValue(category, 'name') || '—')}
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        ${getRestaurantTranslationInputHtml({
+          type: 'category',
+          categoryIndex,
+          target: category,
+          field: 'name',
+          label: getRestaurantTranslationText('category')
+        })}
+
+        ${(Array.isArray(category.subcategories) ? category.subcategories : []).map((subcategory, subcategoryIndex) => `
+          <div class="mt-5 rounded-[22px] border border-white/10 bg-white/[0.025] p-3">
+            <div class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-cream/50">
+              ${getRestaurantTranslationText('subcategory')}
+            </div>
+
+            <div class="space-y-3">
+              ${getRestaurantTranslationInputHtml({
+                type: 'subcategory',
+                categoryIndex,
+                subcategoryIndex,
+                target: subcategory,
+                field: 'name',
+                label: getRestaurantTranslationText('subcategory')
+              })}
+
+              ${(Array.isArray(subcategory.items) ? subcategory.items : []).map((item, itemIndex) => `
+                <div class="mt-4 rounded-2xl border border-white/8 bg-black/18 p-3">
+                  ${getRestaurantTranslationInputHtml({
+                    type: 'subcategory-item',
+                    categoryIndex,
+                    subcategoryIndex,
+                    itemIndex,
+                    target: item,
+                    field: 'name',
+                    label: getRestaurantTranslationText('dish')
+                  })}
+
+                  <div class="mt-3">
+                    ${getRestaurantTranslationInputHtml({
+                      type: 'subcategory-item',
+                      categoryIndex,
+                      subcategoryIndex,
+                      itemIndex,
+                      target: item,
+                      field: 'subtitle',
+                      label: getRestaurantTranslationText('description')
+                    })}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+
+        ${(Array.isArray(category.items) ? category.items : []).map((item, itemIndex) => `
+          <div class="mt-4 rounded-2xl border border-white/8 bg-black/18 p-3">
+            ${getRestaurantTranslationInputHtml({
+              type: 'item',
+              categoryIndex,
+              itemIndex,
+              target: item,
+              field: 'name',
+              label: getRestaurantTranslationText('dish')
+            })}
+
+            <div class="mt-3">
+              ${getRestaurantTranslationInputHtml({
+                type: 'item',
+                categoryIndex,
+                itemIndex,
+                target: item,
+                field: 'subtitle',
+                label: getRestaurantTranslationText('description')
+              })}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  `).join('');
+}
+
+function getRestaurantTranslationTargetFromInput(input) {
+  const categoryIndex = Number(input.dataset.categoryIndex);
+  const subcategoryIndex = input.dataset.subcategoryIndex === '' ? null : Number(input.dataset.subcategoryIndex);
+  const itemIndex = input.dataset.itemIndex === '' ? null : Number(input.dataset.itemIndex);
+  const type = input.dataset.translationType;
+
+  const category = activeRestaurantData?.menu?.categories?.[categoryIndex];
+  if (!category) return null;
+
+  if (type === 'category') return category;
+
+  if (type === 'subcategory') {
+    return category.subcategories?.[subcategoryIndex] || null;
+  }
+
+  if (type === 'subcategory-item') {
+    return category.subcategories?.[subcategoryIndex]?.items?.[itemIndex] || null;
+  }
+
+  if (type === 'item') {
+    return category.items?.[itemIndex] || null;
+  }
+
+  return null;
+}
+
+function applyRestaurantTranslationInput(input) {
+  const target = getRestaurantTranslationTargetFromInput(input);
+  if (!target) return;
+
+  const field = input.dataset.translationField;
+  setRestaurantTranslationTargetValue(target, field, restaurantTranslationTargetLang, input.value);
+}
+
+function collectRestaurantTranslationInputs() {
+  document
+    .querySelectorAll('#restaurant-menu-translations-modal [data-translation-type]')
+    .forEach((input) => applyRestaurantTranslationInput(input));
+}
+
+function renderRestaurantTranslationsBody() {
+  const body = document.getElementById('restaurant-menu-translations-body');
+  if (!body) return;
+
+  body.innerHTML = renderRestaurantTranslationRows();
+
+  if (window.lucide) {
+    requestAnimationFrame(() => lucide.createIcons());
+  }
+}
+
+function closeRestaurantMenuTranslationsModal() {
+  document.getElementById('restaurant-menu-translations-modal')?.remove();
+  document.body.style.overflow = '';
+}
+
+function openRestaurantMenuTranslationsModal() {
+  if (!activeRestaurantData?.menu) return;
+
+  const baseLang = getRestaurantTranslationBaseLang();
+
+  if (!restaurantTranslationTargetLang || restaurantTranslationTargetLang === baseLang) {
+    restaurantTranslationTargetLang =
+      RESTAURANT_TRANSLATION_LANGS.find((lang) => lang.code !== baseLang)?.code || baseLang;
+  }
+
+  document.getElementById('restaurant-menu-translations-modal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'restaurant-menu-translations-modal';
+  modal.className = 'fixed inset-0 z-[10100] bg-black/78 backdrop-blur-xl flex items-stretch justify-center p-3 md:p-6';
+
+  modal.innerHTML = `
+    <div class="flex w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-gold/30 bg-[#11100c] shadow-[0_30px_100px_rgba(0,0,0,0.62)]">
+      <div class="flex flex-col gap-4 border-b border-gold/16 px-4 py-4 md:flex-row md:items-start md:justify-between md:px-6">
+        <div class="min-w-0">
+          <div class="flex items-center gap-3">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-gold/30 bg-gold/12">
+              <i data-lucide="languages" class="h-5 w-5 text-gold"></i>
+            </div>
+            <div>
+              <h2 class="font-display text-2xl font-bold text-gold">
+                ${getRestaurantTranslationText('title')}
+              </h2>
+              <p class="mt-1 text-sm leading-relaxed text-cream/65">
+                ${getRestaurantTranslationText('subtitle')}
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-3 text-xs font-bold uppercase tracking-[0.14em] text-cream/45">
+            Base : ${baseLang.toUpperCase()}
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          ${RESTAURANT_TRANSLATION_LANGS.map((lang) => `
+            <button
+              type="button"
+              data-translation-lang="${lang.code}"
+              class="btn-action rounded-xl border px-4 py-2 text-sm font-extrabold ${
+                lang.code === restaurantTranslationTargetLang
+                  ? 'border-gold bg-gold text-black'
+                  : 'border-white/12 bg-white/[0.03] text-cream hover:border-gold/45'
+              }"
+            >
+              ${lang.label}
+            </button>
+          `).join('')}
+
+          <button
+            type="button"
+            id="restaurant-menu-translations-close"
+            class="btn-action rounded-xl border border-white/12 bg-white/[0.03] px-4 py-2 text-sm font-bold text-cream/80 hover:bg-white/8"
+          >
+            ${getRestaurantTranslationText('close')}
+          </button>
+        </div>
+      </div>
+
+      <div id="restaurant-menu-translations-body" class="flex-1 overflow-y-auto px-4 py-4 md:px-6">
+      </div>
+
+      <div class="border-t border-gold/16 bg-black/20 px-4 py-4 md:px-6">
+        <button
+          type="button"
+          id="restaurant-menu-translations-save"
+          class="btn-action flex w-full items-center justify-center gap-2 rounded-2xl border border-gold bg-gold px-5 py-3 text-sm font-extrabold text-black hover:bg-gold/90"
+        >
+          <i data-lucide="check" class="h-4 w-4"></i>
+          <span>${getRestaurantTranslationText('save')}</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.body.style.overflow = 'hidden';
+
+  renderRestaurantTranslationsBody();
+
+  modal.addEventListener('input', (event) => {
+    if (!event.target.matches('[data-translation-type]')) return;
+    applyRestaurantTranslationInput(event.target);
+    markMenuEditorDirty();
+  });
+
+  modal.querySelectorAll('[data-translation-lang]').forEach((button) => {
+    button.addEventListener('click', () => {
+      collectRestaurantTranslationInputs();
+      restaurantTranslationTargetLang = button.dataset.translationLang;
+      openRestaurantMenuTranslationsModal();
+    });
+  });
+
+  document.getElementById('restaurant-menu-translations-close')?.addEventListener('click', closeRestaurantMenuTranslationsModal);
+
+  document.getElementById('restaurant-menu-translations-save')?.addEventListener('click', () => {
+    collectRestaurantTranslationInputs();
+    markMenuEditorDirty();
+    updateMenuEditorDirtyUi();
+    renderRestaurantMenuEditor();
+    closeRestaurantMenuTranslationsModal();
+
+    showTapCartaMessage(
+      currentLang === 'es'
+        ? 'Traducciones guardadas. Valide los cambios para publicarlas.'
+        : currentLang === 'en'
+          ? 'Translations saved. Apply changes to publish them.'
+          : currentLang === 'nl'
+            ? 'Vertalingen opgeslagen. Bevestig de wijzigingen om ze te publiceren.'
+            : 'Traductions enregistrées. Validez les modifications pour les publier.'
+    );
+  });
+
+  if (window.lucide) {
+    requestAnimationFrame(() => lucide.createIcons());
+  }
 }
 
 let menuSaveInProgress = false;
@@ -15744,9 +16072,10 @@ function openRestaurantQrFramedModal() {
   const editorWorkspaceBackBtn = document.getElementById('restaurant-menu-editor-workspace-back-btn');
   const categoryModeBtn = document.getElementById('restaurant-menu-editor-category-mode-btn');
   const dishModeBtn = document.getElementById('restaurant-menu-editor-dish-mode-btn');
-  const addCategoryBtn = document.getElementById('restaurant-add-category-btn');
-  const exportJsonBtn = document.getElementById('restaurant-save-menu-json-btn');
-  const floatingSaveBtn = document.getElementById('restaurant-save-menu-floating-btn');
+const addCategoryBtn = document.getElementById('restaurant-add-category-btn');
+const menuTranslationsBtn = document.getElementById('restaurant-menu-translations-btn');
+const exportJsonBtn = document.getElementById('restaurant-save-menu-json-btn');
+const floatingSaveBtn = document.getElementById('restaurant-save-menu-floating-btn');
 const unsavedBannerSaveBtn = document.getElementById('restaurant-menu-unsaved-save-btn');
   const editorList = document.getElementById('restaurant-menu-categories-list');
 
@@ -15899,7 +16228,11 @@ const unsavedBannerSaveBtn = document.getElementById('restaurant-menu-unsaved-sa
     });
   }
 
-async function saveMenuAndCloseEditor() {
+  if (menuTranslationsBtn) {
+    menuTranslationsBtn.addEventListener('click', openRestaurantMenuTranslationsModal);
+  }
+
+  async function saveMenuAndCloseEditor() {
   const saved = await exportRestaurantJson();
 
   if (!saved) {
@@ -15942,17 +16275,6 @@ if (dishSaveBtn) {
 const dishSaveAddAnotherBtn = document.getElementById('dishEditorSaveAddAnotherBtn');
 if (dishSaveAddAnotherBtn) {
   dishSaveAddAnotherBtn.addEventListener('click', saveDishEditorAndAddAnother);
-}
-
-const dishTranslateNowBtn = document.getElementById('dishTranslateNowBtn');
-if (dishTranslateNowBtn) {
-  dishTranslateNowBtn.addEventListener('click', () => {
-    const categoryIndex = window._dishEditorContext?.categoryIndex;
-
-    if (typeof categoryIndex !== 'number') return;
-
-    openCategoryTranslationWorkspace(categoryIndex);
-  });
 }
 
 const dishAddAnotherBtn = document.getElementById('dishAddAnotherBtn');
@@ -16023,34 +16345,6 @@ if (dishFinishBtn) {
       if (field === 'item-subtitle') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
         activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].subtitle = e.target.value;
-        markMenuTranslationWarningNeeded();
-        return;
-      }
-
-      if (field === 'item-translation-name') {
-        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex] || !lang) return;
-        const item = activeRestaurantData.menu.categories[categoryIndex].items[itemIndex];
-        if (!item.translations || typeof item.translations !== 'object') {
-          item.translations = {};
-        }
-        if (!item.translations[lang] || typeof item.translations[lang] !== 'object') {
-          item.translations[lang] = { name: '', subtitle: '' };
-        }
-        item.translations[lang].name = e.target.value;
-        markMenuTranslationWarningNeeded();
-        return;
-      }
-
-      if (field === 'item-translation-subtitle') {
-        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex] || !lang) return;
-        const item = activeRestaurantData.menu.categories[categoryIndex].items[itemIndex];
-        if (!item.translations || typeof item.translations !== 'object') {
-          item.translations = {};
-        }
-        if (!item.translations[lang] || typeof item.translations[lang] !== 'object') {
-          item.translations[lang] = { name: '', subtitle: '' };
-        }
-        item.translations[lang].subtitle = e.target.value;
         markMenuTranslationWarningNeeded();
         return;
       }
@@ -16256,7 +16550,7 @@ if (dishFinishBtn) {
 
       if (
         itemCard &&
-        !e.target.closest('button, select, label, [data-field="item-translation-name"], [data-field="item-translation-subtitle"]')
+        !e.target.closest('button, select, label')
       ) {
         const categoryIndex = Number(itemCard.dataset.menuCategoryIndex);
         const itemIndex = Number(itemCard.dataset.menuItemIndex);
@@ -16492,10 +16786,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           <button id="dishAddCategoryBtn" class="dish-flow-btn" type="button">
             Ajouter une autre catégorie
-          </button>
-
-          <button id="dishTranslateNowBtn" class="dish-flow-btn" type="button">
-            Traduire cette catégorie
           </button>
 
           <button id="dishFinishBtn" class="dish-flow-btn final" type="button">
