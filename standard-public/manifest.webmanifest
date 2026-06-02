@@ -1,25 +1,23 @@
 {
-  "name": "Alta Cocina",
-  "short_name": "Alta Cocina",
-  "description": "Menu digital Alta Cocina",
-  "start_url": "/alta-cocina-sabinillas/",
-  "scope": "/alta-cocina-sabinillas/",
+  "name": "TapCarta",
+  "short_name": "TapCarta",
+  "description": "Menu digital TapCarta",
+  "start_url": "/standard-public/",
+  "scope": "/standard-public/",
   "display": "standalone",
   "background_color": "#0F0F0F",
   "theme_color": "#0F0F0F",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/standard-public/icon-192.png",
+      "src": "/favicon.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "/standard-public/icon-512.png",
+      "src": "/favicon.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
