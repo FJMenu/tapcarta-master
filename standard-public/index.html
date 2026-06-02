@@ -1928,13 +1928,6 @@ function renderStandardInstallShareRow(t) {
   return `
     <div class="space-y-3 max-w-[420px] mx-auto">
       <div class="flex justify-center">
-        <button id="install-app-btn" hidden onclick="handleInstallClick()" class="${getStandardSmallButtonClass()}">
-          <i data-lucide="download" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
-          <span class="text-xs font-medium tracking-wide">${t.installApp}</span>
-        </button>
-      </div>
-
-      <div class="flex justify-center">
         <button onclick="handleShareRestaurantClick()" class="${getStandardSmallButtonClass()}">
           <i data-lucide="share-2" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
           <span class="text-xs font-medium tracking-wide">${t.shareRestaurant}</span>
@@ -3452,10 +3445,7 @@ function detectLanguage() {
 }
 
 let currentLang = detectLanguage();
-let deferredInstallPrompt = null;
 let installToastTimeout = null;
-let installFallbackTimeout = null;
-let installToastAlreadyShown = false;
 let installHelpTimeout = null;
 
 let orderMode = false;
@@ -3562,69 +3552,6 @@ function persistClientActiveView() {
       updateTapCartaPublicSignature();
     }
 
-function updateInstallUI() {
-      const installBtn = document.getElementById('install-app-btn');
-      const iosHelp = document.getElementById('ios-install-help');
-      const t = translations[currentLang];
-
-      if (!installBtn) return;
-
-      if (isInStandaloneMode()) {
-        installBtn.hidden = true;
-        if (iosHelp) iosHelp.hidden = true;
-        return;
-      }
-
-      if (isSamsungInternet()) {
-        installBtn.hidden = false;
-        installBtn.querySelector('span').textContent = t.installApp;
-
-        if (iosHelp) {
-          iosHelp.hidden = true;
-          iosHelp.innerHTML = t.samsungInstallHelp;
-        }
-        return;
-      }
-
-      if (deferredInstallPrompt || isIos()) {
-        installBtn.hidden = false;
-        installBtn.querySelector('span').textContent = t.installApp;
-      } else {
-        installBtn.hidden = true;
-      }
-
-      if (iosHelp) {
-        iosHelp.hidden = true;
-      }
-    }
-
-    function showInstallToast() {
-      if (installToastAlreadyShown) return;
-
-      const toast = document.getElementById('install-toast');
-      const title = document.getElementById('install-toast-title');
-      const text = document.getElementById('install-toast-text');
-      const t = translations[currentLang];
-
-      if (!toast || !title || !text) return;
-
-      installToastAlreadyShown = true;
-      title.textContent = t.installToastTitle;
-      text.textContent = t.installToastText;
-      toast.classList.add('show');
-
-      if (window.lucide) {
-        requestAnimationFrame(() => {
-          lucide.createIcons();
-        });
-      }
-
-      clearTimeout(installToastTimeout);
-      installToastTimeout = setTimeout(() => {
-        toast.classList.remove('show');
-        installToastAlreadyShown = false;
-      }, 3200);
-    }
 
     function showStandardShareToast(titleText, bodyText) {
       const toast = document.getElementById('install-toast');
@@ -3696,81 +3623,6 @@ function updateInstallUI() {
         showStandardShareToast(t.shareUnavailableTitle, t.shareUnavailableText);
       }
     }
-
-async function handleInstallClick() {
-  const iosHelp = document.getElementById('ios-install-help');
-  const t = translations[currentLang];
-
-  const isInsideIframe = window.self !== window.top;
-
-  if (isInsideIframe && !deferredInstallPrompt) {
-    const directUrl = new URL(window.location.href);
-    directUrl.searchParams.set('install', '1');
-    window.top.location.href = directUrl.href;
-    return;
-  }
-
-  if (isSamsungInternet()) {
-    if (iosHelp) {
-      if (!iosHelp.hidden) {
-        clearTimeout(installHelpTimeout);
-        iosHelp.hidden = true;
-        return;
-      }
-
-      clearTimeout(installHelpTimeout);
-      iosHelp.hidden = false;
-      iosHelp.innerHTML = t.samsungInstallHelp;
-      iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-      installHelpTimeout = setTimeout(() => {
-        iosHelp.hidden = true;
-      }, 15000);
-    }
-    return;
-  }
-
-  if (deferredInstallPrompt) {
-    installToastAlreadyShown = false;
-    deferredInstallPrompt.prompt();
-
-    try {
-      const choiceResult = await deferredInstallPrompt.userChoice;
-
-      if (choiceResult && choiceResult.outcome === 'accepted') {
-        clearTimeout(installFallbackTimeout);
-        installFallbackTimeout = setTimeout(() => {
-          if (isInStandaloneMode()) {
-            showInstallToast();
-          }
-        }, 1200);
-      }
-    } catch (_) {}
-
-    deferredInstallPrompt = null;
-    updateInstallUI();
-    return;
-  }
-
-  if (isIos() && !isInStandaloneMode()) {
-    if (iosHelp) {
-      if (!iosHelp.hidden) {
-        clearTimeout(installHelpTimeout);
-        iosHelp.hidden = true;
-        return;
-      }
-
-      clearTimeout(installHelpTimeout);
-      iosHelp.hidden = false;
-      iosHelp.innerHTML = t.iosInstallHelp;
-      iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-      installHelpTimeout = setTimeout(() => {
-        iosHelp.hidden = true;
-      }, 15000);
-    }
-  }
-}
 
 let tapCartaMenuHistoryActive = false;
 
@@ -9198,7 +9050,6 @@ ${!orderMode ? renderInfoBlocks() : ''}
         });
       }
 
-      updateInstallUI();
       updateLangButtons();
       setupClientRequestAutoRefresh();
     }
