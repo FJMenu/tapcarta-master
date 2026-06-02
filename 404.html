@@ -33,33 +33,10 @@
       background: #0F0F0F;
     }
 
-    #tapcarta-install-button {
-      position: fixed;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      z-index: 9999;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(242, 199, 68, 0.65);
-      background: linear-gradient(180deg, rgba(242,199,68,0.24), rgba(242,199,68,0.12));
-      color: #FAF6EE;
-      border-radius: 999px;
-      padding: 13px 20px;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      box-shadow: 0 12px 28px rgba(0,0,0,0.38);
-      cursor: pointer;
-    }
   </style>
 </head>
 
 <body>
-  <button id="tapcarta-install-button" type="button">
-    Installer le menu
-  </button>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -181,43 +158,55 @@
 
     let deferredInstallPrompt = null;
 
-    const installButton = document.getElementById('tapcarta-install-button');
-
     function isStandaloneMode() {
       return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     }
 
-    function updateInstallButton() {
-      if (!installButton) return;
+    function sendInstallStateToStandard() {
+      const frame = document.getElementById('tapcarta-standard-frame');
+      if (!frame || !frame.contentWindow) return;
 
-      if (isStandaloneMode() || !deferredInstallPrompt) {
-        installButton.style.display = 'none';
-        return;
-      }
-
-      installButton.style.display = 'inline-flex';
+      frame.contentWindow.postMessage({
+        source: 'tapcarta-404',
+        type: 'tapcarta-install-state',
+        canInstall: Boolean(deferredInstallPrompt) && !isStandaloneMode(),
+        isStandalone: isStandaloneMode()
+      }, window.location.origin);
     }
 
     window.addEventListener('beforeinstallprompt', (event) => {
       event.preventDefault();
       deferredInstallPrompt = event;
-      updateInstallButton();
+      sendInstallStateToStandard();
     });
 
     window.addEventListener('appinstalled', () => {
       deferredInstallPrompt = null;
-      updateInstallButton();
+      sendInstallStateToStandard();
     });
 
-    installButton.addEventListener('click', async () => {
-      if (!deferredInstallPrompt) return;
+    window.addEventListener('message', async (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (!event.data || event.data.source !== 'tapcarta-standard') return;
+
+      if (event.data.type === 'tapcarta-install-state-request') {
+        sendInstallStateToStandard();
+        return;
+      }
+
+      if (event.data.type !== 'tapcarta-install-request') return;
+
+      if (!deferredInstallPrompt || isStandaloneMode()) {
+        sendInstallStateToStandard();
+        return;
+      }
 
       deferredInstallPrompt.prompt();
 
       await deferredInstallPrompt.userChoice.catch(() => null);
 
       deferredInstallPrompt = null;
-      updateInstallButton();
+      sendInstallStateToStandard();
     });
 
     if ('serviceWorker' in navigator) {
@@ -233,7 +222,7 @@
       const restaurantManifestData = await loadRestaurantForManifest();
       createDynamicManifest(restaurantManifestData);
       loadStandardFrame();
-      updateInstallButton();
+      setTimeout(sendInstallStateToStandard, 500);
     })();
   </script>
 </body>
