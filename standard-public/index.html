@@ -3697,11 +3697,7 @@ function updateInstallUI() {
     }
 
 async function handleInstallClick() {
-  alert(
-  'deferredInstallPrompt = ' +
-  (deferredInstallPrompt ? 'OK' : 'NULL')
-);
-      const iosHelp = document.getElementById('ios-install-help');
+  const iosHelp = document.getElementById('ios-install-help');
       const t = translations[currentLang];
 
       if (isSamsungInternet()) {

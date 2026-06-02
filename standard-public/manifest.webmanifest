@@ -1,22 +1,22 @@
 {
-  "name": "TapCarta Demo",
-  "short_name": "TapCarta",
-  "description": "TapCarta Demo",
-  "start_url": "./",
-  "scope": "./",
+  "name": "Alta Cocina",
+  "short_name": "Alta Cocina",
+  "description": "Menu digital Alta Cocina",
+  "start_url": "/alta-cocina/",
+  "scope": "/alta-cocina/",
   "display": "standalone",
   "background_color": "#0F0F0F",
   "theme_color": "#0F0F0F",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "/alta-cocina/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./icon-512.png",
+      "src": "/alta-cocina/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
