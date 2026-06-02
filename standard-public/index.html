@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.3.9';
+    const APP_VERSION = 'V2.3.3.10';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -3699,103 +3699,76 @@ function updateInstallUI() {
 
 async function handleInstallClick() {
   const iosHelp = document.getElementById('ios-install-help');
-      const t = translations[currentLang];
+  const t = translations[currentLang];
 
-      if (isSamsungInternet()) {
-        if (iosHelp) {
-          if (!iosHelp.hidden) {
-            clearTimeout(installHelpTimeout);
-            iosHelp.hidden = true;
-            return;
-          }
+  const isInsideIframe = window.self !== window.top;
 
-          clearTimeout(installHelpTimeout);
-          iosHelp.hidden = false;
-          iosHelp.innerHTML = t.samsungInstallHelp;
-          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (isInsideIframe && !deferredInstallPrompt) {
+    const directUrl = new URL(window.location.href);
+    directUrl.searchParams.set('install', '1');
+    window.top.location.href = directUrl.href;
+    return;
+  }
 
-          installHelpTimeout = setTimeout(() => {
-            iosHelp.hidden = true;
-          }, 15000);
-        }
+  if (isSamsungInternet()) {
+    if (iosHelp) {
+      if (!iosHelp.hidden) {
+        clearTimeout(installHelpTimeout);
+        iosHelp.hidden = true;
         return;
       }
 
-      if (deferredInstallPrompt) {
-        installToastAlreadyShown = false;
-        deferredInstallPrompt.prompt();
+      clearTimeout(installHelpTimeout);
+      iosHelp.hidden = false;
+      iosHelp.innerHTML = t.samsungInstallHelp;
+      iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        try {
-          const choiceResult = await deferredInstallPrompt.userChoice;
-
-          if (choiceResult && choiceResult.outcome === 'accepted') {
-            clearTimeout(installFallbackTimeout);
-            installFallbackTimeout = setTimeout(() => {
-              if (isInStandaloneMode()) {
-                showInstallToast();
-              }
-            }, 1200);
-          }
-        } catch (_) {}
-
-        deferredInstallPrompt = null;
-        updateInstallUI();
-        return;
-      }
-
-      if (isIos() && !isInStandaloneMode()) {
-        if (iosHelp) {
-          if (!iosHelp.hidden) {
-            clearTimeout(installHelpTimeout);
-            iosHelp.hidden = true;
-            return;
-          }
-
-          clearTimeout(installHelpTimeout);
-          iosHelp.hidden = false;
-          iosHelp.innerHTML = t.iosInstallHelp;
-          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-          installHelpTimeout = setTimeout(() => {
-            iosHelp.hidden = true;
-          }, 15000);
-        }
-      }
+      installHelpTimeout = setTimeout(() => {
+        iosHelp.hidden = true;
+      }, 15000);
     }
+    return;
+  }
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredInstallPrompt = e;
+  if (deferredInstallPrompt) {
+    installToastAlreadyShown = false;
+    deferredInstallPrompt.prompt();
 
-      if (!isSamsungInternet()) {
-        updateInstallUI();
+    try {
+      const choiceResult = await deferredInstallPrompt.userChoice;
+
+      if (choiceResult && choiceResult.outcome === 'accepted') {
+        clearTimeout(installFallbackTimeout);
+        installFallbackTimeout = setTimeout(() => {
+          if (isInStandaloneMode()) {
+            showInstallToast();
+          }
+        }, 1200);
       }
-    });
+    } catch (_) {}
 
-    window.addEventListener('appinstalled', () => {
-      clearTimeout(installFallbackTimeout);
-      deferredInstallPrompt = null;
-      updateInstallUI();
-      showInstallToast();
-    });
+    deferredInstallPrompt = null;
+    updateInstallUI();
+    return;
+  }
 
-    const categoryIcons = {
-      snacks: 'utensils-crossed',
-      entrees: 'soup',
-      plats: 'chef-hat',
-      moules: 'fish',
-      desserts: 'cake',
-      crepes: 'circle',
-      suggestions: 'star',
-      supplements: 'plus-circle',
-      boissons: 'glass-water',
-      allergenes: 'alert-triangle'
-    };
+  if (isIos() && !isInStandaloneMode()) {
+    if (iosHelp) {
+      if (!iosHelp.hidden) {
+        clearTimeout(installHelpTimeout);
+        iosHelp.hidden = true;
+        return;
+      }
 
-    function scrollToMenuCategory(categoryKey) {
-  const target = document.getElementById(`menu-${categoryKey}`);
-  if (target) {
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      clearTimeout(installHelpTimeout);
+      iosHelp.hidden = false;
+      iosHelp.innerHTML = t.iosInstallHelp;
+      iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      installHelpTimeout = setTimeout(() => {
+        iosHelp.hidden = true;
+      }, 15000);
+    }
   }
 }
 
