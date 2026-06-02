@@ -3697,7 +3697,10 @@ function updateInstallUI() {
     }
 
 async function handleInstallClick() {
-  alert('handleInstallClick');
+  alert(
+  'deferredInstallPrompt = ' +
+  (deferredInstallPrompt ? 'OK' : 'NULL')
+);
       const iosHelp = document.getElementById('ios-install-help');
       const t = translations[currentLang];
 
