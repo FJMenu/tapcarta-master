@@ -4,13 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
+
   <title>TapCarta</title>
+
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+  <meta name="theme-color" content="#0F0F0F">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="TapCarta">
+
   <style>
     html, body {
       margin: 0;
       width: 100%;
       min-height: 100%;
       background: #0F0F0F;
+      overflow: hidden;
     }
 
     #tapcarta-standard-frame {
@@ -20,9 +32,33 @@
       display: block;
       background: #0F0F0F;
     }
+
+    #tapcarta-install-button {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: none;
+      border: 1px solid rgba(242, 199, 68, 0.65);
+      background: linear-gradient(180deg, rgba(242,199,68,0.24), rgba(242,199,68,0.12));
+      color: #FAF6EE;
+      border-radius: 999px;
+      padding: 13px 20px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.38);
+      cursor: pointer;
+    }
   </style>
 </head>
+
 <body>
+  <button id="tapcarta-install-button" type="button">
+    Installer le menu
+  </button>
+
   <script>
     const slug = window.location.pathname
       .replace(/^\/+|\/+$/g, '')
@@ -37,6 +73,58 @@
     iframe.src = target;
     iframe.title = 'TapCarta';
     document.body.appendChild(iframe);
+
+    let deferredInstallPrompt = null;
+
+    const installButton = document.getElementById('tapcarta-install-button');
+
+    function isStandaloneMode() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function updateInstallButton() {
+      if (!installButton) return;
+
+      if (isStandaloneMode() || !deferredInstallPrompt) {
+        installButton.style.display = 'none';
+        return;
+      }
+
+      installButton.style.display = 'inline-flex';
+    }
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      updateInstallButton();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      updateInstallButton();
+    });
+
+    installButton.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+
+      deferredInstallPrompt.prompt();
+
+      await deferredInstallPrompt.userChoice.catch(() => null);
+
+      deferredInstallPrompt = null;
+      updateInstallButton();
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+          updateViaCache: 'none'
+        }).catch(() => {});
+      });
+    }
+
+    updateInstallButton();
   </script>
 </body>
 </html>
