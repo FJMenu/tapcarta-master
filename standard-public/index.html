@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.3.10';
+    const APP_VERSION = 'V2.3.3.11';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -8114,9 +8114,22 @@ function renderMenuItem(item, t) {
   `;
 }
 
-    function getCategoryIconClass(categoryKey) {
-      return categoryKey === 'allergenes' ? 'icon-gold' : 'icon-red';
-    }
+    const categoryIcons = {
+  snacks: 'utensils-crossed',
+  entrees: 'salad',
+  plats: 'utensils',
+  moules: 'shell',
+  desserts: 'cake-slice',
+  crepes: 'circle',
+  suggestions: 'sparkles',
+  supplements: 'plus-circle',
+  boissons: 'wine',
+  allergenes: 'shield-alert'
+};
+
+function getCategoryIconClass(categoryKey) {
+  return categoryKey === 'allergenes' ? 'icon-gold' : 'icon-red';
+}
 
 function renderCategory(categoryKey, categoryLabel, t) {
       const categoryMeta = menuMeta.categories[categoryKey] || {};
