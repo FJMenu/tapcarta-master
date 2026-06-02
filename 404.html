@@ -120,7 +120,7 @@
     }
 
     function createDynamicManifest({ name, logoUrl }) {
-      const startUrl = '/' + encodeURIComponent(slug) + '/';
+      const startUrl = window.location.origin + '/' + encodeURIComponent(slug) + '/';
       const appName = cleanRestaurantName(name);
 
       const manifest = {
