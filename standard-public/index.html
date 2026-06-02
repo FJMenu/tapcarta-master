@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.3.6';
+    const APP_VERSION = 'V2.3.3.7';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -1924,20 +1924,23 @@ function renderStandardComplementaryLinksSection() {
 }
 
 function renderStandardInstallShareRow(t) {
-  return renderStandardActionRow([
-    `
-      <button id="install-app-btn" hidden onclick="handleInstallClick()" class="${getStandardSmallButtonClass()}">
-        <i data-lucide="download" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
-        <span class="text-xs font-medium tracking-wide">${t.installApp}</span>
-      </button>
-    `,
-    `
-      <button onclick="handleShareRestaurantClick()" class="${getStandardSmallButtonClass()}">
-        <i data-lucide="share-2" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
-        <span class="text-xs font-medium tracking-wide">${t.shareRestaurant}</span>
-      </button>
-    `
-  ], true);
+  return `
+    <div class="space-y-3 max-w-[420px] mx-auto">
+      <div class="flex justify-center">
+        <button id="install-app-btn" hidden onclick="handleInstallClick()" class="${getStandardSmallButtonClass()}">
+          <i data-lucide="download" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
+          <span class="text-xs font-medium tracking-wide">${t.installApp}</span>
+        </button>
+      </div>
+
+      <div class="flex justify-center">
+        <button onclick="handleShareRestaurantClick()" class="${getStandardSmallButtonClass()}">
+          <i data-lucide="share-2" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
+          <span class="text-xs font-medium tracking-wide">${t.shareRestaurant}</span>
+        </button>
+      </div>
+    </div>
+  `;
 }
 
 function renderStandardMainActionsSection(t) {
