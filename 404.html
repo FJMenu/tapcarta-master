@@ -73,7 +73,7 @@
       try {
         const { data, error } = await tapCartaSupabase
           .from('restaurants')
-          .select('name, slug, logo_url')
+          .select('name, slug, logo_url, app_icon_url')
           .eq('slug', slug)
           .maybeSingle();
 
@@ -86,7 +86,7 @@
 
         return {
           name: cleanRestaurantName(data.name),
-          logoUrl: data.logo_url || fallbackIconUrl
+          logoUrl: data.app_icon_url || data.logo_url || fallbackIconUrl
         };
       } catch (error) {
         return {
