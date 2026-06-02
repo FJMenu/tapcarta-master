@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.3.11';
+    const APP_VERSION = 'V2.3.3.12';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -1927,7 +1927,12 @@ function renderStandardComplementaryLinksSection() {
 function renderStandardInstallShareRow(t) {
   return `
     <div class="space-y-3 max-w-[420px] mx-auto">
-      <div class="flex justify-center">
+      <div class="grid grid-cols-2 gap-3">
+        <button id="install-app-btn" type="button" onclick="handleInstallClick()" class="${getStandardSmallButtonClass()}" hidden>
+          <i data-lucide="download" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
+          <span class="text-xs font-medium tracking-wide">${t.installApp}</span>
+        </button>
+
         <button onclick="handleShareRestaurantClick()" class="${getStandardSmallButtonClass()}">
           <i data-lucide="share-2" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
           <span class="text-xs font-medium tracking-wide">${t.shareRestaurant}</span>
@@ -3445,6 +3450,7 @@ function detectLanguage() {
 }
 
 let currentLang = detectLanguage();
+let parentInstallAvailable = false;
 let installToastTimeout = null;
 let installHelpTimeout = null;
 
@@ -3510,6 +3516,119 @@ function persistClientActiveView() {
     function isSamsungInternet() {
       return /SamsungBrowser/i.test(window.navigator.userAgent || '');
     }
+
+    function isAndroid() {
+      return /android/i.test(window.navigator.userAgent || '');
+    }
+
+    function isInStandaloneMode() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function getInstallAppTexts() {
+      return {
+        button: translations[currentLang]?.installApp || 'Installer le menu',
+        samsungHelp: translations[currentLang]?.samsungInstallHelp || translations.fr.samsungInstallHelp,
+        androidHelp: translations[currentLang]?.samsungInstallHelp || translations.fr.samsungInstallHelp,
+        iosHelp: translations[currentLang]?.iosInstallHelp || translations.fr.iosInstallHelp
+      };
+    }
+
+    function requestParentInstallState() {
+      if (window.parent === window) return;
+
+      window.parent.postMessage({
+        source: 'tapcarta-standard',
+        type: 'tapcarta-install-state-request'
+      }, window.location.origin);
+    }
+
+    function updateInstallUI() {
+      const installBtn = document.getElementById('install-app-btn');
+      const iosHelp = document.getElementById('ios-install-help');
+      const installTexts = getInstallAppTexts();
+
+      if (!installBtn) return;
+
+      const buttonSpan = installBtn.querySelector('span');
+      if (buttonSpan) {
+        buttonSpan.textContent = installTexts.button;
+      }
+
+      if (isInStandaloneMode()) {
+        installBtn.hidden = true;
+        if (iosHelp) {
+          iosHelp.hidden = true;
+          iosHelp.innerHTML = '';
+        }
+        return;
+      }
+
+      if (parentInstallAvailable || isSamsungInternet() || isIos() || isAndroid()) {
+        installBtn.hidden = false;
+      } else {
+        installBtn.hidden = true;
+      }
+
+      if (iosHelp) {
+        iosHelp.hidden = true;
+      }
+    }
+
+    async function handleInstallClick() {
+      const iosHelp = document.getElementById('ios-install-help');
+      const installTexts = getInstallAppTexts();
+
+      const toggleHelp = (html) => {
+        if (!iosHelp) return;
+
+        if (!iosHelp.hidden) {
+          clearTimeout(installHelpTimeout);
+          iosHelp.hidden = true;
+          return;
+        }
+
+        clearTimeout(installHelpTimeout);
+        iosHelp.hidden = false;
+        iosHelp.innerHTML = html;
+        iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        installHelpTimeout = setTimeout(() => {
+          iosHelp.hidden = true;
+        }, 15000);
+      };
+
+      if (parentInstallAvailable && window.parent !== window) {
+        window.parent.postMessage({
+          source: 'tapcarta-standard',
+          type: 'tapcarta-install-request'
+        }, window.location.origin);
+        return;
+      }
+
+      if (isSamsungInternet()) {
+        toggleHelp(installTexts.samsungHelp);
+        return;
+      }
+
+      if (isIos() && !isInStandaloneMode()) {
+        toggleHelp(installTexts.iosHelp);
+        return;
+      }
+
+      if (isAndroid() && !isInStandaloneMode()) {
+        toggleHelp(installTexts.androidHelp);
+      }
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (!event.data || event.data.source !== 'tapcarta-404') return;
+      if (event.data.type !== 'tapcarta-install-state') return;
+
+      parentInstallAvailable = Boolean(event.data.canInstall);
+      updateInstallUI();
+    });
 
     function isInStandaloneMode() {
       return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -9065,6 +9184,7 @@ ${!orderMode ? renderInfoBlocks() : ''}
 
       updateLangButtons();
       setupClientRequestAutoRefresh();
+      requestParentInstallState();
     }
 
 function ensureFreshHtmlVersion() {
