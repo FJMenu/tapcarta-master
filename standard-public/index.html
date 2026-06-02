@@ -6,7 +6,7 @@
   <title>TapCarta Demo</title>
 
   <script>
-    const APP_VERSION = 'V2.3.3.5';
+    const APP_VERSION = 'V2.3.3.6';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -1926,7 +1926,7 @@ function renderStandardComplementaryLinksSection() {
 function renderStandardInstallShareRow(t) {
   return renderStandardActionRow([
     `
-      <button id="install-app-btn" onclick="handleInstallClick()" class="${getStandardSmallButtonClass()}">
+      <button id="install-app-btn" hidden onclick="handleInstallClick()" class="${getStandardSmallButtonClass()}">
         <i data-lucide="download" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
         <span class="text-xs font-medium tracking-wide">${t.installApp}</span>
       </button>
@@ -3559,25 +3559,40 @@ function persistClientActiveView() {
     }
 
 function updateInstallUI() {
-  const installBtn = document.getElementById('install-app-btn');
-  const iosHelp = document.getElementById('ios-install-help');
-  const t = translations[currentLang];
+      const installBtn = document.getElementById('install-app-btn');
+      const iosHelp = document.getElementById('ios-install-help');
+      const t = translations[currentLang];
 
-  if (!installBtn) return;
+      if (!installBtn) return;
 
-  if (isInStandaloneMode()) {
-    installBtn.hidden = true;
-    if (iosHelp) iosHelp.hidden = true;
-    return;
-  }
+      if (isInStandaloneMode()) {
+        installBtn.hidden = true;
+        if (iosHelp) iosHelp.hidden = true;
+        return;
+      }
 
-  installBtn.hidden = false;
-  installBtn.querySelector('span').textContent = t.installApp;
+      if (isSamsungInternet()) {
+        installBtn.hidden = false;
+        installBtn.querySelector('span').textContent = t.installApp;
 
-  if (iosHelp) {
-    iosHelp.hidden = true;
-  }
-}
+        if (iosHelp) {
+          iosHelp.hidden = true;
+          iosHelp.innerHTML = t.samsungInstallHelp;
+        }
+        return;
+      }
+
+      if (deferredInstallPrompt || isIos()) {
+        installBtn.hidden = false;
+        installBtn.querySelector('span').textContent = t.installApp;
+      } else {
+        installBtn.hidden = true;
+      }
+
+      if (iosHelp) {
+        iosHelp.hidden = true;
+      }
+    }
 
     function showInstallToast() {
       if (installToastAlreadyShown) return;
@@ -3679,62 +3694,70 @@ function updateInstallUI() {
     }
 
 async function handleInstallClick() {
-  const iosHelp = document.getElementById('ios-install-help');
-  const t = translations[currentLang];
+      const iosHelp = document.getElementById('ios-install-help');
+      const t = translations[currentLang];
 
-  const showInstallHelp = (html) => {
-    if (!iosHelp) return;
+      if (isSamsungInternet()) {
+        if (iosHelp) {
+          if (!iosHelp.hidden) {
+            clearTimeout(installHelpTimeout);
+            iosHelp.hidden = true;
+            return;
+          }
 
-    if (!iosHelp.hidden) {
-      clearTimeout(installHelpTimeout);
-      iosHelp.hidden = true;
-      return;
+          clearTimeout(installHelpTimeout);
+          iosHelp.hidden = false;
+          iosHelp.innerHTML = t.samsungInstallHelp;
+          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          installHelpTimeout = setTimeout(() => {
+            iosHelp.hidden = true;
+          }, 15000);
+        }
+        return;
+      }
+
+      if (deferredInstallPrompt) {
+        installToastAlreadyShown = false;
+        deferredInstallPrompt.prompt();
+
+        try {
+          const choiceResult = await deferredInstallPrompt.userChoice;
+
+          if (choiceResult && choiceResult.outcome === 'accepted') {
+            clearTimeout(installFallbackTimeout);
+            installFallbackTimeout = setTimeout(() => {
+              if (isInStandaloneMode()) {
+                showInstallToast();
+              }
+            }, 1200);
+          }
+        } catch (_) {}
+
+        deferredInstallPrompt = null;
+        updateInstallUI();
+        return;
+      }
+
+      if (isIos() && !isInStandaloneMode()) {
+        if (iosHelp) {
+          if (!iosHelp.hidden) {
+            clearTimeout(installHelpTimeout);
+            iosHelp.hidden = true;
+            return;
+          }
+
+          clearTimeout(installHelpTimeout);
+          iosHelp.hidden = false;
+          iosHelp.innerHTML = t.iosInstallHelp;
+          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          installHelpTimeout = setTimeout(() => {
+            iosHelp.hidden = true;
+          }, 15000);
+        }
+      }
     }
-
-    clearTimeout(installHelpTimeout);
-    iosHelp.hidden = false;
-    iosHelp.innerHTML = html || t.iosInstallHelp || t.installApp;
-    iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    installHelpTimeout = setTimeout(() => {
-      iosHelp.hidden = true;
-    }, 15000);
-  };
-
-  if (isSamsungInternet()) {
-    showInstallHelp(t.samsungInstallHelp);
-    return;
-  }
-
-  if (deferredInstallPrompt) {
-    deferredInstallPrompt.prompt();
-
-    const choiceResult = await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;
-    updateInstallUI();
-
-    if (choiceResult.outcome === 'accepted') {
-      showInstallToast();
-    }
-
-    return;
-  }
-
-  if (isIos() && !isInStandaloneMode()) {
-    showInstallHelp(t.iosInstallHelp);
-    return;
-  }
-
-  showInstallHelp(
-    currentLang === 'es'
-      ? 'En Android: toca el menú ⋮ del navegador y elige “Añadir a pantalla de inicio” o “Instalar aplicación”.'
-      : currentLang === 'en'
-        ? 'On Android: tap the browser menu ⋮ and choose “Add to Home screen” or “Install app”.'
-        : currentLang === 'nl'
-          ? 'Op Android: tik op het browsermenu ⋮ en kies “Toevoegen aan startscherm” of “App installeren”.'
-          : 'Sur Android : appuyez sur le menu ⋮ du navigateur, puis choisissez “Ajouter à l’écran d’accueil” ou “Installer l’application”.'
-  );
-}
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
