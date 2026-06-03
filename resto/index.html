@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.3.3.1';
+        const APP_VERSION = 'V2.4.1.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1766,7 +1766,7 @@ async function validateTapCartaRestoAccess() {
 
   const { data: restaurantRow, error: restaurantError } = await supabaseClient
     .from('restaurants')
-    .select('id, name, slug, status, pack_code, public_url, resto_url, qr_framed_storage_path, qr_framed_url')
+    .select('id, name, slug, status, pack_code, public_url, resto_url, qr_framed_storage_path, qr_framed_url, google_rating, google_user_rating_count, google_rating_updated_at, google_next_sync_at, google_sync_status, google_sync_error')
     .eq('id', restaurantId)
     .maybeSingle();
 
@@ -2004,6 +2004,19 @@ siteConfig.experienceUrl = resolvedExperienceUrl;
 siteConfig.activationRequestUrl = resolvedActivationRequestUrl;
 siteConfig.reviewReadUrl = resolvedReviewReadUrl;
 siteConfig.reviewWriteUrl = resolvedReviewWriteUrl;
+
+siteConfig.googleReviews = {
+  rating: typeof supabaseRestaurant.google_rating === 'number'
+    ? Number(supabaseRestaurant.google_rating)
+    : null,
+  userRatingCount: Number.isFinite(Number(supabaseRestaurant.google_user_rating_count))
+    ? Number(supabaseRestaurant.google_user_rating_count)
+    : null,
+  updatedAt: supabaseRestaurant.google_rating_updated_at || null,
+  nextSyncAt: supabaseRestaurant.google_next_sync_at || null,
+  syncStatus: supabaseRestaurant.google_sync_status || null,
+  syncError: supabaseRestaurant.google_sync_error || null
+};
 
 if (!restaurantData.links || typeof restaurantData.links !== 'object') {
   restaurantData.links = {};
@@ -3845,7 +3858,25 @@ function updateOrderFormTimePart(part, value) {
       `;
     }
 
-  function renderMenu() {
+  function formatGoogleSyncDate(value) {
+  if (!value) return 'non disponible';
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return 'non disponible';
+  }
+
+  return date.toLocaleString(currentLang || 'fr', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function renderMenu() {
   const t = translations[currentLang];
   const wrapper = document.getElementById('app-wrapper');
   document.documentElement.lang = currentLang;
@@ -4995,7 +5026,7 @@ function notifyIfNewActionRequests() {
   document.getElementById('restaurant-new-request-notification')?.remove();
 }
 
-const googleReviewsData = window.tapCartaGoogleReviewsData;
+const googleReviewsData = siteConfig.googleReviews || {};
 
 const restaurantData = {
   name:
@@ -10227,27 +10258,44 @@ function renderRequestRow(item, displayMode = 'active') {
               </div>
               <div>
                 <h3 class="font-display text-lg font-bold text-cream">${t.restaurantGoogleTitle}</h3>
-                <p class="text-xs text-cream/60 mt-1">${t.restaurantGoogleRefreshInfo}</p>
+                <p class="text-xs text-cream/60 mt-1">Synchronisation Google quotidienne</p>
               </div>
             </div>
 
-            <div class="flex items-end gap-3 mb-5">
-              <div id="restaurant-google-reviews-rating" class="text-4xl font-bold text-gold leading-none">${googleReviewsData.rating}</div>
-              <div class="text-sm text-cream/70 pb-1">/ 5</div>
-            </div>
+            ${
+              googleReviewsData.rating && googleReviewsData.userRatingCount !== null
+                ? `
+                  <div class="flex items-end gap-3 mb-5">
+                    <div id="restaurant-google-reviews-rating" class="text-4xl font-bold text-gold leading-none">${googleReviewsData.rating.toFixed(1).replace('.', ',')}</div>
+                    <div class="text-sm text-cream/70 pb-1">/ 5</div>
+                  </div>
 
-            <div id="restaurant-google-reviews-count" class="text-sm text-cream/75 mb-6">${t.restaurantGoogleReviewsCount.replace('{count}', googleReviewsData.count)}</div>
+                  <div id="restaurant-google-reviews-count" class="text-sm text-cream/75 mb-4">
+                    ${t.restaurantGoogleReviewsCount.replace('{count}', googleReviewsData.userRatingCount)}
+                  </div>
+
+                  <div class="mb-6 space-y-1 rounded-2xl border border-gold/15 bg-black/15 px-4 py-3 text-xs text-cream/60">
+                    <div>Dernière mise à jour : ${formatGoogleSyncDate(googleReviewsData.updatedAt)}</div>
+                    <div>Prochaine mise à jour prévue : ${formatGoogleSyncDate(googleReviewsData.nextSyncAt)}</div>
+                  </div>
+                `
+                : `
+                  <div class="mb-6 rounded-2xl border border-gold/15 bg-black/15 px-4 py-4">
+                    <div class="text-sm font-semibold text-cream">
+                      Données Google en cours de synchronisation.
+                    </div>
+                    <div class="mt-2 text-xs leading-relaxed text-cream/60">
+                      La note réelle Google sera affichée ici après la prochaine synchronisation TapCarta.
+                    </div>
+                  </div>
+                `
+            }
 
             <div class="flex flex-col sm:flex-row gap-3">
               <a href="${siteConfig.reviewReadUrl}" target="_blank" rel="noopener noreferrer" class="btn-action flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
                 <i data-lucide="external-link" class="w-4 h-4 text-gold"></i>
                 <span>${t.restaurantGoogleViewReviews}</span>
               </a>
-
-              <button id="restaurant-google-reviews-refresh-btn" class="btn-action flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
-                <i data-lucide="refresh-cw" class="w-4 h-4 text-gold"></i>
-                <span>${t.restaurantGoogleRefreshButton}</span>
-              </button>
             </div>
           </article>
    ` : ''}
