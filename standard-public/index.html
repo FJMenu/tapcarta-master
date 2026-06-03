@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.4.4';
+    const APP_VERSION = 'V2.3.4.5';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -920,16 +920,22 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
     </button>
   </div>
 
-  <div class="tapcarta-public-signature" aria-label="TapCarta menu digital">
+  <a
+    class="tapcarta-public-signature"
+    href="https://tapcarta.com/"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Découvrir TapCarta"
+  >
     <img
       id="tapcarta-public-logo"
       class="tapcarta-public-logo"
-      src=""
+      src="https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png"
       alt="TapCarta"
       loading="eager"
     >
     <div id="tapcarta-public-text" class="tapcarta-public-text"></div>
-  </div>
+  </a>
 
   <div id="app-wrapper" class="w-full min-h-screen bg-dark text-cream">
     <header class="relative overflow-hidden pt-64 pb-8 px-6 text-center animate-fade-up">
@@ -2776,7 +2782,7 @@ async function loadRestaurantData() {
         closed: 'Fermé',
         tueFriHours: '11:30 – 22:00',
         satSunHours: '10:00 – 23:00',
-        copyright: '© 2026 TapCarta Demo',
+        copyright: '© 2026 TapCarta',
         logoPlaceholder: 'Insérez votre logo complet ici',
         noticeAllFries: 'Tous nos plats sont accompagnés de frites.',
         noticeTakeaway: 'Tous nos plats sont disponibles à emporter.',
