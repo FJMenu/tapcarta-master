@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.4.7';
+    const APP_VERSION = 'V2.3.5.1';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -852,7 +852,6 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
   </div>
 
   <script>
-  const RESTAURANT_JSON_URL = '';
 
 function isUuid(value) {
   return typeof value === 'string'
@@ -940,12 +939,9 @@ let siteConfig = {
     name: ''
   },
   logoUrl: '',
-  brandLogoUrl: TAPCARTA_PUBLIC_LOGO_URL,
   productName: 'TapCarta',
-  productSignature: '',
   reviewUrl: '',
-  desktopCollageUrl: '',
-  restaurantName: 'Restaurant TapCarta',
+  restaurantName: '',
   modules: {
     ordering: true,
     booking: true,
@@ -967,39 +963,14 @@ let siteConfig = {
   }
 };
 
-const defaultInfoBlocks = [];
+let infoBlocks = [];
 
-let infoBlocks = defaultInfoBlocks.map(block => ({
-  ...block,
-  text: { ...block.text }
-}));
-
-let menuData = {
-  snacks: [],
-  entrees: [],
-  plats: [],
-  moules: [],
-  desserts: [],
-  crepes: [],
-  suggestions: [],
-  supplements: [],
-  boissons: []
-};
+let menuData = {};
 
 let menuMeta = {
   updatedAt: null,
   menuVersion: null,
-  categories: {
-    snacks: { visible: true, order: 9999, updatedAt: null, name: '' },
-    entrees: { visible: true, order: 9999, updatedAt: null, name: '' },
-    plats: { visible: true, order: 9999, updatedAt: null, name: '' },
-    moules: { visible: true, order: 9999, updatedAt: null, name: '' },
-    desserts: { visible: true, order: 9999, updatedAt: null, name: '' },
-    crepes: { visible: true, order: 9999, updatedAt: null, name: '' },
-    suggestions: { visible: true, order: 9999, updatedAt: null, name: '' },
-    supplements: { visible: true, order: 9999, updatedAt: null, name: '' },
-    boissons: { visible: true, order: 9999, updatedAt: null, name: '' }
-  },
+  categories: {},
   subcategories: {}
 };
 
@@ -1153,7 +1124,7 @@ function renderMenuSubcategoryCards(categoryKey, t) {
 
       <div class="flex items-center gap-3 mb-5">
         <div class="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
-          <i data-lucide="${categoryIcons[categoryKey] || 'utensils-crossed'}" class="w-4 h-4 ${getCategoryIconClass(categoryKey)}"></i>
+          <i data-lucide="utensils-crossed" class="w-4 h-4 text-gold"></i>
         </div>
         <h3 class="font-display text-lg font-bold text-cream tracking-wide uppercase">${categoryLabel}</h3>
         <div class="flex-1 h-px bg-gold/20"></div>
@@ -1248,8 +1219,8 @@ function renderCategory(categoryKey, categoryLabel, t) {
 
   const items = getMenuCategoryVisibleItems(categoryKey);
 
-  const icon = categoryIcons[categoryKey] || 'utensils-crossed';
-  const iconClass = getCategoryIconClass(categoryKey);
+  const icon = 'utensils-crossed';
+  const iconClass = 'text-gold';
 
   if (items.length === 0) {
     return '';
@@ -1302,39 +1273,27 @@ function getMenuItemSubtitle(item) {
   );
 }
 
-function cloneDefaultInfoBlocks() {
-  return defaultInfoBlocks.map(block => ({
-    ...block,
-    text: { ...block.text }
-  }));
-}
-
 function normalizeInfoBlocks(sourceBlocks) {
   if (!Array.isArray(sourceBlocks)) {
-    return cloneDefaultInfoBlocks();
+    return [];
   }
-
-  const fallbackById = new Map(defaultInfoBlocks.map(block => [block.id, block]));
 
   const normalizedBlocks = sourceBlocks
     .filter(block => block && typeof block === 'object')
     .map((block, index) => {
-      const fallback = fallbackById.get(block.id) || defaultInfoBlocks[index] || {};
       const sourceText = block.text && typeof block.text === 'object' ? block.text : {};
-      const fallbackText = fallback.text && typeof fallback.text === 'object' ? fallback.text : {};
 
       return {
         id: block.id || fallback.id || `infoBlock${index + 1}`,
         visible: block.visible === true,
-        icon: block.icon || fallback.icon || 'info',
+        icon: block.icon || 'info',
         text: {
-          ...fallbackText,
           ...sourceText
         }
       };
     });
 
-  return normalizedBlocks.length ? normalizedBlocks : cloneDefaultInfoBlocks();
+  return normalizedBlocks;
 }
 
 function getInfoBlockText(block) {
@@ -2420,22 +2379,6 @@ function applyStandardPublicRestaurant(restaurantRow) {
 
 async function loadRestaurantData() {
   let restaurantData = {};
-
-  const shouldLoadLocalRestaurantJson =
-    typeof RESTAURANT_JSON_URL === 'string' &&
-    RESTAURANT_JSON_URL.trim();
-
-  if (shouldLoadLocalRestaurantJson) {
-    try {
-      const response = await fetch(RESTAURANT_JSON_URL, { cache: 'no-store' });
-
-      if (response.ok) {
-        restaurantData = await response.json();
-      }
-    } catch (error) {
-      restaurantData = {};
-    }
-  }
 
   if (!restaurantData || typeof restaurantData !== 'object') {
     restaurantData = {};
@@ -7816,24 +7759,6 @@ function renderMenuItem(item, t) {
     </div>
   `;
 }
-
-    const categoryIcons = {
-  snacks: 'utensils-crossed',
-  entrees: 'salad',
-  plats: 'utensils',
-  moules: 'shell',
-  desserts: 'cake-slice',
-  crepes: 'circle',
-  suggestions: 'sparkles',
-  supplements: 'plus-circle',
-  boissons: 'wine',
-  allergenes: 'shield-alert'
-};
-
-function getCategoryIconClass(categoryKey) {
-  return categoryKey === 'allergenes' ? 'icon-gold' : 'icon-red';
-}
-
 function renderCategory(categoryKey, categoryLabel, t) {
       const categoryMeta = menuMeta.categories[categoryKey] || {};
       if (!menuData[categoryKey]) return '';
@@ -7843,8 +7768,8 @@ function renderCategory(categoryKey, categoryLabel, t) {
         item => item && item.visible !== false
       );
 
-      const icon = categoryIcons[categoryKey] || 'utensils-crossed';
-      const iconClass = getCategoryIconClass(categoryKey);
+      const icon = 'utensils-crossed';
+      const iconClass = 'text-gold';
 
       if (items.length === 0) {
         return `
@@ -7981,7 +7906,7 @@ function renderOrderCategoryFilter(visibleCategoryKeys, t) {
         <div class="menu-category mb-8" id="menu-allergenes">
           <div class="flex items-center gap-3 mb-4">
             <div class="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
-              <i data-lucide="${categoryIcons.allergenes}" class="w-4 h-4 icon-gold"></i>
+              <i data-lucide="shield-alert" class="w-4 h-4 icon-gold"></i>
             </div>
             <h3 class="font-display text-lg font-bold text-cream tracking-wide uppercase">${t.allergenTitle}</h3>
             <div class="flex-1 h-px bg-gold/20"></div>
