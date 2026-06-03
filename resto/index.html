@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.4.2.1';
+        const APP_VERSION = 'V2.4.2.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2016,7 +2016,7 @@ siteConfig.googleMapsProfileUrl =
 siteConfig.googleReviewsReadUrl =
   supabaseRestaurant.google_place_id
     ? `https://search.google.com/local/reviews?placeid=${encodeURIComponent(supabaseRestaurant.google_place_id)}`
-    : resolvedReviewReadUrl;
+    : '#';
 
 siteConfig.googleReviews = {
   rating: typeof supabaseRestaurant.google_rating === 'number'
