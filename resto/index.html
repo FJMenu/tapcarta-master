@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.4.1.2';
+        const APP_VERSION = 'V2.4.2.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1766,7 +1766,7 @@ async function validateTapCartaRestoAccess() {
 
   const { data: restaurantRow, error: restaurantError } = await supabaseClient
     .from('restaurants')
-    .select('id, name, slug, status, pack_code, public_url, resto_url, qr_framed_storage_path, qr_framed_url, google_reviews_url, google_maps_url, google_rating, google_user_rating_count, google_rating_updated_at, google_next_sync_at, google_sync_status, google_sync_error')
+    .select('id, name, slug, status, pack_code, public_url, resto_url, qr_framed_storage_path, qr_framed_url, google_reviews_url, google_maps_url, google_place_id, google_rating, google_user_rating_count, google_rating_updated_at, google_next_sync_at, google_sync_status, google_sync_error')
     .eq('id', restaurantId)
     .maybeSingle();
 
@@ -2007,6 +2007,16 @@ siteConfig.experienceUrl = resolvedExperienceUrl;
 siteConfig.activationRequestUrl = resolvedActivationRequestUrl;
 siteConfig.reviewReadUrl = resolvedReviewReadUrl;
 siteConfig.reviewWriteUrl = resolvedReviewWriteUrl;
+
+siteConfig.googleMapsProfileUrl =
+  supabaseRestaurant.google_maps_url ||
+  resolvedReviewReadUrl ||
+  '#';
+
+siteConfig.googleReviewsReadUrl =
+  supabaseRestaurant.google_place_id
+    ? `https://search.google.com/local/reviews?placeid=${encodeURIComponent(supabaseRestaurant.google_place_id)}`
+    : resolvedReviewReadUrl;
 
 siteConfig.googleReviews = {
   rating: typeof supabaseRestaurant.google_rating === 'number'
@@ -10295,11 +10305,16 @@ function renderRequestRow(item, displayMode = 'active') {
             }
 
             <div class="flex flex-col sm:flex-row gap-3">
-              <a href="${siteConfig.reviewReadUrl}" target="_blank" rel="noopener noreferrer" class="btn-action flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
-                <i data-lucide="external-link" class="w-4 h-4 text-gold"></i>
-                <span>${t.restaurantGoogleViewReviews}</span>
-              </a>
-            </div>
+  <a href="${siteConfig.googleMapsProfileUrl}" target="_blank" rel="noopener noreferrer" class="btn-action flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
+    <i data-lucide="map-pin" class="w-4 h-4 text-gold"></i>
+    <span>Voir ma fiche Google</span>
+  </a>
+
+  <a href="${siteConfig.googleReviewsReadUrl}" target="_blank" rel="noopener noreferrer" class="btn-action flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
+    <i data-lucide="star" class="w-4 h-4 text-gold"></i>
+    <span>Voir les avis</span>
+  </a>
+</div>
           </article>
    ` : ''}
 
