@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.3.2.2';
+        const APP_VERSION = 'V2.3.3.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1875,6 +1875,27 @@ async function loadActiveRestaurantData() {
     } catch (error) {
       console.error('Erreur lecture menu live Supabase côté restaurant :', error);
     }
+
+    try {
+      const { data: settingsRow, error: settingsError } = await supabaseClient
+        .from('restaurant_settings')
+        .select('modules_json')
+        .eq('restaurant_id', resolvedSupabaseRestaurantId)
+        .maybeSingle();
+
+      if (settingsError) {
+        throw settingsError;
+      }
+
+      if (settingsRow?.modules_json && typeof settingsRow.modules_json === 'object') {
+        restaurantData.modules = {
+          ...(restaurantData.modules || {}),
+          ...settingsRow.modules_json
+        };
+      }
+    } catch (error) {
+      console.warn('TapCarta Resto: erreur lecture modules depuis Supabase.', error);
+    }
   }
 
   siteConfig.restaurantName =
@@ -1890,11 +1911,36 @@ const restaurantLifecycle =
 
 const isRestaurantActive = restaurantLifecycle === 'active';
 
+const getRestaurantMainModuleStatus = (value) => {
+  if (!isRestaurantActive) return 'hidden';
+  if (['active', 'standby', 'hidden'].includes(value)) return value;
+  if (value === false) return 'hidden';
+  return 'active';
+};
+
+const getRestaurantQuickModuleStatus = (value) => {
+  if (!isRestaurantActive) return 'hidden';
+  if (value === 'hidden' || value === false) return 'hidden';
+  return 'active';
+};
+
+siteConfig.moduleStatuses = {
+  ...(siteConfig.moduleStatuses || {}),
+  ordering: getRestaurantMainModuleStatus(restaurantData?.modules?.ordering),
+  booking: getRestaurantMainModuleStatus(restaurantData?.modules?.booking),
+  googleReviews: getRestaurantQuickModuleStatus(restaurantData?.modules?.googleReviews),
+  whatsapp: getRestaurantQuickModuleStatus(restaurantData?.modules?.whatsapp),
+  phone: getRestaurantQuickModuleStatus(restaurantData?.modules?.phone),
+  directions: getRestaurantQuickModuleStatus(restaurantData?.modules?.directions)
+};
+
 siteConfig.modules = {
-  ordering: isRestaurantActive && restaurantData?.modules?.ordering !== false,
-  booking: isRestaurantActive && restaurantData?.modules?.booking !== false,
-  googleReviews: isRestaurantActive && restaurantData?.modules?.googleReviews !== false,
-  whatsapp: isRestaurantActive && restaurantData?.modules?.whatsapp !== false,
+  ordering: siteConfig.moduleStatuses.ordering !== 'hidden',
+  booking: siteConfig.moduleStatuses.booking !== 'hidden',
+  googleReviews: siteConfig.moduleStatuses.googleReviews !== 'hidden',
+  whatsapp: siteConfig.moduleStatuses.whatsapp !== 'hidden',
+  phone: siteConfig.moduleStatuses.phone !== 'hidden',
+  directions: siteConfig.moduleStatuses.directions !== 'hidden',
   web: isRestaurantActive && restaurantData?.modules?.web === true
 };
 
