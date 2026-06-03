@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.4.3';
+    const APP_VERSION = 'V2.3.4.4';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -952,7 +952,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
   </div>
 
   <script>
-  const RESTAURANT_JSON_URL = './restaurants/tapcarta-demo.json';
+  const RESTAURANT_JSON_URL = '';
 
 function isUuid(value) {
   return typeof value === 'string'
@@ -2573,16 +2573,21 @@ function applyStandardPublicRestaurant(restaurantRow) {
 async function loadRestaurantData() {
   let restaurantData = {};
 
-  try {
-    const response = await fetch(RESTAURANT_JSON_URL, { cache: 'no-store' });
+  const shouldLoadLocalRestaurantJson =
+    typeof RESTAURANT_JSON_URL === 'string' &&
+    RESTAURANT_JSON_URL.trim() &&
+    !RESTAURANT_JSON_URL.includes('tapcarta-demo');
 
-    if (response.ok) {
-      restaurantData = await response.json();
-    } else {
-      console.warn(`TapCarta Standard: JSON local non trouvé (${RESTAURANT_JSON_URL}). Démarrage via slug URL / Supabase.`);
+  if (shouldLoadLocalRestaurantJson) {
+    try {
+      const response = await fetch(RESTAURANT_JSON_URL, { cache: 'no-store' });
+
+      if (response.ok) {
+        restaurantData = await response.json();
+      }
+    } catch (error) {
+      restaurantData = {};
     }
-  } catch (error) {
-    console.warn(`TapCarta Standard: impossible de charger le JSON local (${RESTAURANT_JSON_URL}). Démarrage via slug URL / Supabase.`, error);
   }
 
   if (!restaurantData || typeof restaurantData !== 'object') {
