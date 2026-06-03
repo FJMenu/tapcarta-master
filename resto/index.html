@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.4.1.1';
+        const APP_VERSION = 'V2.4.1.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1766,7 +1766,7 @@ async function validateTapCartaRestoAccess() {
 
   const { data: restaurantRow, error: restaurantError } = await supabaseClient
     .from('restaurants')
-    .select('id, name, slug, status, pack_code, public_url, resto_url, qr_framed_storage_path, qr_framed_url, google_rating, google_user_rating_count, google_rating_updated_at, google_next_sync_at, google_sync_status, google_sync_error')
+    .select('id, name, slug, status, pack_code, public_url, resto_url, qr_framed_storage_path, qr_framed_url, google_reviews_url, google_maps_url, google_rating, google_user_rating_count, google_rating_updated_at, google_next_sync_at, google_sync_status, google_sync_error')
     .eq('id', restaurantId)
     .maybeSingle();
 
@@ -1987,11 +1987,14 @@ const resolvedActivationRequestUrl =
   siteConfig.activationRequestUrl;
 
 const resolvedReviewReadUrl =
+  supabaseRestaurant.google_maps_url ||
+  supabaseRestaurant.google_reviews_url ||
   restaurantData?.technical?.reviewReadUrl ||
   restaurantData?.links?.reviewReadUrl ||
   siteConfig.reviewReadUrl;
 
 const resolvedReviewWriteUrl =
+  supabaseRestaurant.google_reviews_url ||
   restaurantData?.technical?.reviewWriteUrl ||
   restaurantData?.links?.reviewWriteUrl ||
   siteConfig.reviewWriteUrl;
