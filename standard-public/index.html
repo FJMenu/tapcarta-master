@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.4.5';
+    const APP_VERSION = 'V2.3.4.6';
 const TAPCARTA_PUBLIC_LOGO_URL = 'https://i.postimg.cc/xjtDSCW8/logo-app-web-sans-fond.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -1051,7 +1051,7 @@ let siteConfig = {
   productSignature: '',
   reviewUrl: '',
   desktopCollageUrl: '',
-  restaurantName: '',
+  restaurantName: 'Restaurant TapCarta',
   modules: {
     ordering: true,
     booking: true,
@@ -1073,41 +1073,7 @@ let siteConfig = {
   }
 };
 
-const defaultInfoBlocks = [
-  {
-    id: 'friesIncluded',
-    visible: true,
-    icon: 'info',
-    text: {
-      fr: 'Tous nos plats sont accompagnés de frites.',
-      es: 'Todos nuestros platos se sirven con patatas fritas.',
-      en: 'All our dishes are served with fries.',
-      nl: 'Al onze gerechten worden geserveerd met frieten.'
-    }
-  },
-  {
-    id: 'takeawayAvailable',
-    visible: false,
-    icon: 'shopping-bag',
-    text: {
-      fr: 'Tous nos plats sont disponibles à emporter.',
-      es: 'Todos nuestros platos están disponibles para llevar.',
-      en: 'All our dishes are available for takeaway.',
-      nl: 'Al onze gerechten zijn beschikbaar om mee te nemen.'
-    }
-  },
-  {
-    id: 'beefFatFries',
-    visible: false,
-    icon: 'flame',
-    text: {
-      fr: 'Nos frites sont cuites dans de la graisse de bœuf selon la tradition belge.',
-      es: 'Nuestras patatas fritas se cocinan en grasa de vacuno siguiendo la tradición belga.',
-      en: 'Our fries are cooked in beef fat according to Belgian tradition.',
-      nl: 'Onze frieten worden volgens Belgische traditie in rundervet gebakken.'
-    }
-  }
-];
+const defaultInfoBlocks = [];
 
 let infoBlocks = defaultInfoBlocks.map(block => ({
   ...block,
@@ -2810,7 +2776,7 @@ shareUnavailableText: 'Le lien n’a pas pu être copié automatiquement.',
         installToastTitle: 'Menu ajouté au téléphone',
         installToastText: 'Retrouvez-le dans vos applications.',
         versionLabel: 'Version',
-        discoverTapCarta: 'Cliquez pour découvrir TapCarta',
+        discoverTapCarta: 'Découvrir TapCarta',
         storyKicker: 'Présentation du restaurant',
         storyTitle: '',
         storySignature: '',
@@ -2942,7 +2908,7 @@ shareUnavailableText: 'No se ha podido copiar el enlace automáticamente.',
         installToastTitle: 'Menú añadido al teléfono',
         installToastText: 'Ya puede encontrarlo en sus aplicaciones.',
         versionLabel: 'Versión',
-        discoverTapCarta: 'Haz clic para descubrir TapCarta',
+        discoverTapCarta: 'Descubrir TapCarta',
         storyKicker: 'Presentación del restaurante',
         storyTitle: 'Una mesa belga acogedora en el corazón de Lieja',
         storySignature: 'Cocina belga auténtica · ambiente acogedor',
@@ -3075,7 +3041,7 @@ shareUnavailableText: 'The link could not be copied automatically.',
         installToastTitle: 'Menu added to your phone',
         installToastText: 'You can now find it in your apps.',
         versionLabel: 'Version',
-        discoverTapCarta: 'Click to discover TapCarta',
+        discoverTapCarta: 'Discover TapCarta',
         storyKicker: 'Restaurant presentation',
         storyTitle: 'A warm Belgian table in the heart of Liège',
         storySignature: 'Authentic Belgian cuisine · warm atmosphere',
@@ -3208,7 +3174,7 @@ shareUnavailableText: 'De link kon niet automatisch worden gekopieerd.',
         installToastTitle: 'Menu toegevoegd aan uw telefoon',
         installToastText: 'U vindt het nu terug bij uw apps.',
         versionLabel: 'Versie',
-        discoverTapCarta: 'Klik om TapCarta te ontdekken',
+        discoverTapCarta: 'TapCarta ontdekken',
         storyKicker: 'Restaurantpresentatie',
         storyTitle: 'Een warme Belgische tafel in het hart van Luik',
         storySignature: 'Authentieke Belgische keuken · warme sfeer',
