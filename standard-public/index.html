@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.6.1';
+    const APP_VERSION = 'V2.3.6.2';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -1064,10 +1064,14 @@ function getMenuSubcategoryGroups(categoryKey) {
 }
 
 function renderMenuBackButton(label, action) {
+  const menuAction = action === 'backToMenuSubcategories()'
+    ? 'back-subcategories'
+    : 'back-categories';
+
   return `
     <button
       type="button"
-      onclick="${action}"
+      data-tapcarta-menu-action="${menuAction}"
       class="btn-action mb-5 inline-flex items-center gap-2 rounded-xl border border-gold/35 bg-darkCard px-4 py-2 text-sm font-semibold text-cream/85 hover:bg-gold/10 hover:border-gold transition-all"
     >
       <span>←</span>
@@ -1090,7 +1094,8 @@ function renderMenuCategoryCards(categoryKeys, t) {
           <button
             type="button"
             class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all"
-            onclick="openMenuCategory('${categoryKey}')"
+            data-tapcarta-menu-action="category"
+            data-category-key="${escapeBookingHtml(categoryKey)}"
           >
             ${escapeBookingHtml(categoryLabel)}
           </button>
@@ -1134,7 +1139,8 @@ function renderMenuSubcategoryCards(categoryKey, t) {
         ${subcategoryGroups.map((group) => `
           <button
             type="button"
-            onclick="openMenuSubcategory('${group.id}')"
+            data-tapcarta-menu-action="subcategory"
+            data-subcategory-id="${escapeBookingHtml(group.id)}"
             class="btn-action w-full rounded-2xl border border-gold/25 bg-darkCard/80 px-4 py-4 text-left hover:bg-gold/10 hover:border-gold/55 transition-all"
           >
             <div class="flex items-center gap-3">
@@ -3283,6 +3289,37 @@ function pushTapCartaMenuHistoryState(view, payload = {}) {
     window.location.href
   );
 }
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-tapcarta-menu-action]');
+
+  if (!button) return;
+
+  const action = button.dataset.tapcartaMenuAction;
+
+  if (action === 'category') {
+    event.preventDefault();
+    window.openMenuCategory(button.dataset.categoryKey || '');
+    return;
+  }
+
+  if (action === 'subcategory') {
+    event.preventDefault();
+    window.openMenuSubcategory(button.dataset.subcategoryId || '');
+    return;
+  }
+
+  if (action === 'back-categories') {
+    event.preventDefault();
+    window.backToMenuCategories();
+    return;
+  }
+
+  if (action === 'back-subcategories') {
+    event.preventDefault();
+    window.backToMenuSubcategories();
+  }
+});
 
 window.openMenuCategory = function(categoryKey) {
   selectedMenuCategory = categoryKey;
