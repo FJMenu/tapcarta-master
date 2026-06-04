@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.6.2';
+    const APP_VERSION = 'V2.3.6.3';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -1064,14 +1064,10 @@ function getMenuSubcategoryGroups(categoryKey) {
 }
 
 function renderMenuBackButton(label, action) {
-  const menuAction = action === 'backToMenuSubcategories()'
-    ? 'back-subcategories'
-    : 'back-categories';
-
   return `
     <button
       type="button"
-      data-tapcarta-menu-action="${menuAction}"
+      onclick="${action}"
       class="btn-action mb-5 inline-flex items-center gap-2 rounded-xl border border-gold/35 bg-darkCard px-4 py-2 text-sm font-semibold text-cream/85 hover:bg-gold/10 hover:border-gold transition-all"
     >
       <span>←</span>
@@ -1094,8 +1090,8 @@ function renderMenuCategoryCards(categoryKeys, t) {
           <button
             type="button"
             class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all"
-            data-tapcarta-menu-action="category"
-            data-category-key="${escapeBookingHtml(categoryKey)}"
+            data-tapcarta-menu-action="open-category"
+            data-tapcarta-menu-category="${escapeBookingHtml(categoryKey)}"
           >
             ${escapeBookingHtml(categoryLabel)}
           </button>
@@ -1139,8 +1135,8 @@ function renderMenuSubcategoryCards(categoryKey, t) {
         ${subcategoryGroups.map((group) => `
           <button
             type="button"
-            data-tapcarta-menu-action="subcategory"
-            data-subcategory-id="${escapeBookingHtml(group.id)}"
+            data-tapcarta-menu-action="open-subcategory"
+            data-tapcarta-menu-subcategory="${escapeBookingHtml(group.id)}"
             class="btn-action w-full rounded-2xl border border-gold/25 bg-darkCard/80 px-4 py-4 text-left hover:bg-gold/10 hover:border-gold/55 transition-all"
           >
             <div class="flex items-center gap-3">
@@ -1290,7 +1286,7 @@ function normalizeInfoBlocks(sourceBlocks) {
       const sourceText = block.text && typeof block.text === 'object' ? block.text : {};
 
       return {
-        id: block.id || fallback.id || `infoBlock${index + 1}`,
+        id: block.id || `infoBlock${index + 1}`,
         visible: block.visible === true,
         icon: block.icon || 'info',
         text: {
@@ -3290,37 +3286,6 @@ function pushTapCartaMenuHistoryState(view, payload = {}) {
   );
 }
 
-document.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-tapcarta-menu-action]');
-
-  if (!button) return;
-
-  const action = button.dataset.tapcartaMenuAction;
-
-  if (action === 'category') {
-    event.preventDefault();
-    window.openMenuCategory(button.dataset.categoryKey || '');
-    return;
-  }
-
-  if (action === 'subcategory') {
-    event.preventDefault();
-    window.openMenuSubcategory(button.dataset.subcategoryId || '');
-    return;
-  }
-
-  if (action === 'back-categories') {
-    event.preventDefault();
-    window.backToMenuCategories();
-    return;
-  }
-
-  if (action === 'back-subcategories') {
-    event.preventDefault();
-    window.backToMenuSubcategories();
-  }
-});
-
 window.openMenuCategory = function(categoryKey) {
   selectedMenuCategory = categoryKey;
   selectedMenuSubcategory = null;
@@ -3364,6 +3329,31 @@ window.backToMenuSubcategories = function() {
   renderMenu();
   setTimeout(() => scrollToMenuStart(), 80);
 };
+
+document.addEventListener('click', (event) => {
+  const actionButton = event.target.closest('[data-tapcarta-menu-action]');
+
+  if (!actionButton) return;
+
+  const action = actionButton.dataset.tapcartaMenuAction;
+
+  if (action === 'open-category') {
+    const categoryKey = actionButton.dataset.tapcartaMenuCategory || '';
+    if (categoryKey) {
+      event.preventDefault();
+      window.openMenuCategory(categoryKey);
+    }
+    return;
+  }
+
+  if (action === 'open-subcategory') {
+    const subcategoryId = actionButton.dataset.tapcartaMenuSubcategory || '';
+    if (subcategoryId) {
+      event.preventDefault();
+      window.openMenuSubcategory(subcategoryId);
+    }
+  }
+});
 
 window.addEventListener('popstate', () => {
   if (!tapCartaMenuHistoryActive) return;
