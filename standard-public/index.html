@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.6.3';
+    const APP_VERSION = 'V2.3.6.4';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -7706,8 +7706,14 @@ function updateOrderFormTime(value) {
       return icons[key] || '';
     }
 
-function renderMenuItem(item, t) {
-  const itemData = t.items[item.id] || {};
+function renderMenuItem(item, t = {}) {
+  if (!item || typeof item !== 'object') return '';
+
+  const translatedItems = t && typeof t.items === 'object' && t.items !== null
+    ? t.items
+    : {};
+
+  const itemData = item.id ? (translatedItems[item.id] || {}) : {};
   const itemTitle = getMenuItemLabel(item) || itemData.name || '';
   const itemSubtitle = getMenuItemSubtitle(item) || itemData.subtitle || '';
   const isAvailable = item.available !== false;
