@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.4.3.1';
+        const APP_VERSION = 'V2.4.3.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -6275,14 +6275,28 @@ async function hydrateRestaurantGeneralInfoDraftFromSupabaseOnce() {
 
       draft.customerMessages = [0, 1, 2].map((index) => {
         const message = normalizedMessages[index] || draft.customerMessages?.[index] || {};
+        const messageTexts = message.texts && typeof message.texts === 'object'
+          ? message.texts
+          : {};
+
+        const legacyText = typeof message.text === 'string' ? message.text.slice(0, 120) : '';
 
         return {
           active: Boolean(message.active),
-          text: typeof message.text === 'string' ? message.text.slice(0, 120) : ''
+          text: legacyText,
+          texts: {
+            fr: typeof messageTexts.fr === 'string' ? messageTexts.fr.slice(0, 120) : legacyText,
+            es: typeof messageTexts.es === 'string' ? messageTexts.es.slice(0, 120) : '',
+            en: typeof messageTexts.en === 'string' ? messageTexts.en.slice(0, 120) : '',
+            nl: typeof messageTexts.nl === 'string' ? messageTexts.nl.slice(0, 120) : ''
+          }
         };
       });
 
-      activeRestaurantData.customerMessages = draft.customerMessages.map((message) => ({ ...message }));
+      activeRestaurantData.customerMessages = draft.customerMessages.map((message) => ({
+        ...message,
+        texts: { ...(message.texts || {}) }
+      }));
     }
 
     activeRestaurantData.restaurantGeneralInfoSupabaseHydrated = true;
