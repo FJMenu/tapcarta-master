@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.6.4';
+    const APP_VERSION = 'V2.3.6.5';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -7709,13 +7709,8 @@ function updateOrderFormTime(value) {
 function renderMenuItem(item, t = {}) {
   if (!item || typeof item !== 'object') return '';
 
-  const translatedItems = t && typeof t.items === 'object' && t.items !== null
-    ? t.items
-    : {};
-
-  const itemData = item.id ? (translatedItems[item.id] || {}) : {};
-  const itemTitle = getMenuItemLabel(item) || itemData.name || '';
-  const itemSubtitle = getMenuItemSubtitle(item) || itemData.subtitle || '';
+  const itemTitle = getMenuItemLabel(item);
+  const itemSubtitle = getMenuItemSubtitle(item);
   const isAvailable = item.available !== false;
   const cartItem = cart.find(selectedItem => selectedItem.id === item.id);
   const selectedQuantity = cartItem?.quantity || 0;
@@ -7729,7 +7724,7 @@ function renderMenuItem(item, t = {}) {
   } else if (item.price) {
     priceDisplay = `<span class="text-sm font-semibold ${isAvailable ? 'text-gold' : 'text-cream/45'} ml-4 whitespace-nowrap">${item.price}</span>`;
   } else {
-    priceDisplay = `<span class="text-sm font-semibold ${isAvailable ? 'text-gold' : 'text-cream/45'} ml-4 whitespace-nowrap">${t[item.specialPriceText]}</span>`;
+    priceDisplay = `<span class="text-sm font-semibold ${isAvailable ? 'text-gold' : 'text-cream/45'} ml-4 whitespace-nowrap">${t[item.specialPriceText] || ''}</span>`;
   }
 
   const unavailableLabel =
