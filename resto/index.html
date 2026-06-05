@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.4.2.4';
+        const APP_VERSION = 'V2.4.2.5';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1620,6 +1620,67 @@ function isUuid(value) {
     && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+const TAPCARTA_RESTO_SESSION_KEY = 'tapcarta-resto-secure-access';
+
+function readTapCartaRestoSessionAccess() {
+  try {
+    const rawSession = sessionStorage.getItem(TAPCARTA_RESTO_SESSION_KEY);
+    if (!rawSession) return null;
+
+    const parsedSession = JSON.parse(rawSession);
+
+    if (
+      !parsedSession ||
+      typeof parsedSession !== 'object' ||
+      !parsedSession.restaurantId ||
+      !parsedSession.accessToken
+    ) {
+      return null;
+    }
+
+    return parsedSession;
+  } catch (error) {
+    console.warn('TapCarta Resto: session accès Resto illisible.', error);
+    return null;
+  }
+}
+
+function saveTapCartaRestoSessionAccess(restaurantId, accessToken) {
+  if (!restaurantId || !accessToken) return;
+
+  try {
+    sessionStorage.setItem(
+      TAPCARTA_RESTO_SESSION_KEY,
+      JSON.stringify({
+        restaurantId,
+        accessToken,
+        savedAt: new Date().toISOString()
+      })
+    );
+  } catch (error) {
+    console.warn('TapCarta Resto: impossible de sauvegarder la session accès Resto.', error);
+  }
+}
+
+function cleanTapCartaRestoUrlAfterValidation(restaurantId) {
+  if (!restaurantId || !isUuid(restaurantId)) return;
+
+  try {
+    const cleanUrl = new URL(window.location.href);
+
+    cleanUrl.searchParams.set('restaurant_id', restaurantId);
+    cleanUrl.searchParams.delete('restaurantId');
+    cleanUrl.searchParams.delete('rid');
+    cleanUrl.searchParams.delete('token');
+    cleanUrl.searchParams.delete('access_token');
+    cleanUrl.searchParams.delete('t');
+
+    window.history.replaceState({}, document.title, cleanUrl.toString());
+  } catch (error) {
+    console.warn('TapCarta Resto: impossible de nettoyer l’URL Resto.', error);
+  }
+}
+
 function getTapCartaRestoUrlCredentials() {
   const params = new URLSearchParams(window.location.search);
 
@@ -1630,16 +1691,39 @@ function getTapCartaRestoUrlCredentials() {
     ''
   ).trim();
 
-  const accessToken = (
+  const urlAccessToken = (
     params.get('token') ||
     params.get('access_token') ||
     params.get('t') ||
     ''
   ).trim();
 
+  if (restaurantId && urlAccessToken) {
+    return {
+      restaurantId,
+      accessToken: urlAccessToken,
+      source: 'url'
+    };
+  }
+
+  const sessionAccess = readTapCartaRestoSessionAccess();
+
+  if (
+    restaurantId &&
+    sessionAccess?.restaurantId === restaurantId &&
+    sessionAccess?.accessToken
+  ) {
+    return {
+      restaurantId,
+      accessToken: sessionAccess.accessToken,
+      source: 'session'
+    };
+  }
+
   return {
     restaurantId,
-    accessToken
+    accessToken: '',
+    source: 'missing'
   };
 }
 
@@ -1741,7 +1825,7 @@ function showTapCartaRestoAccessBlocked(message) {
 }
 
 async function validateTapCartaRestoAccess() {
-  const { restaurantId, accessToken } = getTapCartaRestoUrlCredentials();
+  const { restaurantId, accessToken, source } = getTapCartaRestoUrlCredentials();
 
   if (!restaurantId || !isUuid(restaurantId) || !accessToken) {
     throw new Error('Ce lien Resto est incomplet. Il doit contenir un identifiant restaurant et un token sécurisé.');
@@ -1761,6 +1845,12 @@ async function validateTapCartaRestoAccess() {
   }
 
   if (!accessRow?.id) {
+    try {
+      sessionStorage.removeItem(TAPCARTA_RESTO_SESSION_KEY);
+    } catch (error) {
+      console.warn('TapCarta Resto: impossible d’effacer la session accès Resto.', error);
+    }
+
     throw new Error('Ce lien Resto est invalide ou a été révoqué.');
   }
 
@@ -1779,6 +1869,11 @@ async function validateTapCartaRestoAccess() {
     throw new Error('Restaurant introuvable.');
   }
 
+  saveTapCartaRestoSessionAccess(restaurantId, accessToken);
+
+  if (source === 'url') {
+    cleanTapCartaRestoUrlAfterValidation(restaurantId);
+  }
 
   return {
     restaurantId,
