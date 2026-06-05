@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.4.2.3';
+        const APP_VERSION = 'V2.4.2.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -10309,14 +10309,9 @@ function renderRequestRow(item, displayMode = 'active') {
             }
 
             <div class="flex flex-col sm:flex-row gap-3">
-  <a href="${siteConfig.googleMapsProfileUrl}" target="_blank" rel="noopener noreferrer" class="btn-action flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
+  <a href="${siteConfig.googleMapsProfileUrl}" target="_blank" rel="noopener noreferrer" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
     <i data-lucide="map-pin" class="w-4 h-4 text-gold"></i>
     <span>Voir ma fiche Google</span>
-  </a>
-
-  <a href="${siteConfig.googleReviewsReadUrl}" target="_blank" rel="noopener noreferrer" class="btn-action flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
-    <i data-lucide="star" class="w-4 h-4 text-gold"></i>
-    <span>Voir les avis</span>
   </a>
 </div>
           </article>
