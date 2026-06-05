@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.6.5';
+    const APP_VERSION = 'V2.3.6.6';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -7787,52 +7787,6 @@ function renderMenuItem(item, t = {}) {
     </div>
   `;
 }
-function renderCategory(categoryKey, categoryLabel, t) {
-      const categoryMeta = menuMeta.categories[categoryKey] || {};
-      if (!menuData[categoryKey]) return '';
-      if (categoryMeta.visible === false) return '';
-
-      const items = (menuData[categoryKey] || []).filter(
-        item => item && item.visible !== false
-      );
-
-      const icon = 'utensils-crossed';
-      const iconClass = 'text-gold';
-
-      if (items.length === 0) {
-        return `
-          <div class="menu-category mb-8" id="menu-${categoryKey}">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
-                <i data-lucide="${icon}" class="w-4 h-4 ${iconClass}"></i>
-              </div>
-              <h3 class="font-display text-lg font-bold text-cream tracking-wide uppercase">${categoryLabel}</h3>
-              <div class="flex-1 h-px bg-gold/20"></div>
-            </div>
-            <div class="text-center py-8">
-              <p class="text-sm text-cream/50 italic">${t.comingSoon}</p>
-            </div>
-          </div>
-        `;
-      }
-
-      const itemsHTML = items.map(item => renderMenuItem(item, t)).join('');
-
-      return `
-        <div class="menu-category mb-8" id="menu-${categoryKey}">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
-              <i data-lucide="${icon}" class="w-4 h-4 ${iconClass}"></i>
-            </div>
-            <h3 class="font-display text-lg font-bold text-cream tracking-wide uppercase">${categoryLabel}</h3>
-            <div class="flex-1 h-px bg-gold/20"></div>
-          </div>
-          <div class="space-y-1">
-            ${itemsHTML}
-          </div>
-        </div>
-      `;
-    }
 
 function getNumericMenuItemPrice(item) {
   if (!item || !item.price) return 0;
