@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.4.2.5';
+        const APP_VERSION = 'V2.4.3.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -4419,7 +4419,7 @@ function showRestaurantToast(message, variant = 'info') {
   toast.innerHTML = `
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-xl ${isDanger ? 'bg-red-500/20 text-red-100' : 'bg-gold text-black'} flex items-center justify-center flex-shrink-0">
-        <i data-lucide="${isDanger ? 'triangle-alert' : 'info'}" class="w-5 h-5"></i>
+        <i data-lucide="${isDanger ? 'alert-triangle' : 'info'}" class="w-5 h-5"></i>
       </div>
       <div>${message}</div>
     </div>
@@ -6162,12 +6162,37 @@ function getActiveRestaurantSettingsId() {
 function normalizeCustomerMessagesForSettings(messages) {
   if (!Array.isArray(messages)) return [];
 
-  return messages.slice(0, 3).map((message) => ({
-    active: Boolean(message?.active),
-    text: typeof message?.text === 'string'
+  const supportedLanguages = ['fr', 'es', 'en', 'nl'];
+
+  return messages.slice(0, 3).map((message) => {
+    const legacyText = typeof message?.text === 'string'
       ? message.text.trim().slice(0, 120)
-      : ''
-  }));
+      : '';
+
+    const sourceTexts =
+      message?.texts && typeof message.texts === 'object' && !Array.isArray(message.texts)
+        ? message.texts
+        : {};
+
+    const texts = supportedLanguages.reduce((acc, lang) => {
+      const value = typeof sourceTexts[lang] === 'string'
+        ? sourceTexts[lang]
+        : '';
+
+      acc[lang] = value.trim().slice(0, 120);
+      return acc;
+    }, {});
+
+    if (!texts.fr && legacyText) {
+      texts.fr = legacyText;
+    }
+
+    return {
+      active: Boolean(message?.active),
+      text: texts.fr || legacyText,
+      texts
+    };
+  });
 }
 
 async function hydrateRestaurantGeneralInfoDraftFromSupabaseOnce() {
@@ -12308,7 +12333,10 @@ async function saveRestaurantOptionsModal() {
     const identity = activeRestaurantData.identity || {};
     const links = activeRestaurantData.links || {};
     const technical = activeRestaurantData.technical || {};
-    const fallbackText = translations?.fr || translations?.[currentLang] || {};
+    const fallbackTextFr = translations?.fr || {};
+    const fallbackTextEs = translations?.es || {};
+    const fallbackTextEn = translations?.en || {};
+    const fallbackTextNl = translations?.nl || {};
 
     if (typeof draft.phone !== 'string') {
       draft.phone = identity.phone || activeRestaurantData.phone || siteConfig.phone || '';
@@ -12325,28 +12353,56 @@ async function saveRestaurantOptionsModal() {
           ? activeRestaurantData.menu.customerMessages
           : null;
 
-    if (!Array.isArray(draft.customerMessages)) {
-      draft.customerMessages = existingMessages || [
-        {
-          active: true,
-          text: fallbackText.noticeAllFries || 'Tous nos plats sont accompagnés de frites.'
-        },
-        {
-          active: false,
-          text: fallbackText.friesInfo || 'Nos frites sont cuites dans de la graisse de bœuf selon la tradition belge.'
-        },
-        {
-          active: false,
-          text: fallbackText.noticeTakeaway || 'Tous nos plats sont disponibles à emporter.'
+    const fallbackMessages = [
+      {
+        active: true,
+        texts: {
+          fr: fallbackTextFr.noticeAllFries || 'Tous nos plats sont accompagnés de frites.',
+          es: fallbackTextEs.noticeAllFries || 'Todos nuestros platos se sirven con patatas fritas.',
+          en: fallbackTextEn.noticeAllFries || 'All our dishes are served with fries.',
+          nl: fallbackTextNl.noticeAllFries || 'Al onze gerechten worden geserveerd met frieten.'
         }
-      ];
+      },
+      {
+        active: false,
+        texts: {
+          fr: fallbackTextFr.friesInfo || 'Nos frites sont cuites dans de la graisse de bœuf selon la tradition belge.',
+          es: fallbackTextEs.friesInfo || 'Nuestras patatas fritas se cocinan en grasa de ternera según la tradición belga.',
+          en: fallbackTextEn.friesInfo || 'Our fries are cooked in beef fat according to Belgian tradition.',
+          nl: fallbackTextNl.friesInfo || 'Onze frieten worden volgens Belgische traditie gebakken in rundervet.'
+        }
+      },
+      {
+        active: false,
+        texts: {
+          fr: fallbackTextFr.noticeTakeaway || 'Tous nos plats sont disponibles à emporter.',
+          es: fallbackTextEs.noticeTakeaway || 'Todos nuestros platos están disponibles para llevar.',
+          en: fallbackTextEn.noticeTakeaway || 'All our dishes are available for takeaway.',
+          nl: fallbackTextNl.noticeTakeaway || 'Al onze gerechten zijn beschikbaar om mee te nemen.'
+        }
+      }
+    ];
+
+    if (!Array.isArray(draft.customerMessages)) {
+      draft.customerMessages = existingMessages || fallbackMessages;
     }
 
     draft.customerMessages = [0, 1, 2].map((index) => {
-      const message = draft.customerMessages[index] || {};
+      const message = draft.customerMessages[index] || fallbackMessages[index] || {};
+      const messageTexts = message.texts && typeof message.texts === 'object'
+        ? message.texts
+        : {};
+
+      const legacyText = typeof message.text === 'string' ? message.text : '';
+
       return {
         active: Boolean(message.active),
-        text: typeof message.text === 'string' ? message.text.slice(0, 120) : ''
+        texts: {
+          fr: typeof messageTexts.fr === 'string' ? messageTexts.fr.slice(0, 120) : legacyText.slice(0, 120),
+          es: typeof messageTexts.es === 'string' ? messageTexts.es.slice(0, 120) : legacyText.slice(0, 120),
+          en: typeof messageTexts.en === 'string' ? messageTexts.en.slice(0, 120) : legacyText.slice(0, 120),
+          nl: typeof messageTexts.nl === 'string' ? messageTexts.nl.slice(0, 120) : legacyText.slice(0, 120)
+        }
       };
     });
 
@@ -12401,15 +12457,22 @@ async function saveRestaurantOptionsModal() {
       draft.phone = readValue('restaurant-general-phone');
       draft.whatsapp = readValue('restaurant-general-whatsapp');
 
-      draft.customerMessages = [0, 1, 2].map((index) => {
-        const textValue = readValue(`restaurant-general-message-${index}`).slice(0, 120);
-        const activeValue = Boolean(document.querySelector(`[data-general-message-active="${index}"]`)?.checked);
+  draft.customerMessages = [0, 1, 2].map((index) => {
+  const texts = {
+    fr: readValue(`restaurant-general-message-${index}-fr`).slice(0, 120),
+    es: readValue(`restaurant-general-message-${index}-es`).slice(0, 120),
+    en: readValue(`restaurant-general-message-${index}-en`).slice(0, 120),
+    nl: readValue(`restaurant-general-message-${index}-nl`).slice(0, 120)
+  };
 
-        return {
-          active: activeValue,
-          text: textValue
-        };
-      });
+  const activeValue = Boolean(document.querySelector(`[data-general-message-active="${index}"]`)?.checked);
+
+  return {
+    active: activeValue,
+    text: texts.fr || texts.es || texts.en || texts.nl,
+    texts
+  };
+});
 
       if (!activeRestaurantData.identity || typeof activeRestaurantData.identity !== 'object') {
         activeRestaurantData.identity = {};
@@ -12605,39 +12668,60 @@ async function saveRestaurantOptionsModal() {
               </div>
 
               <div class="grid gap-4">
-                ${draft.customerMessages.map((message, index) => `
-                  <div class="rounded-[22px] border border-white/10 bg-black/22 p-4">
-                    <div class="flex items-center justify-between gap-3 mb-3">
-                      <div class="text-sm font-bold text-cream/82">${text.messageLabel} ${index + 1}</div>
-                      <label class="inline-flex items-center gap-2 rounded-full border ${message.active ? 'border-emerald-400/28 bg-emerald-500/10 text-emerald-300' : 'border-white/12 bg-white/5 text-cream/60'} px-3 py-2 text-xs font-bold">
-                        <input
-                          type="checkbox"
-                          data-general-message-active="${index}"
-                          ${message.active ? 'checked' : ''}
-                          class="accent-yellow-400"
-                        >
-                        <span>${message.active ? text.active : text.hidden}</span>
-                      </label>
-                    </div>
+                ${draft.customerMessages.map((message, index) => {
+                  const messageTexts = message.texts && typeof message.texts === 'object'
+                    ? message.texts
+                    : {};
 
-                    <div class="flex items-start gap-3">
-                      <div class="w-10 h-10 rounded-2xl border border-gold/22 bg-gold/8 flex items-center justify-center shrink-0 mt-1">
-                        <i data-lucide="info" class="w-5 h-5 text-gold"></i>
+                  const legacyText = typeof message.text === 'string' ? message.text : '';
+
+                  const values = {
+                    fr: typeof messageTexts.fr === 'string' ? messageTexts.fr : legacyText,
+                    es: typeof messageTexts.es === 'string' ? messageTexts.es : legacyText,
+                    en: typeof messageTexts.en === 'string' ? messageTexts.en : legacyText,
+                    nl: typeof messageTexts.nl === 'string' ? messageTexts.nl : legacyText
+                  };
+
+                  return `
+                    <div class="rounded-[22px] border border-white/10 bg-black/22 p-4">
+                      <div class="flex items-center justify-between gap-3 mb-3">
+                        <div class="text-sm font-bold text-cream/82">${text.messageLabel} ${index + 1}</div>
+                        <label class="inline-flex items-center gap-2 rounded-full border ${message.active ? 'border-emerald-400/28 bg-emerald-500/10 text-emerald-300' : 'border-white/12 bg-white/5 text-cream/60'} px-3 py-2 text-xs font-bold">
+                          <input
+                            type="checkbox"
+                            data-general-message-active="${index}"
+                            ${message.active ? 'checked' : ''}
+                            class="accent-yellow-400"
+                          >
+                          <span>${message.active ? text.active : text.hidden}</span>
+                        </label>
                       </div>
-                      <div class="min-w-0 flex-1">
-                        <textarea
-                          id="restaurant-general-message-${index}"
-                          maxlength="120"
-                          rows="2"
-                          class="w-full rounded-2xl border border-white/12 bg-black/28 px-4 py-3 text-cream outline-none focus:border-gold/55 resize-none"
-                        >${escapeHtml(message.text)}</textarea>
-                        <div class="mt-2 text-xs text-cream/48 text-right">
-                          <span data-message-counter="${index}">${escapeHtml(message.text).length}</span>/120 ${text.characters}
+
+                      <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-2xl border border-gold/22 bg-gold/8 flex items-center justify-center shrink-0 mt-1">
+                          <i data-lucide="info" class="w-5 h-5 text-gold"></i>
+                        </div>
+
+                        <div class="min-w-0 flex-1 grid gap-3">
+                          ${['fr', 'es', 'en', 'nl'].map((lang) => `
+                            <label class="grid gap-2">
+                              <span class="text-xs font-bold uppercase tracking-[0.14em] text-gold/85">${lang}</span>
+                              <textarea
+                                id="restaurant-general-message-${index}-${lang}"
+                                maxlength="120"
+                                rows="2"
+                                class="w-full rounded-2xl border border-white/12 bg-black/28 px-4 py-3 text-cream outline-none focus:border-gold/55 resize-none"
+                              >${escapeHtml(values[lang]).slice(0, 120)}</textarea>
+                              <div class="text-xs text-cream/48 text-right">
+                                <span data-message-counter="${index}-${lang}">${escapeHtml(values[lang]).slice(0, 120).length}</span>/120 ${text.characters}
+                              </div>
+                            </label>
+                          `).join('')}
                         </div>
                       </div>
                     </div>
-                  </div>
-                `).join('')}
+                  `;
+                }).join('')}
               </div>
             </section>
 
@@ -14239,7 +14323,7 @@ let dishEditorState = null;
         <div class="w-full max-w-md rounded-[28px] border border-gold/35 bg-[#12110d] shadow-[0_28px_90px_rgba(0,0,0,0.55)] p-6">
           <div class="flex items-start gap-4 mb-5">
             <div class="w-11 h-11 rounded-2xl bg-gold/15 border border-gold/30 flex items-center justify-center shrink-0">
-              <i data-lucide="triangle-alert" class="w-5 h-5 text-gold"></i>
+              <i data-lucide="alert-triangle" class="w-5 h-5 text-gold"></i>
             </div>
             <div>
               <div class="font-display text-xl font-bold text-cream">
