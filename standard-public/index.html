@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.6.6';
+    const APP_VERSION = 'V2.3.7.1';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -1781,21 +1781,38 @@ function renderStandardMainActionsSection(t) {
 function normalizeStandardCustomerMessages(messages) {
   if (!Array.isArray(messages)) return [];
 
+  const supportedLanguages = ['fr', 'es', 'en', 'nl'];
+
   return messages.slice(0, 3).map((message, index) => {
-    const text = typeof message?.text === 'string'
+    const legacyText = typeof message?.text === 'string'
       ? message.text.trim().slice(0, 120)
       : '';
 
+    const sourceTexts =
+      message?.texts && typeof message.texts === 'object' && !Array.isArray(message.texts)
+        ? message.texts
+        : {};
+
+    const text = supportedLanguages.reduce((acc, lang) => {
+      const value = typeof sourceTexts[lang] === 'string'
+        ? sourceTexts[lang]
+        : '';
+
+      acc[lang] = value.trim().slice(0, 120);
+      return acc;
+    }, {});
+
+    if (!text.fr && legacyText) {
+      text.fr = legacyText;
+    }
+
+    const hasVisibleText = supportedLanguages.some((lang) => Boolean(text[lang]));
+
     return {
       id: `customerMessage${index + 1}`,
-      visible: Boolean(message?.active) && Boolean(text),
+      visible: Boolean(message?.active) && hasVisibleText,
       icon: 'info',
-      text: {
-        fr: text,
-        es: text,
-        en: text,
-        nl: text
-      }
+      text
     };
   });
 }
