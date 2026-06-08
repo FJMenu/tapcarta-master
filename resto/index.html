@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.4.3.2';
+        const APP_VERSION = 'V2.4.3.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1931,6 +1931,26 @@ async function loadActiveRestaurantData() {
     restaurantData.identity.slug ||
     activeRestaurant.slug ||
     '';
+
+  const resolvedRestaurantPackCode = String(
+    supabaseRestaurant.pack_code ||
+    restaurantData.identity.pack_code ||
+    restaurantData.identity.packCode ||
+    restaurantData.identity.plan ||
+    restaurantData.pack_code ||
+    restaurantData.packCode ||
+    restaurantData.plan ||
+    ''
+  ).trim().toLowerCase();
+
+  if (resolvedRestaurantPackCode) {
+    restaurantData.identity.pack_code = resolvedRestaurantPackCode;
+    restaurantData.identity.packCode = resolvedRestaurantPackCode;
+    restaurantData.identity.plan = resolvedRestaurantPackCode;
+    restaurantData.pack_code = resolvedRestaurantPackCode;
+    restaurantData.packCode = resolvedRestaurantPackCode;
+    restaurantData.plan = resolvedRestaurantPackCode;
+  }
 
   restaurantData.supabaseRestaurantId = resolvedSupabaseRestaurantId;
   restaurantData.restaurantId = resolvedSupabaseRestaurantId;
@@ -5147,17 +5167,25 @@ const restaurantData = {
 
   plan: (() => {
     const rawPlan =
+      activeRestaurantData?.identity?.pack_code ||
+      activeRestaurantData?.identity?.packCode ||
       activeRestaurantData?.identity?.plan ||
+      activeRestaurantData?.pack_code ||
+      activeRestaurantData?.packCode ||
       activeRestaurantData?.plan ||
-      'standard';
+      '';
+
+    const normalizedPlan = String(rawPlan).trim().toLowerCase();
 
     const planMap = {
       light: 'Light',
       standard: 'Standard',
+      plus: 'Plus',
+      max: 'Max',
       premium: 'Premium'
     };
 
-    return planMap[rawPlan] || rawPlan;
+    return planMap[normalizedPlan] || String(rawPlan).trim() || 'Non configurée';
   })(),
 
   languages:
