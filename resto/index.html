@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.1.2';
+        const APP_VERSION = 'V2.5.1.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -6489,6 +6489,71 @@ const TAPCARTA_RESTAURANT_THEMES = [
     name: 'Oliva',
     color: '#5F6F3A'
   }
+];
+
+function getRestaurantThemeByCode(themeCode) {
+  return TAPCARTA_RESTAURANT_THEMES.find((theme) => theme.code === themeCode)
+    || TAPCARTA_RESTAURANT_THEMES[0];
+}
+
+function normalizeRestaurantThemeCode(themeCode) {
+  return getRestaurantThemeByCode(themeCode).code;
+}
+
+function parseRestaurantThemeSettingsValue(value) {
+  if (!value) {
+    return { theme_code: 'gold' };
+  }
+
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    return {
+      theme_code: normalizeRestaurantThemeCode(value.theme_code || value.themeCode || 'gold')
+    };
+  }
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return parseRestaurantThemeSettingsValue(parsed);
+    } catch (error) {
+      return { theme_code: 'gold' };
+    }
+  }
+
+  return { theme_code: 'gold' };
+}
+
+function getActiveRestaurantThemeCode() {
+  return normalizeRestaurantThemeCode(
+    activeRestaurantData?.theme?.theme_code ||
+    activeRestaurantData?.theme?.themeCode ||
+    activeRestaurantData?.theme_code ||
+    'gold'
+  );
+}
+
+function setActiveRestaurantThemeCode(themeCode) {
+  if (!activeRestaurantData || typeof activeRestaurantData !== 'object') {
+    return;
+  }
+
+  activeRestaurantData.theme = {
+    theme_code: normalizeRestaurantThemeCode(themeCode)
+  };
+}
+const TAPCARTA_RESTAURANT_THEMES = [
+  { code: 'gold', name: 'TapCarta Gold', color: '#0F0F0F' },
+  { code: 'azul_real', name: 'Azul Real', color: '#0F056B' },
+  { code: 'perla', name: 'Perla', color: '#E8E3DA' },
+  { code: 'marfil', name: 'Marfil', color: '#E1D2B8' },
+  { code: 'imperial', name: 'Imperial', color: '#791443' },
+  { code: 'esmeralda', name: 'Esmeralda', color: '#007865' },
+  { code: 'andalucia', name: 'Andalucía', color: '#006B3A' },
+  { code: 'terracota', name: 'Terracota', color: '#A6532A' },
+  { code: 'reserva', name: 'Reserva', color: '#5A0F1B' },
+  { code: 'grafito', name: 'Grafito', color: '#6B6B6B' },
+  { code: 'aqua', name: 'Aqua', color: '#B0F2B6' },
+  { code: 'oliva', name: 'Oliva', color: '#5F6F3A' }
 ];
 
 function getRestaurantThemeByCode(themeCode) {
