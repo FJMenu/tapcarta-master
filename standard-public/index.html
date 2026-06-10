@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.4.1.1';
+    const APP_VERSION = 'V2.4.1.2';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -2237,6 +2237,61 @@ async function fetchStandardRestaurantSettings(restaurantId) {
     return null;
   }
 }
+function applyStandardVisualTheme(themeCode) {
+  const themes = {
+    gold: {
+      background: '#0F0F0F'
+    },
+    azul_real: {
+      background: '#0F056B'
+    },
+    perla: {
+      background: '#E8E3DA'
+    },
+    marfil: {
+      background: '#E1D2B8'
+    },
+    imperial: {
+      background: '#791443'
+    },
+    esmeralda: {
+      background: '#007865'
+    },
+    andalucia: {
+      background: '#006B3A'
+    },
+    terracota: {
+      background: '#A6532A'
+    },
+    reserva: {
+      background: '#5A0F1B'
+    },
+    grafito: {
+      background: '#6B6B6B'
+    },
+    aqua: {
+      background: '#B0F2B6'
+    },
+    oliva: {
+      background: '#5F6F3A'
+    }
+  };
+
+  const selectedTheme = themes[themeCode] || themes.gold;
+  const appWrapper = document.getElementById('app-wrapper');
+
+  document.documentElement.style.background = selectedTheme.background;
+  document.body.style.background = selectedTheme.background;
+
+  if (appWrapper) {
+    appWrapper.style.background = selectedTheme.background;
+  }
+
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute('content', selectedTheme.background);
+  }
+}
 
 function applyStandardRestaurantSettings(settingsRow) {
   if (!settingsRow || typeof settingsRow !== 'object') return;
@@ -2336,6 +2391,8 @@ function applyStandardRestaurantSettings(settingsRow) {
   siteConfig.visualTheme = {
     theme_code: resolvedThemeCode
   };
+
+  applyStandardVisualTheme(resolvedThemeCode);
 }
 
 function normalizeStandardPublicStatus(value) {
