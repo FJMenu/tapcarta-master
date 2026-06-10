@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.4.1.2';
+    const APP_VERSION = 'V2.4.1.3';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -2240,40 +2240,64 @@ async function fetchStandardRestaurantSettings(restaurantId) {
 function applyStandardVisualTheme(themeCode) {
   const themes = {
     gold: {
-      background: '#0F0F0F'
+      background: '#0F0F0F',
+      surface: '#1A1A1A',
+      surfaceSoft: 'rgba(255, 255, 255, 0.035)'
     },
     azul_real: {
-      background: '#0F056B'
+      background: '#0F056B',
+      surface: '#160D45',
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
     },
     perla: {
-      background: '#E8E3DA'
+      background: '#E8E3DA',
+      surface: '#DCD5CA',
+      surfaceSoft: 'rgba(15, 15, 15, 0.045)'
     },
     marfil: {
-      background: '#E1D2B8'
+      background: '#E1D2B8',
+      surface: '#D4C3A6',
+      surfaceSoft: 'rgba(15, 15, 15, 0.045)'
     },
     imperial: {
-      background: '#791443'
+      background: '#791443',
+      surface: '#541130',
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
     },
     esmeralda: {
-      background: '#007865'
+      background: '#007865',
+      surface: '#07584D',
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
     },
     andalucia: {
-      background: '#006B3A'
+      background: '#006B3A',
+      surface: '#064A2C',
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
     },
     terracota: {
-      background: '#A6532A'
+      background: '#A6532A',
+      surface: '#743B22',
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
     },
     reserva: {
-      background: '#5A0F1B'
+      background: '#5A0F1B',
+      surface: '#3F0E16',
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
     },
     grafito: {
-      background: '#6B6B6B'
+      background: '#6B6B6B',
+      surface: '#4E4E4E',
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
     },
     aqua: {
-      background: '#B0F2B6'
+      background: '#B0F2B6',
+      surface: '#8FD99A',
+      surfaceSoft: 'rgba(15, 15, 15, 0.045)'
     },
     oliva: {
-      background: '#5F6F3A'
+      background: '#5F6F3A',
+      surface: '#46542D',
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
     }
   };
 
@@ -2291,6 +2315,42 @@ function applyStandardVisualTheme(themeCode) {
   if (themeColorMeta) {
     themeColorMeta.setAttribute('content', selectedTheme.background);
   }
+
+  document.getElementById('tapcarta-standard-theme-style')?.remove();
+
+  if (themeCode === 'gold') {
+    return;
+  }
+
+  const themeStyle = document.createElement('style');
+  themeStyle.id = 'tapcarta-standard-theme-style';
+
+  themeStyle.textContent = `
+    #app-wrapper .bg-dark,
+    #app-wrapper [class*="bg-dark"] {
+      background-color: ${selectedTheme.background} !important;
+    }
+
+    #app-wrapper .bg-darkCard,
+    #app-wrapper [class*="bg-darkCard"],
+    #app-wrapper [class*="bg-black"] {
+      background: ${selectedTheme.surface} !important;
+    }
+
+    #app-wrapper .desktop-story-card,
+    #app-wrapper .install-help-box,
+    #app-wrapper .allergen-card,
+    #app-wrapper .allergen-legal-box,
+    #app-wrapper .restaurant-manual-action-inner {
+      background: linear-gradient(180deg, ${selectedTheme.surface}, ${selectedTheme.surfaceSoft}) !important;
+    }
+
+    #app-wrapper .language-selector {
+      background: rgba(18, 15, 12, 0.94) !important;
+    }
+  `;
+
+  document.head.appendChild(themeStyle);
 }
 
 function applyStandardRestaurantSettings(settingsRow) {
