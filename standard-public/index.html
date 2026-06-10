@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.3.7.1';
+    const APP_VERSION = 'V2.4.1.1';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -2223,7 +2223,7 @@ async function fetchStandardRestaurantSettings(restaurantId) {
   try {
     const { data, error } = await supabaseClient
       .from('restaurant_settings')
-      .select('contact_json, modules_json, customer_messages_json, hours_json')
+      .select('contact_json, modules_json, customer_messages_json, hours_json, theme_json')
       .eq('restaurant_id', restaurantId)
       .maybeSingle();
 
@@ -2255,9 +2255,11 @@ function applyStandardRestaurantSettings(settingsRow) {
   if (whatsappHref) {
     siteConfig.whatsappHref = whatsappHref;
   }
+
   siteConfig.complementaryLinks = normalizeStandardComplementaryLinks(
     contact.externalLinks || contact.complementaryLinks || {}
   );
+
   const modules = settingsRow.modules_json && typeof settingsRow.modules_json === 'object'
     ? settingsRow.modules_json
     : {};
@@ -2296,6 +2298,44 @@ function applyStandardRestaurantSettings(settingsRow) {
   if (customerMessages.length) {
     infoBlocks = customerMessages;
   }
+
+  const allowedThemeCodes = [
+    'gold',
+    'azul_real',
+    'perla',
+    'marfil',
+    'imperial',
+    'esmeralda',
+    'andalucia',
+    'terracota',
+    'reserva',
+    'grafito',
+    'aqua',
+    'oliva'
+  ];
+
+  const rawThemeSettings = settingsRow.theme_json;
+  let resolvedThemeCode = 'gold';
+
+  if (rawThemeSettings && typeof rawThemeSettings === 'object' && !Array.isArray(rawThemeSettings)) {
+    const candidateThemeCode = rawThemeSettings.theme_code || rawThemeSettings.themeCode || 'gold';
+    resolvedThemeCode = allowedThemeCodes.includes(candidateThemeCode) ? candidateThemeCode : 'gold';
+  } else if (typeof rawThemeSettings === 'string') {
+    try {
+      const parsedThemeSettings = JSON.parse(rawThemeSettings);
+
+      if (parsedThemeSettings && typeof parsedThemeSettings === 'object' && !Array.isArray(parsedThemeSettings)) {
+        const candidateThemeCode = parsedThemeSettings.theme_code || parsedThemeSettings.themeCode || 'gold';
+        resolvedThemeCode = allowedThemeCodes.includes(candidateThemeCode) ? candidateThemeCode : 'gold';
+      }
+    } catch (error) {
+      resolvedThemeCode = 'gold';
+    }
+  }
+
+  siteConfig.visualTheme = {
+    theme_code: resolvedThemeCode
+  };
 }
 
 function normalizeStandardPublicStatus(value) {
