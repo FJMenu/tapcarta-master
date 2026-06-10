@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.1.4';
+        const APP_VERSION = 'V2.5.1.5';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2009,7 +2009,45 @@ async function loadActiveRestaurantData() {
         };
       }
 
-      restaurantData.theme = parseRestaurantThemeSettingsValue(settingsRow?.theme_json);
+      const rawThemeSettings = settingsRow?.theme_json;
+
+      const allowedThemeCodes = [
+        'gold',
+        'azul_real',
+        'perla',
+        'marfil',
+        'imperial',
+        'esmeralda',
+        'andalucia',
+        'terracota',
+        'reserva',
+        'grafito',
+        'aqua',
+        'oliva'
+      ];
+
+      const normalizeThemeCode = (value) =>
+        allowedThemeCodes.includes(value) ? value : 'gold';
+
+      let resolvedThemeCode = 'gold';
+
+      if (rawThemeSettings && typeof rawThemeSettings === 'object' && !Array.isArray(rawThemeSettings)) {
+        resolvedThemeCode = normalizeThemeCode(rawThemeSettings.theme_code || rawThemeSettings.themeCode || 'gold');
+      } else if (typeof rawThemeSettings === 'string') {
+        try {
+          const parsedThemeSettings = JSON.parse(rawThemeSettings);
+
+          if (parsedThemeSettings && typeof parsedThemeSettings === 'object' && !Array.isArray(parsedThemeSettings)) {
+            resolvedThemeCode = normalizeThemeCode(parsedThemeSettings.theme_code || parsedThemeSettings.themeCode || 'gold');
+          }
+        } catch (error) {
+          resolvedThemeCode = 'gold';
+        }
+      }
+
+      restaurantData.theme = {
+        theme_code: resolvedThemeCode
+      };
     } catch (error) {
       console.warn('TapCarta Resto: erreur lecture options depuis Supabase.', error);
     }
