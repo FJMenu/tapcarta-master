@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.4.1.4';
+    const APP_VERSION = 'V2.4.1.5';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -2260,22 +2260,22 @@ function applyStandardVisualTheme(themeCode) {
     },
     perla: {
       background: '#E8E3DA',
-      surface: '#D6CDBC',
-      surfaceSoft: 'rgba(255, 255, 255, 0.36)',
-      text: '#241D14',
-      mutedText: 'rgba(36, 29, 20, 0.72)',
-      standbySurface: 'rgba(205, 194, 176, 0.78)',
-      languageSurface: 'rgba(35, 29, 22, 0.92)',
+      surface: '#CFC3B1',
+      surfaceSoft: '#EFE8DC',
+      text: '#18120C',
+      mutedText: 'rgba(24, 18, 12, 0.90)',
+      standbySurface: '#BFAF98',
+      languageSurface: 'rgba(28, 22, 16, 0.94)',
       isLight: true
     },
     marfil: {
       background: '#E1D2B8',
-      surface: '#CFBC9E',
-      surfaceSoft: 'rgba(255, 255, 255, 0.30)',
-      text: '#251B12',
-      mutedText: 'rgba(37, 27, 18, 0.72)',
-      standbySurface: 'rgba(196, 176, 145, 0.78)',
-      languageSurface: 'rgba(36, 27, 18, 0.92)',
+      surface: '#C6AF8D',
+      surfaceSoft: '#EBDDC2',
+      text: '#181007',
+      mutedText: 'rgba(24, 16, 7, 0.90)',
+      standbySurface: '#B99D72',
+      languageSurface: 'rgba(30, 22, 13, 0.94)',
       isLight: true
     },
     imperial: {
@@ -2340,12 +2340,12 @@ function applyStandardVisualTheme(themeCode) {
     },
     aqua: {
       background: '#B0F2B6',
-      surface: '#8FD99A',
-      surfaceSoft: 'rgba(255, 255, 255, 0.32)',
-      text: '#12351C',
-      mutedText: 'rgba(18, 53, 28, 0.72)',
-      standbySurface: 'rgba(129, 203, 139, 0.78)',
-      languageSurface: 'rgba(20, 48, 27, 0.92)',
+      surface: '#7DCA89',
+      surfaceSoft: '#D8F7DC',
+      text: '#082B12',
+      mutedText: 'rgba(8, 43, 18, 0.90)',
+      standbySurface: '#68B875',
+      languageSurface: 'rgba(14, 45, 22, 0.94)',
       isLight: true
     },
     oliva: {
@@ -2419,7 +2419,6 @@ function applyStandardVisualTheme(themeCode) {
     #app-wrapper .install-help-box,
     #app-wrapper .allergen-card,
     #app-wrapper .allergen-legal-box,
-    #app-wrapper .allergen-legal-text,
     #app-wrapper section .rounded-lg,
     #app-wrapper section .rounded-2xl {
       background: linear-gradient(180deg, ${selectedTheme.surface}, ${selectedTheme.surfaceSoft}) !important;
@@ -2451,22 +2450,72 @@ function applyStandardVisualTheme(themeCode) {
     }
 
     ${selectedTheme.isLight ? `
+      #app-wrapper .border-gold\\/60,
+      #app-wrapper .border-gold\\/55,
+      #app-wrapper .border-gold\\/45,
+      #app-wrapper .border-gold\\/35,
+      #app-wrapper .border-gold\\/30,
       #app-wrapper .border-gold\\/25,
       #app-wrapper .border-gold\\/20,
       #app-wrapper .border-gold\\/15,
       #app-wrapper .border-gold\\/10 {
-        border-color: rgba(150, 110, 24, 0.34) !important;
+        border-color: rgba(120, 85, 20, 0.58) !important;
       }
 
       #app-wrapper .text-gold,
       #app-wrapper [class*="text-gold"] {
-        color: #B88412 !important;
-        stroke: #B88412 !important;
+        color: #8A5D06 !important;
+        stroke: #8A5D06 !important;
       }
 
       #app-wrapper .bg-gold\\/10,
-      #app-wrapper .bg-gold\\/8 {
-        background-color: rgba(184, 132, 18, 0.10) !important;
+      #app-wrapper .bg-gold\\/8,
+      #app-wrapper .bg-gold\\/5 {
+        background-color: rgba(138, 93, 6, 0.18) !important;
+      }
+
+      #app-wrapper .menu-item-row,
+      #app-wrapper .allergen-card,
+      #app-wrapper .allergen-legal-box,
+      #app-wrapper section .rounded-lg,
+      #app-wrapper section .rounded-2xl,
+      #app-wrapper [class*="bg-darkCard"],
+      #app-wrapper [class*="bg-black"] {
+        background: ${selectedTheme.surfaceSoft} !important;
+        color: ${selectedTheme.text} !important;
+        border-color: rgba(100, 70, 18, 0.42) !important;
+      }
+
+      #app-wrapper .menu-item-subtitle,
+      #app-wrapper .allergen-legal-text,
+      #app-wrapper .allergen-label {
+        color: ${selectedTheme.mutedText} !important;
+      }
+
+      #app-wrapper .menu-item-row .font-semibold,
+      #app-wrapper .menu-item-row .font-bold,
+      #app-wrapper h1,
+      #app-wrapper h2,
+      #app-wrapper h3,
+      #app-wrapper .font-display {
+        color: ${selectedTheme.text} !important;
+      }
+
+      #app-wrapper button[class*="repeating-linear-gradient"],
+      #app-wrapper a[class*="repeating-linear-gradient"] {
+        background: ${selectedTheme.standbySurface} !important;
+        border-color: rgba(100, 70, 18, 0.58) !important;
+        color: ${selectedTheme.text} !important;
+        box-shadow: 0 8px 18px rgba(80, 60, 30, 0.18) !important;
+      }
+
+      #app-wrapper button[class*="repeating-linear-gradient"] span,
+      #app-wrapper a[class*="repeating-linear-gradient"] span {
+        color: ${selectedTheme.text} !important;
+      }
+
+      #app-wrapper .allergen-subtitle {
+        color: #8A5D06 !important;
       }
     ` : ''}
   `;
