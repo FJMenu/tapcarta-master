@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.4.1.5';
+    const APP_VERSION = 'V2.4.1.6';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -2236,6 +2236,7 @@ async function fetchStandardRestaurantSettings(restaurantId) {
     return null;
   }
 }
+
 function applyStandardVisualTheme(themeCode) {
   const themes = {
     gold: {
@@ -2244,8 +2245,13 @@ function applyStandardVisualTheme(themeCode) {
       surfaceSoft: 'rgba(255, 255, 255, 0.035)',
       text: '#FAF6EE',
       mutedText: 'rgba(250, 246, 238, 0.72)',
+      accentText: '#F2C744',
+      premiumButton: 'linear-gradient(135deg, rgba(242,199,68,0.18), rgba(242,199,68,0.08))',
+      secondaryButton: 'rgba(26, 26, 26, 0.90)',
       standbySurface: 'rgba(26, 26, 26, 0.88)',
       languageSurface: 'rgba(26, 26, 26, 0.92)',
+      languageButton: 'rgba(255,255,255,0.02)',
+      languageActive: 'rgba(242,199,68,0.18)',
       isLight: false
     },
     azul_real: {
@@ -2254,28 +2260,43 @@ function applyStandardVisualTheme(themeCode) {
       surfaceSoft: 'rgba(255, 255, 255, 0.045)',
       text: '#FAF6EE',
       mutedText: 'rgba(250, 246, 238, 0.72)',
+      accentText: '#F2C744',
+      premiumButton: 'linear-gradient(135deg, rgba(242,199,68,0.18), rgba(242,199,68,0.08))',
+      secondaryButton: 'rgba(22, 13, 69, 0.86)',
       standbySurface: 'rgba(22, 13, 69, 0.88)',
       languageSurface: 'rgba(22, 13, 69, 0.94)',
+      languageButton: 'rgba(255,255,255,0.035)',
+      languageActive: 'rgba(242,199,68,0.18)',
       isLight: false
     },
     perla: {
       background: '#E8E3DA',
-      surface: '#CFC3B1',
-      surfaceSoft: '#EFE8DC',
-      text: '#18120C',
-      mutedText: 'rgba(24, 18, 12, 0.90)',
-      standbySurface: '#BFAF98',
-      languageSurface: 'rgba(28, 22, 16, 0.94)',
+      surface: '#F3EADC',
+      surfaceSoft: '#E3D6C3',
+      text: '#1E1710',
+      mutedText: 'rgba(30, 23, 16, 0.78)',
+      accentText: '#A06A08',
+      premiumButton: 'linear-gradient(135deg, #E8D3A7, #CDAA68)',
+      secondaryButton: '#CFC6B8',
+      standbySurface: '#D8C7A8',
+      languageSurface: 'linear-gradient(135deg, #D8C7A8, #BFA67B)',
+      languageButton: 'rgba(248, 239, 224, 0.72)',
+      languageActive: 'rgba(160, 106, 8, 0.18)',
       isLight: true
     },
     marfil: {
       background: '#E1D2B8',
-      surface: '#C6AF8D',
-      surfaceSoft: '#EBDDC2',
-      text: '#181007',
-      mutedText: 'rgba(24, 16, 7, 0.90)',
-      standbySurface: '#B99D72',
-      languageSurface: 'rgba(30, 22, 13, 0.94)',
+      surface: '#F0DFC4',
+      surfaceSoft: '#D7C09A',
+      text: '#1E1308',
+      mutedText: 'rgba(30, 19, 8, 0.78)',
+      accentText: '#935F06',
+      premiumButton: 'linear-gradient(135deg, #E3C68E, #BE9654)',
+      secondaryButton: '#C9B99D',
+      standbySurface: '#D0B383',
+      languageSurface: 'linear-gradient(135deg, #D0B383, #B0915E)',
+      languageButton: 'rgba(245, 231, 205, 0.70)',
+      languageActive: 'rgba(147, 95, 6, 0.20)',
       isLight: true
     },
     imperial: {
@@ -2284,8 +2305,13 @@ function applyStandardVisualTheme(themeCode) {
       surfaceSoft: 'rgba(255, 255, 255, 0.045)',
       text: '#FAF6EE',
       mutedText: 'rgba(250, 246, 238, 0.72)',
+      accentText: '#F2C744',
+      premiumButton: 'linear-gradient(135deg, rgba(242,199,68,0.18), rgba(242,199,68,0.08))',
+      secondaryButton: 'rgba(84, 17, 48, 0.86)',
       standbySurface: 'rgba(84, 17, 48, 0.88)',
-      languageSurface: 'rgba(38, 18, 28, 0.94)',
+      languageSurface: 'rgba(64, 15, 38, 0.94)',
+      languageButton: 'rgba(255,255,255,0.035)',
+      languageActive: 'rgba(242,199,68,0.18)',
       isLight: false
     },
     esmeralda: {
@@ -2294,8 +2320,13 @@ function applyStandardVisualTheme(themeCode) {
       surfaceSoft: 'rgba(255, 255, 255, 0.045)',
       text: '#FAF6EE',
       mutedText: 'rgba(250, 246, 238, 0.72)',
+      accentText: '#F2C744',
+      premiumButton: 'linear-gradient(135deg, rgba(242,199,68,0.18), rgba(242,199,68,0.08))',
+      secondaryButton: 'rgba(7, 88, 77, 0.86)',
       standbySurface: 'rgba(7, 88, 77, 0.88)',
-      languageSurface: 'rgba(11, 42, 37, 0.94)',
+      languageSurface: 'rgba(11, 76, 66, 0.94)',
+      languageButton: 'rgba(255,255,255,0.035)',
+      languageActive: 'rgba(242,199,68,0.18)',
       isLight: false
     },
     andalucia: {
@@ -2304,8 +2335,13 @@ function applyStandardVisualTheme(themeCode) {
       surfaceSoft: 'rgba(255, 255, 255, 0.045)',
       text: '#FAF6EE',
       mutedText: 'rgba(250, 246, 238, 0.72)',
+      accentText: '#F2C744',
+      premiumButton: 'linear-gradient(135deg, rgba(242,199,68,0.18), rgba(242,199,68,0.08))',
+      secondaryButton: 'rgba(6, 74, 44, 0.86)',
       standbySurface: 'rgba(6, 74, 44, 0.88)',
-      languageSurface: 'rgba(10, 38, 25, 0.94)',
+      languageSurface: 'rgba(10, 66, 39, 0.94)',
+      languageButton: 'rgba(255,255,255,0.035)',
+      languageActive: 'rgba(242,199,68,0.18)',
       isLight: false
     },
     terracota: {
@@ -2314,8 +2350,13 @@ function applyStandardVisualTheme(themeCode) {
       surfaceSoft: 'rgba(255, 255, 255, 0.045)',
       text: '#FAF6EE',
       mutedText: 'rgba(250, 246, 238, 0.72)',
+      accentText: '#F2C744',
+      premiumButton: 'linear-gradient(135deg, rgba(242,199,68,0.18), rgba(242,199,68,0.08))',
+      secondaryButton: 'rgba(116, 59, 34, 0.86)',
       standbySurface: 'rgba(116, 59, 34, 0.88)',
-      languageSurface: 'rgba(52, 30, 20, 0.94)',
+      languageSurface: 'rgba(86, 43, 25, 0.94)',
+      languageButton: 'rgba(255,255,255,0.035)',
+      languageActive: 'rgba(242,199,68,0.18)',
       isLight: false
     },
     reserva: {
@@ -2324,8 +2365,13 @@ function applyStandardVisualTheme(themeCode) {
       surfaceSoft: 'rgba(255, 255, 255, 0.045)',
       text: '#FAF6EE',
       mutedText: 'rgba(250, 246, 238, 0.72)',
+      accentText: '#F2C744',
+      premiumButton: 'linear-gradient(135deg, rgba(242,199,68,0.18), rgba(242,199,68,0.08))',
+      secondaryButton: 'rgba(63, 14, 22, 0.86)',
       standbySurface: 'rgba(63, 14, 22, 0.88)',
-      languageSurface: 'rgba(35, 15, 18, 0.94)',
+      languageSurface: 'rgba(55, 12, 19, 0.94)',
+      languageButton: 'rgba(255,255,255,0.035)',
+      languageActive: 'rgba(242,199,68,0.18)',
       isLight: false
     },
     grafito: {
@@ -2334,18 +2380,28 @@ function applyStandardVisualTheme(themeCode) {
       surfaceSoft: 'rgba(255, 255, 255, 0.045)',
       text: '#FAF6EE',
       mutedText: 'rgba(250, 246, 238, 0.72)',
+      accentText: '#F2C744',
+      premiumButton: 'linear-gradient(135deg, rgba(242,199,68,0.18), rgba(242,199,68,0.08))',
+      secondaryButton: 'rgba(78, 78, 78, 0.86)',
       standbySurface: 'rgba(78, 78, 78, 0.88)',
-      languageSurface: 'rgba(35, 35, 35, 0.94)',
+      languageSurface: 'rgba(58, 58, 58, 0.94)',
+      languageButton: 'rgba(255,255,255,0.035)',
+      languageActive: 'rgba(242,199,68,0.18)',
       isLight: false
     },
     aqua: {
       background: '#B0F2B6',
-      surface: '#7DCA89',
-      surfaceSoft: '#D8F7DC',
+      surface: '#E5F7E8',
+      surfaceSoft: '#A1DDA9',
       text: '#082B12',
-      mutedText: 'rgba(8, 43, 18, 0.90)',
-      standbySurface: '#68B875',
-      languageSurface: 'rgba(14, 45, 22, 0.94)',
+      mutedText: 'rgba(8, 43, 18, 0.78)',
+      accentText: '#7A6105',
+      premiumButton: 'linear-gradient(135deg, #E6D394, #BFA85B)',
+      secondaryButton: '#A8CFAE',
+      standbySurface: '#8DC894',
+      languageSurface: 'linear-gradient(135deg, #9DCE9F, #759F72)',
+      languageButton: 'rgba(231, 249, 233, 0.70)',
+      languageActive: 'rgba(122, 97, 5, 0.20)',
       isLight: true
     },
     oliva: {
@@ -2354,8 +2410,13 @@ function applyStandardVisualTheme(themeCode) {
       surfaceSoft: 'rgba(255, 255, 255, 0.045)',
       text: '#FAF6EE',
       mutedText: 'rgba(250, 246, 238, 0.72)',
+      accentText: '#F2C744',
+      premiumButton: 'linear-gradient(135deg, rgba(242,199,68,0.18), rgba(242,199,68,0.08))',
+      secondaryButton: 'rgba(70, 84, 45, 0.86)',
       standbySurface: 'rgba(70, 84, 45, 0.88)',
-      languageSurface: 'rgba(35, 42, 24, 0.94)',
+      languageSurface: 'rgba(55, 66, 35, 0.94)',
+      languageButton: 'rgba(255,255,255,0.035)',
+      languageActive: 'rgba(242,199,68,0.18)',
       isLight: false
     }
   };
@@ -2439,14 +2500,34 @@ function applyStandardVisualTheme(themeCode) {
 
     #app-wrapper button[class*="repeating-linear-gradient"] i,
     #app-wrapper a[class*="repeating-linear-gradient"] i {
-      color: rgba(242, 199, 68, 0.82) !important;
-      stroke: rgba(242, 199, 68, 0.82) !important;
+      color: ${selectedTheme.accentText} !important;
+      stroke: ${selectedTheme.accentText} !important;
     }
 
     .language-selector {
       background: ${selectedTheme.languageSurface} !important;
-      border-color: rgba(242, 199, 68, 0.38) !important;
-      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26) !important;
+      border-color: rgba(120, 85, 20, 0.42) !important;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.24) !important;
+    }
+
+    .language-selector .lang-btn {
+      background: ${selectedTheme.languageButton} !important;
+      border-color: rgba(120, 85, 20, 0.28) !important;
+      color: ${selectedTheme.isLight ? selectedTheme.text : 'rgba(250, 246, 238, 0.78)'} !important;
+    }
+
+    .language-selector .lang-btn.active {
+      background: ${selectedTheme.languageActive} !important;
+      border-color: ${selectedTheme.accentText} !important;
+      color: ${selectedTheme.accentText} !important;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.10) inset, 0 8px 18px rgba(0,0,0,0.16) !important;
+    }
+
+    #app-wrapper .font-display,
+    #app-wrapper h1,
+    #app-wrapper h2,
+    #app-wrapper h3 {
+      color: ${selectedTheme.accentText} !important;
     }
 
     ${selectedTheme.isLight ? `
@@ -2459,31 +2540,35 @@ function applyStandardVisualTheme(themeCode) {
       #app-wrapper .border-gold\\/20,
       #app-wrapper .border-gold\\/15,
       #app-wrapper .border-gold\\/10 {
-        border-color: rgba(120, 85, 20, 0.58) !important;
+        border-color: rgba(120, 85, 20, 0.46) !important;
       }
 
       #app-wrapper .text-gold,
       #app-wrapper [class*="text-gold"] {
-        color: #8A5D06 !important;
-        stroke: #8A5D06 !important;
+        color: ${selectedTheme.accentText} !important;
+        stroke: ${selectedTheme.accentText} !important;
       }
 
       #app-wrapper .bg-gold\\/10,
       #app-wrapper .bg-gold\\/8,
       #app-wrapper .bg-gold\\/5 {
-        background-color: rgba(138, 93, 6, 0.18) !important;
+        background-color: rgba(154, 105, 8, 0.13) !important;
       }
 
       #app-wrapper .menu-item-row,
       #app-wrapper .allergen-card,
       #app-wrapper .allergen-legal-box,
-      #app-wrapper section .rounded-lg,
-      #app-wrapper section .rounded-2xl,
       #app-wrapper [class*="bg-darkCard"],
       #app-wrapper [class*="bg-black"] {
-        background: ${selectedTheme.surfaceSoft} !important;
+        background: ${selectedTheme.surface} !important;
         color: ${selectedTheme.text} !important;
-        border-color: rgba(100, 70, 18, 0.42) !important;
+        border-color: rgba(105, 78, 25, 0.34) !important;
+      }
+
+      #app-wrapper section .rounded-lg,
+      #app-wrapper section .rounded-2xl {
+        background: linear-gradient(180deg, ${selectedTheme.surface}, ${selectedTheme.surfaceSoft}) !important;
+        border-color: rgba(105, 78, 25, 0.34) !important;
       }
 
       #app-wrapper .menu-item-subtitle,
@@ -2493,29 +2578,40 @@ function applyStandardVisualTheme(themeCode) {
       }
 
       #app-wrapper .menu-item-row .font-semibold,
-      #app-wrapper .menu-item-row .font-bold,
-      #app-wrapper h1,
-      #app-wrapper h2,
-      #app-wrapper h3,
-      #app-wrapper .font-display {
+      #app-wrapper .menu-item-row .font-bold {
         color: ${selectedTheme.text} !important;
       }
 
-      #app-wrapper button[class*="repeating-linear-gradient"],
-      #app-wrapper a[class*="repeating-linear-gradient"] {
-        background: ${selectedTheme.standbySurface} !important;
-        border-color: rgba(100, 70, 18, 0.58) !important;
+      #app-wrapper [class*="from-gold"],
+      #app-wrapper [class*="to-gold"] {
+        background: ${selectedTheme.premiumButton} !important;
         color: ${selectedTheme.text} !important;
-        box-shadow: 0 8px 18px rgba(80, 60, 30, 0.18) !important;
+        border-color: rgba(120, 85, 20, 0.56) !important;
+        box-shadow: 0 12px 26px rgba(90, 65, 25, 0.18) !important;
       }
 
-      #app-wrapper button[class*="repeating-linear-gradient"] span,
-      #app-wrapper a[class*="repeating-linear-gradient"] span {
+      #app-wrapper [class*="from-gold"] span,
+      #app-wrapper [class*="to-gold"] span {
         color: ${selectedTheme.text} !important;
+      }
+
+      #app-wrapper [class*="from-gold"] i,
+      #app-wrapper [class*="to-gold"] i {
+        color: ${selectedTheme.accentText} !important;
+        stroke: ${selectedTheme.accentText} !important;
+      }
+
+      #app-wrapper #install-app-btn,
+      #app-wrapper #install-app-btn + button,
+      #app-wrapper button[onclick="handleShareRestaurantClick()"] {
+        background: ${selectedTheme.secondaryButton} !important;
+        color: ${selectedTheme.text} !important;
+        border-color: rgba(90, 70, 35, 0.30) !important;
+        box-shadow: 0 8px 18px rgba(80, 65, 35, 0.13) !important;
       }
 
       #app-wrapper .allergen-subtitle {
-        color: #8A5D06 !important;
+        color: ${selectedTheme.accentText} !important;
       }
     ` : ''}
   `;
