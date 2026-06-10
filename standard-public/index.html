@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.4.1.3';
+    const APP_VERSION = 'V2.4.1.4';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -792,7 +792,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_FUtVznXw3Y0dftgEE7zgHg_aTbK669l';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
 </head>
-}
 
 <body class="font-body">
   <div class="language-selector">
@@ -2242,62 +2241,122 @@ function applyStandardVisualTheme(themeCode) {
     gold: {
       background: '#0F0F0F',
       surface: '#1A1A1A',
-      surfaceSoft: 'rgba(255, 255, 255, 0.035)'
+      surfaceSoft: 'rgba(255, 255, 255, 0.035)',
+      text: '#FAF6EE',
+      mutedText: 'rgba(250, 246, 238, 0.72)',
+      standbySurface: 'rgba(26, 26, 26, 0.88)',
+      languageSurface: 'rgba(26, 26, 26, 0.92)',
+      isLight: false
     },
     azul_real: {
       background: '#0F056B',
       surface: '#160D45',
-      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)',
+      text: '#FAF6EE',
+      mutedText: 'rgba(250, 246, 238, 0.72)',
+      standbySurface: 'rgba(22, 13, 69, 0.88)',
+      languageSurface: 'rgba(22, 13, 69, 0.94)',
+      isLight: false
     },
     perla: {
       background: '#E8E3DA',
-      surface: '#DCD5CA',
-      surfaceSoft: 'rgba(15, 15, 15, 0.045)'
+      surface: '#D6CDBC',
+      surfaceSoft: 'rgba(255, 255, 255, 0.36)',
+      text: '#241D14',
+      mutedText: 'rgba(36, 29, 20, 0.72)',
+      standbySurface: 'rgba(205, 194, 176, 0.78)',
+      languageSurface: 'rgba(35, 29, 22, 0.92)',
+      isLight: true
     },
     marfil: {
       background: '#E1D2B8',
-      surface: '#D4C3A6',
-      surfaceSoft: 'rgba(15, 15, 15, 0.045)'
+      surface: '#CFBC9E',
+      surfaceSoft: 'rgba(255, 255, 255, 0.30)',
+      text: '#251B12',
+      mutedText: 'rgba(37, 27, 18, 0.72)',
+      standbySurface: 'rgba(196, 176, 145, 0.78)',
+      languageSurface: 'rgba(36, 27, 18, 0.92)',
+      isLight: true
     },
     imperial: {
       background: '#791443',
       surface: '#541130',
-      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)',
+      text: '#FAF6EE',
+      mutedText: 'rgba(250, 246, 238, 0.72)',
+      standbySurface: 'rgba(84, 17, 48, 0.88)',
+      languageSurface: 'rgba(38, 18, 28, 0.94)',
+      isLight: false
     },
     esmeralda: {
       background: '#007865',
       surface: '#07584D',
-      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)',
+      text: '#FAF6EE',
+      mutedText: 'rgba(250, 246, 238, 0.72)',
+      standbySurface: 'rgba(7, 88, 77, 0.88)',
+      languageSurface: 'rgba(11, 42, 37, 0.94)',
+      isLight: false
     },
     andalucia: {
       background: '#006B3A',
       surface: '#064A2C',
-      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)',
+      text: '#FAF6EE',
+      mutedText: 'rgba(250, 246, 238, 0.72)',
+      standbySurface: 'rgba(6, 74, 44, 0.88)',
+      languageSurface: 'rgba(10, 38, 25, 0.94)',
+      isLight: false
     },
     terracota: {
       background: '#A6532A',
       surface: '#743B22',
-      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)',
+      text: '#FAF6EE',
+      mutedText: 'rgba(250, 246, 238, 0.72)',
+      standbySurface: 'rgba(116, 59, 34, 0.88)',
+      languageSurface: 'rgba(52, 30, 20, 0.94)',
+      isLight: false
     },
     reserva: {
       background: '#5A0F1B',
       surface: '#3F0E16',
-      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)',
+      text: '#FAF6EE',
+      mutedText: 'rgba(250, 246, 238, 0.72)',
+      standbySurface: 'rgba(63, 14, 22, 0.88)',
+      languageSurface: 'rgba(35, 15, 18, 0.94)',
+      isLight: false
     },
     grafito: {
       background: '#6B6B6B',
       surface: '#4E4E4E',
-      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)',
+      text: '#FAF6EE',
+      mutedText: 'rgba(250, 246, 238, 0.72)',
+      standbySurface: 'rgba(78, 78, 78, 0.88)',
+      languageSurface: 'rgba(35, 35, 35, 0.94)',
+      isLight: false
     },
     aqua: {
       background: '#B0F2B6',
       surface: '#8FD99A',
-      surfaceSoft: 'rgba(15, 15, 15, 0.045)'
+      surfaceSoft: 'rgba(255, 255, 255, 0.32)',
+      text: '#12351C',
+      mutedText: 'rgba(18, 53, 28, 0.72)',
+      standbySurface: 'rgba(129, 203, 139, 0.78)',
+      languageSurface: 'rgba(20, 48, 27, 0.92)',
+      isLight: true
     },
     oliva: {
       background: '#5F6F3A',
       surface: '#46542D',
-      surfaceSoft: 'rgba(255, 255, 255, 0.045)'
+      surfaceSoft: 'rgba(255, 255, 255, 0.045)',
+      text: '#FAF6EE',
+      mutedText: 'rgba(250, 246, 238, 0.72)',
+      standbySurface: 'rgba(70, 84, 45, 0.88)',
+      languageSurface: 'rgba(35, 42, 24, 0.94)',
+      isLight: false
     }
   };
 
@@ -2309,6 +2368,8 @@ function applyStandardVisualTheme(themeCode) {
 
   if (appWrapper) {
     appWrapper.style.background = selectedTheme.background;
+    appWrapper.classList.toggle('tapcarta-theme-light', selectedTheme.isLight);
+    appWrapper.classList.toggle('tapcarta-theme-dark', !selectedTheme.isLight);
   }
 
   const themeColorMeta = document.querySelector('meta[name="theme-color"]');
@@ -2326,6 +2387,24 @@ function applyStandardVisualTheme(themeCode) {
   themeStyle.id = 'tapcarta-standard-theme-style';
 
   themeStyle.textContent = `
+    #app-wrapper,
+    #app-wrapper .text-cream,
+    #app-wrapper [class*="text-cream"] {
+      color: ${selectedTheme.text} !important;
+    }
+
+    #app-wrapper .text-cream\\/80,
+    #app-wrapper .text-cream\\/75,
+    #app-wrapper .text-cream\\/70,
+    #app-wrapper .text-cream\\/60,
+    #app-wrapper .text-cream\\/55,
+    #app-wrapper .text-cream\\/50,
+    #app-wrapper .text-cream\\/45,
+    #app-wrapper .text-cream\\/40,
+    #app-wrapper [class*="text-cream/"] {
+      color: ${selectedTheme.mutedText} !important;
+    }
+
     #app-wrapper .bg-dark,
     #app-wrapper [class*="bg-dark"] {
       background-color: ${selectedTheme.background} !important;
@@ -2337,17 +2416,59 @@ function applyStandardVisualTheme(themeCode) {
       background: ${selectedTheme.surface} !important;
     }
 
-    #app-wrapper .desktop-story-card,
     #app-wrapper .install-help-box,
     #app-wrapper .allergen-card,
     #app-wrapper .allergen-legal-box,
-    #app-wrapper .restaurant-manual-action-inner {
+    #app-wrapper .allergen-legal-text,
+    #app-wrapper section .rounded-lg,
+    #app-wrapper section .rounded-2xl {
       background: linear-gradient(180deg, ${selectedTheme.surface}, ${selectedTheme.surfaceSoft}) !important;
     }
 
-    #app-wrapper .language-selector {
-      background: rgba(18, 15, 12, 0.94) !important;
+    #app-wrapper button[class*="repeating-linear-gradient"],
+    #app-wrapper a[class*="repeating-linear-gradient"] {
+      background: ${selectedTheme.standbySurface} !important;
+      border-color: rgba(242, 199, 68, 0.34) !important;
+      color: ${selectedTheme.mutedText} !important;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16) !important;
     }
+
+    #app-wrapper button[class*="repeating-linear-gradient"] span,
+    #app-wrapper a[class*="repeating-linear-gradient"] span {
+      color: ${selectedTheme.mutedText} !important;
+    }
+
+    #app-wrapper button[class*="repeating-linear-gradient"] i,
+    #app-wrapper a[class*="repeating-linear-gradient"] i {
+      color: rgba(242, 199, 68, 0.82) !important;
+      stroke: rgba(242, 199, 68, 0.82) !important;
+    }
+
+    .language-selector {
+      background: ${selectedTheme.languageSurface} !important;
+      border-color: rgba(242, 199, 68, 0.38) !important;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26) !important;
+    }
+
+    ${selectedTheme.isLight ? `
+      #app-wrapper .border-gold\\/25,
+      #app-wrapper .border-gold\\/20,
+      #app-wrapper .border-gold\\/15,
+      #app-wrapper .border-gold\\/10 {
+        border-color: rgba(150, 110, 24, 0.34) !important;
+      }
+
+      #app-wrapper .text-gold,
+      #app-wrapper [class*="text-gold"] {
+        color: #B88412 !important;
+        stroke: #B88412 !important;
+      }
+
+      #app-wrapper .bg-gold\\/10,
+      #app-wrapper .bg-gold\\/8 {
+        background-color: rgba(184, 132, 18, 0.10) !important;
+      }
+    ` : ''}
   `;
 
   document.head.appendChild(themeStyle);
