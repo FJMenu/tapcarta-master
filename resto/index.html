@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.1.5';
+        const APP_VERSION = 'V2.5.1.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -11426,7 +11426,27 @@ async function saveRestaurantOptionsModal() {
   function openRestaurantOptionsModal() {
     document.getElementById('restaurant-options-modal')?.remove();
 
-    const text = getRestaurantOptionsText();
+     const text = getRestaurantOptionsText();
+
+    const restaurantThemeOptions = [
+      { code: 'gold', name: 'TapCarta Gold', color: '#0F0F0F' },
+      { code: 'azul_real', name: 'Azul Real', color: '#0F056B' },
+      { code: 'perla', name: 'Perla', color: '#E8E3DA' },
+      { code: 'marfil', name: 'Marfil', color: '#E1D2B8' },
+      { code: 'imperial', name: 'Imperial', color: '#791443' },
+      { code: 'esmeralda', name: 'Esmeralda', color: '#007865' },
+      { code: 'andalucia', name: 'Andalucía', color: '#006B3A' },
+      { code: 'terracota', name: 'Terracota', color: '#A6532A' },
+      { code: 'reserva', name: 'Reserva', color: '#5A0F1B' },
+      { code: 'grafito', name: 'Grafito', color: '#6B6B6B' },
+      { code: 'aqua', name: 'Aqua', color: '#B0F2B6' },
+      { code: 'oliva', name: 'Oliva', color: '#5F6F3A' }
+    ];
+
+    const currentThemeCode = activeRestaurantData?.theme?.theme_code || 'gold';
+    const currentTheme =
+      restaurantThemeOptions.find((theme) => theme.code === currentThemeCode) ||
+      restaurantThemeOptions[0];
 
     const manualActionBar = document.getElementById('manualActionBar');
     if (manualActionBar) {
@@ -11515,6 +11535,57 @@ async function saveRestaurantOptionsModal() {
             ${buildRestaurantQuickOptionRow('phone', 'phone', text.phone)}
             ${buildRestaurantQuickOptionRow('directions', 'map-pin', text.directions)}
             ${buildRestaurantQuickOptionRow('googleReviews', 'star', text.googleReviews)}
+          </div>
+
+          <div class="restaurant-option-service-card mt-4">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <div class="font-display text-lg font-bold text-cream mb-1">
+                  ${currentLang === 'es'
+                    ? 'Tema visual del menú cliente'
+                    : currentLang === 'en'
+                      ? 'Client menu visual theme'
+                      : currentLang === 'nl'
+                        ? 'Visueel thema van het klantmenu'
+                        : 'Thème visuel du menu client'}
+                </div>
+
+                <div class="text-xs text-cream/55">
+                  ${currentLang === 'es'
+                    ? 'Personaliza el ambiente visual del menú mostrado a los clientes.'
+                    : currentLang === 'en'
+                      ? 'Customize the visual atmosphere of the menu shown to customers.'
+                      : currentLang === 'nl'
+                        ? 'Personaliseer de visuele sfeer van het menu dat klanten zien.'
+                        : 'Personnalisez l’ambiance visuelle du menu affiché aux clients.'}
+                </div>
+              </div>
+
+              <div class="shrink-0 inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-black/20 px-3 py-2">
+                <span
+                  class="inline-block w-4 h-4 rounded-full border border-white/25"
+                  style="background: ${currentTheme.color};"
+                ></span>
+                <span class="text-xs font-bold text-cream/80">${currentTheme.name}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              id="restaurant-theme-open-btn"
+              class="btn-action mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 bg-gold/10 text-sm font-bold text-cream hover:bg-gold/15 transition-all"
+            >
+              <i data-lucide="palette" class="w-4 h-4 text-gold"></i>
+              <span>
+                ${currentLang === 'es'
+                  ? 'Elegir el tema'
+                  : currentLang === 'en'
+                    ? 'Choose theme'
+                    : currentLang === 'nl'
+                      ? 'Thema kiezen'
+                      : 'Choisir le thème'}
+              </span>
+            </button>
           </div>
         </div>
 
