@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.1.7';
+        const APP_VERSION = 'V2.5.1.8';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -11443,6 +11443,196 @@ async function saveRestaurantOptionsModal() {
       resetButtonState();
     }
   }
+  function openRestaurantThemeChoiceModal() {
+    document.getElementById('restaurant-theme-choice-modal')?.remove();
+
+    const themeOptions = [
+      { code: 'gold', name: 'TapCarta Gold', color: '#0F0F0F' },
+      { code: 'azul_real', name: 'Azul Real', color: '#0F056B' },
+      { code: 'perla', name: 'Perla', color: '#E8E3DA' },
+      { code: 'marfil', name: 'Marfil', color: '#E1D2B8' },
+      { code: 'imperial', name: 'Imperial', color: '#791443' },
+      { code: 'esmeralda', name: 'Esmeralda', color: '#007865' },
+      { code: 'andalucia', name: 'Andalucía', color: '#006B3A' },
+      { code: 'terracota', name: 'Terracota', color: '#A6532A' },
+      { code: 'reserva', name: 'Reserva', color: '#5A0F1B' },
+      { code: 'grafito', name: 'Grafito', color: '#6B6B6B' },
+      { code: 'aqua', name: 'Aqua', color: '#B0F2B6' },
+      { code: 'oliva', name: 'Oliva', color: '#5F6F3A' }
+    ];
+
+    const currentThemeCode = activeRestaurantData?.theme?.theme_code || 'gold';
+
+    const overlay = document.createElement('div');
+    overlay.id = 'restaurant-theme-choice-modal';
+    overlay.className = 'restaurant-options-modal';
+
+    overlay.innerHTML = `
+      <div class="restaurant-options-panel" role="dialog" aria-modal="true" style="width: min(780px, 100%);">
+        <div class="restaurant-options-header">
+          <div class="min-w-0">
+            <div class="inline-flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gold/14 border border-gold/28 flex items-center justify-center shrink-0">
+                <i data-lucide="palette" class="w-5 h-5 text-gold"></i>
+              </div>
+              <div>
+                <div class="font-display text-2xl font-bold text-cream leading-tight">
+                  ${currentLang === 'es'
+                    ? 'Elegir el tema visual'
+                    : currentLang === 'en'
+                      ? 'Choose visual theme'
+                      : currentLang === 'nl'
+                        ? 'Visueel thema kiezen'
+                        : 'Choisir le thème visuel'}
+                </div>
+                <div class="text-sm text-cream/58 mt-1">
+                  ${currentLang === 'es'
+                    ? 'Este tema se aplicará al menú cliente.'
+                    : currentLang === 'en'
+                      ? 'This theme will be applied to the customer menu.'
+                      : currentLang === 'nl'
+                        ? 'Dit thema wordt toegepast op het klantmenu.'
+                        : 'Ce thème sera appliqué au menu client.'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            id="restaurant-theme-close-btn"
+            class="btn-action w-11 h-11 rounded-2xl border border-white/15 text-cream hover:bg-white/5 inline-flex items-center justify-center shrink-0"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="restaurant-options-body">
+          <div class="grid md:grid-cols-2 gap-3">
+            ${themeOptions.map((theme) => {
+              const isSelected = theme.code === currentThemeCode;
+
+              return `
+                <button
+                  type="button"
+                  data-restaurant-theme-code="${theme.code}"
+                  class="btn-action text-left rounded-2xl border ${isSelected ? 'border-gold/70 bg-gold/14' : 'border-gold/20 bg-white/[0.035] hover:bg-white/[0.055]'} px-4 py-4 transition-all"
+                >
+                  <div class="flex items-center gap-4">
+                    <span
+                      class="inline-block w-10 h-10 rounded-2xl border border-gold/35 shrink-0"
+                      style="background: ${theme.color}; box-shadow: 0 0 0 1px rgba(255,255,255,0.12) inset, 0 8px 18px rgba(0,0,0,0.32);"
+                    ></span>
+
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-sm font-bold text-cream">${theme.name}</span>
+                      <span class="block text-xs text-cream/48 mt-1">${theme.color}</span>
+                    </span>
+
+                    ${isSelected ? '<i data-lucide="check" class="w-5 h-5 text-gold shrink-0"></i>' : ''}
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="restaurant-options-footer">
+          <button
+            type="button"
+            id="restaurant-theme-cancel-btn"
+            class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+          >
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>${currentLang === 'es' ? 'Volver' : currentLang === 'en' ? 'Back' : currentLang === 'nl' ? 'Terug' : 'Retour'}</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const closeThemeModal = () => {
+      document.getElementById('restaurant-theme-choice-modal')?.remove();
+    };
+
+    document.getElementById('restaurant-theme-close-btn')?.addEventListener('click', closeThemeModal);
+    document.getElementById('restaurant-theme-cancel-btn')?.addEventListener('click', closeThemeModal);
+
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) {
+        closeThemeModal();
+      }
+    });
+
+    overlay.querySelectorAll('[data-restaurant-theme-code]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const selectedThemeCode = button.dataset.restaurantThemeCode;
+        const selectedTheme = themeOptions.find((theme) => theme.code === selectedThemeCode);
+
+        if (!selectedTheme) {
+          return;
+        }
+
+        try {
+          button.disabled = true;
+
+          if (!activeRestaurantData || typeof activeRestaurantData !== 'object') {
+            activeRestaurantData = {};
+          }
+
+          activeRestaurantData.theme = {
+            theme_code: selectedTheme.code
+          };
+
+          const saveOk = await saveRestaurantSettingsToSupabase({
+            theme_json: {
+              theme_code: selectedTheme.code
+            }
+          });
+
+          if (!saveOk) {
+            throw new Error('theme_save_failed');
+          }
+
+          showTapCartaMessage(
+            currentLang === 'es'
+              ? 'Tema visual guardado.'
+              : currentLang === 'en'
+                ? 'Visual theme saved.'
+                : currentLang === 'nl'
+                  ? 'Visueel thema opgeslagen.'
+                  : 'Thème visuel enregistré.'
+          );
+
+          closeThemeModal();
+
+          document.getElementById('restaurant-options-modal')?.remove();
+          openRestaurantOptionsModal();
+        } catch (error) {
+          console.error('Erreur sauvegarde thème restaurant :', error);
+
+          showTapCartaMessage(
+            currentLang === 'es'
+              ? 'No se ha podido guardar el tema.'
+              : currentLang === 'en'
+                ? 'The theme could not be saved.'
+                : currentLang === 'nl'
+                  ? 'Het thema kon niet worden opgeslagen.'
+                  : 'Le thème n’a pas pu être enregistré.'
+          );
+
+          button.disabled = false;
+        }
+      });
+    });
+
+    if (window.lucide) {
+      requestAnimationFrame(() => {
+        lucide.createIcons();
+      });
+    }
+  }
 
   function openRestaurantOptionsModal() {
     document.getElementById('restaurant-options-modal')?.remove();
@@ -11637,6 +11827,7 @@ async function saveRestaurantOptionsModal() {
     document.getElementById('restaurant-options-close-btn')?.addEventListener('click', closeRestaurantOptionsModal);
     document.getElementById('restaurant-options-cancel-btn')?.addEventListener('click', closeRestaurantOptionsModal);
     document.getElementById('restaurant-options-save-btn')?.addEventListener('click', saveRestaurantOptionsModal);
+    document.getElementById('restaurant-theme-open-btn')?.addEventListener('click', openRestaurantThemeChoiceModal);
 
     overlay.addEventListener('click', (event) => {
       if (event.target === overlay) {
