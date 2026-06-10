@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.1.1';
+        const APP_VERSION = 'V2.5.1.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1994,7 +1994,7 @@ async function loadActiveRestaurantData() {
     try {
       const { data: settingsRow, error: settingsError } = await supabaseClient
         .from('restaurant_settings')
-        .select('modules_json')
+        .select('modules_json, theme_json')
         .eq('restaurant_id', resolvedSupabaseRestaurantId)
         .maybeSingle();
 
@@ -2008,8 +2008,10 @@ async function loadActiveRestaurantData() {
           ...settingsRow.modules_json
         };
       }
+
+      restaurantData.theme = parseRestaurantThemeSettingsValue(settingsRow?.theme_json);
     } catch (error) {
-      console.warn('TapCarta Resto: erreur lecture modules depuis Supabase.', error);
+      console.warn('TapCarta Resto: erreur lecture options depuis Supabase.', error);
     }
   }
 
