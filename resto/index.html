@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.2.3';
+        const APP_VERSION = 'V2.5.2.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -15409,6 +15409,25 @@ function deleteRestaurantSubcategory(categoryIndex, subcategoryIndex) {
     }
   }
 
+  function moveRestaurantSubcategory(categoryIndex, subcategoryIndex, direction, action = null) {
+    const category = activeRestaurantData?.menu?.categories?.[categoryIndex];
+    if (!category || !Array.isArray(category.subcategories)) return;
+
+    const subcategories = category.subcategories;
+    const targetIndex = direction === 'up' ? subcategoryIndex - 1 : subcategoryIndex + 1;
+
+    if (targetIndex < 0 || targetIndex >= subcategories.length) return;
+
+    [subcategories[subcategoryIndex], subcategories[targetIndex]] = [subcategories[targetIndex], subcategories[subcategoryIndex]];
+
+    syncRestaurantSubcategoryOrder(category);
+    renderRestaurantMenuEditor();
+
+    if (action) {
+      scrollToMenuEditorAction(action, categoryIndex, null, targetIndex);
+    }
+  }
+
   function deleteRestaurantItem(categoryIndex, itemIndex) {
     if (!activeRestaurantData?.menu?.categories?.[categoryIndex]?.items) return;
 
@@ -17300,8 +17319,10 @@ if (dishFinishBtn) {
 
       if (actionButton) {
         const categoryIndex = Number(actionButton.dataset.categoryIndex);
+        const subcategoryIndex = Number(actionButton.dataset.subcategoryIndex);
         const itemIndex = Number(actionButton.dataset.itemIndex);
         const action = actionButton.dataset.action;
+        const hasSubcategoryIndex = !Number.isNaN(subcategoryIndex);
 
         if (action === 'add-item') {
           markMenuEditorDirty();
@@ -17310,7 +17331,8 @@ if (dishFinishBtn) {
 
           return;
         }
-                  if (action === 'add-subcategory') {
+
+        if (action === 'add-subcategory') {
           markMenuEditorDirty();
           createRestaurantSubcategory(categoryIndex);
           updateMenuEditorDirtyUi();
@@ -17318,7 +17340,6 @@ if (dishFinishBtn) {
         }
 
         if (action === 'add-subcategory-item') {
-          const subcategoryIndex = Number(actionButton.dataset.subcategoryIndex);
           markMenuEditorDirty();
           openNewDishEditorScreen(categoryIndex, {
             subcategoryIndex
@@ -17328,8 +17349,6 @@ if (dishFinishBtn) {
         }
 
         if (action === 'edit-subcategory-item') {
-          const subcategoryIndex = Number(actionButton.dataset.subcategoryIndex);
-
           if (
             !Number.isNaN(categoryIndex) &&
             !Number.isNaN(subcategoryIndex) &&
@@ -17345,14 +17364,40 @@ if (dishFinishBtn) {
 
         if (action === 'move-item-up') {
           markMenuEditorDirty();
-          moveRestaurantItem(categoryIndex, itemIndex, 'up', action);
+          moveRestaurantItem(
+            categoryIndex,
+            itemIndex,
+            'up',
+            action,
+            hasSubcategoryIndex ? subcategoryIndex : null
+          );
           updateMenuEditorDirtyUi();
           return;
         }
 
         if (action === 'move-item-down') {
           markMenuEditorDirty();
-          moveRestaurantItem(categoryIndex, itemIndex, 'down', action);
+          moveRestaurantItem(
+            categoryIndex,
+            itemIndex,
+            'down',
+            action,
+            hasSubcategoryIndex ? subcategoryIndex : null
+          );
+          updateMenuEditorDirtyUi();
+          return;
+        }
+
+        if (action === 'move-subcategory-up') {
+          markMenuEditorDirty();
+          moveRestaurantSubcategory(categoryIndex, subcategoryIndex, 'up', action);
+          updateMenuEditorDirtyUi();
+          return;
+        }
+
+        if (action === 'move-subcategory-down') {
+          markMenuEditorDirty();
+          moveRestaurantSubcategory(categoryIndex, subcategoryIndex, 'down', action);
           updateMenuEditorDirtyUi();
           return;
         }
@@ -17377,13 +17422,14 @@ if (dishFinishBtn) {
           updateMenuEditorDirtyUi();
           return;
         }
+
         if (action === 'delete-subcategory') {
-          const subcategoryIndex = Number(actionButton.dataset.subcategoryIndex);
           markMenuEditorDirty();
           deleteRestaurantSubcategory(categoryIndex, subcategoryIndex);
           updateMenuEditorDirtyUi();
           return;
         }
+
         if (action === 'delete-category') {
           markMenuEditorDirty();
           deleteRestaurantCategory(categoryIndex);
@@ -17399,10 +17445,17 @@ if (dishFinishBtn) {
         !e.target.closest('button, select, label')
       ) {
         const categoryIndex = Number(itemCard.dataset.menuCategoryIndex);
+        const subcategoryIndex = Number(itemCard.dataset.menuSubcategoryIndex);
         const itemIndex = Number(itemCard.dataset.menuItemIndex);
 
         if (!Number.isNaN(categoryIndex) && !Number.isNaN(itemIndex)) {
-          openDishEditorScreen(categoryIndex, itemIndex);
+          if (!Number.isNaN(subcategoryIndex)) {
+            openDishEditorScreen(categoryIndex, itemIndex, {
+              subcategoryIndex
+            });
+          } else {
+            openDishEditorScreen(categoryIndex, itemIndex);
+          }
         }
       }
     });
