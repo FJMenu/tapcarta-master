@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.2.1';
+        const APP_VERSION = 'V2.5.2.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14345,7 +14345,7 @@ async function saveRestaurantOptionsModal() {
               type="button"
               data-action="move-category-up"
               data-category-index="${categoryIndex}"
-              class="rounded-2xl border border-white/12 bg-black/30 px-4 py-4 text-2xl font-bold text-cream hover:bg-white/8"
+              class="rounded-2xl border border-white/12 bg-black/30 px-3 py-3 text-xl font-bold text-cream hover:bg-white/8"
               title="Monter"
             >
               ↑
@@ -14354,7 +14354,7 @@ async function saveRestaurantOptionsModal() {
               type="button"
               data-action="move-category-down"
               data-category-index="${categoryIndex}"
-              class="rounded-2xl border border-white/12 bg-black/30 px-4 py-4 text-2xl font-bold text-cream hover:bg-white/8"
+              class="rounded-2xl border border-white/12 bg-black/30 px-3 py-3 text-xl font-bold text-cream hover:bg-white/8"
               title="Descendre"
             >
               ↓
@@ -14475,6 +14475,31 @@ async function saveRestaurantOptionsModal() {
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-2 md:justify-end">
+                                  <div class="grid grid-cols-2 gap-2">
+                                    <button
+                                      type="button"
+                                      data-action="move-item-up"
+                                      data-category-index="${categoryIndex}"
+                                      data-subcategory-index="${subcategoryIndex}"
+                                      data-item-index="${itemIndex}"
+                                      class="rounded-xl border border-white/12 bg-black/30 px-2.5 py-1.5 text-lg font-bold text-cream hover:bg-white/8"
+                                      title="Monter"
+                                    >
+                                      ↑
+                                    </button>
+                                    <button
+                                      type="button"
+                                      data-action="move-item-down"
+                                      data-category-index="${categoryIndex}"
+                                      data-subcategory-index="${subcategoryIndex}"
+                                      data-item-index="${itemIndex}"
+                                      class="rounded-xl border border-white/12 bg-black/30 px-2.5 py-1.5 text-lg font-bold text-cream hover:bg-white/8"
+                                      title="Descendre"
+                                    >
+                                      ↓
+                                    </button>
+                                  </div>
+
                                   <div class="rounded-xl border border-gold/25 bg-gold/10 px-3 py-2 text-sm font-black text-gold">
                                   ${escapeHtml(formatDishPriceForDisplay(item.price))}
                                   </div>
@@ -14621,7 +14646,7 @@ async function saveRestaurantOptionsModal() {
                       data-action="move-item-up"
                       data-category-index="${categoryIndex}"
                       data-item-index="${itemIndex}"
-                      class="rounded-xl border border-white/12 bg-black/30 px-3 py-2 text-xl font-bold text-cream hover:bg-white/8"
+                      class="rounded-xl border border-white/12 bg-black/30 px-2.5 py-1.5 text-lg font-bold text-cream hover:bg-white/8"
                       title="Monter"
                     >
                       ↑
@@ -14631,7 +14656,7 @@ async function saveRestaurantOptionsModal() {
                       data-action="move-item-down"
                       data-category-index="${categoryIndex}"
                       data-item-index="${itemIndex}"
-                      class="rounded-xl border border-white/12 bg-black/30 px-3 py-2 text-xl font-bold text-cream hover:bg-white/8"
+                      class="rounded-xl border border-white/12 bg-black/30 px-2.5 py-1.5 text-lg font-bold text-cream hover:bg-white/8"
                       title="Descendre"
                     >
                       ↓
