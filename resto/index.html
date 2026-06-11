@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.2.4';
+        const APP_VERSION = 'V2.5.3.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -11062,6 +11062,63 @@ function renderRequestRow(item, displayMode = 'active') {
               </div>
 
               <div class="rounded-2xl border border-gold/15 bg-black/15 p-4 md:p-5">
+                <div class="mb-4 rounded-2xl border border-gold/20 bg-black/22 p-3 md:p-4">
+                  <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div class="min-w-0">
+                      <div class="text-sm font-extrabold text-gold">
+                        ${currentLang === 'es'
+                          ? 'Buscar en el menú'
+                          : currentLang === 'en'
+                            ? 'Search the menu'
+                            : currentLang === 'nl'
+                              ? 'Zoeken in het menu'
+                              : 'Rechercher dans le menu'}
+                      </div>
+                      <div class="mt-1 text-xs text-cream/55">
+                        ${currentLang === 'es'
+                          ? 'Encuentre rápidamente una categoría, subcategoría o plato.'
+                          : currentLang === 'en'
+                            ? 'Quickly find a category, subcategory or dish.'
+                            : currentLang === 'nl'
+                              ? 'Vind snel een categorie, subcategorie of gerecht.'
+                              : 'Retrouvez rapidement une catégorie, une sous-catégorie ou un plat.'}
+                      </div>
+                    </div>
+
+                    <div class="flex w-full flex-col gap-2 md:w-[420px]">
+                      <div class="relative">
+                        <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gold/80"></i>
+                        <input
+                          id="restaurant-menu-search-input"
+                          type="search"
+                          autocomplete="off"
+                          placeholder="${currentLang === 'es'
+                            ? 'Buscar un plato, una categoría...'
+                            : currentLang === 'en'
+                              ? 'Search a dish, a category...'
+                              : currentLang === 'nl'
+                                ? 'Zoek een gerecht, categorie...'
+                                : 'Rechercher un plat, une catégorie...'}"
+                          class="w-full rounded-2xl border border-white/12 bg-black/30 px-10 py-3 text-sm font-semibold text-cream outline-none placeholder:text-cream/35 focus:border-gold/55"
+                        >
+                        <button
+                          id="restaurant-menu-search-clear-btn"
+                          type="button"
+                          class="absolute right-2 top-1/2 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-cream/70 hover:bg-white/[0.08]"
+                          title="Effacer"
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      <div
+                        id="restaurant-menu-search-status"
+                        class="min-h-[18px] text-xs font-semibold text-cream/50"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
                 <div id="restaurant-menu-categories-list" class="space-y-4"></div>
               </div>
             </div>
