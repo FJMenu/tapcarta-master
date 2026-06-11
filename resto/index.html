@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.3.2';
+        const APP_VERSION = 'V2.5.3.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -17778,6 +17778,40 @@ if (dishFinishBtn) {
         }
       }
     });
+
+    if (editorWorkspace) {
+      editorWorkspace.addEventListener('input', (e) => {
+        if (e.target?.id !== 'restaurant-menu-search-input') return;
+
+        runRestaurantMenuSearch({
+          scrollToFirst: false
+        });
+      });
+
+      editorWorkspace.addEventListener('keydown', (e) => {
+        if (e.target?.id !== 'restaurant-menu-search-input') return;
+
+        if (e.key === 'Enter') {
+          e.preventDefault();
+
+          runRestaurantMenuSearch({
+            scrollToFirst: true
+          });
+        }
+
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          clearRestaurantMenuSearch();
+        }
+      });
+
+      editorWorkspace.addEventListener('click', (e) => {
+        const clearButton = e.target.closest('#restaurant-menu-search-clear-btn');
+        if (!clearButton) return;
+
+        clearRestaurantMenuSearch();
+      });
+    }
   }
 
   if (window.tapCartaRestaurantRefreshState.requestsIntervalId) {
