@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.2.2';
+        const APP_VERSION = 'V2.5.2.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14428,20 +14428,52 @@ async function saveRestaurantOptionsModal() {
 
             <div class="space-y-3">
               ${category.subcategories.map((subcategory, subcategoryIndex) => `
-                <div class="rounded-2xl border border-white/10 bg-[#15110a]/72 p-4">
+                <div
+                  data-menu-subcategory-card="true"
+                  data-menu-category-index="${categoryIndex}"
+                  data-menu-subcategory-index="${subcategoryIndex}"
+                  class="rounded-2xl border border-white/10 bg-[#15110a]/72 p-4"
+                >
                   <div class="grid grid-cols-1 xl:grid-cols-[1fr_220px] gap-4 items-start">
                     <div>
-                      <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">
-                        ${editorText.subcategoryName}
-                      </label>
-                      <input
-                        type="text"
-                        value="${escapeHtml(subcategory.name || '')}"
-                        data-category-index="${categoryIndex}"
-                        data-subcategory-index="${subcategoryIndex}"
-                        data-field="subcategory-name"
-                        class="w-full rounded-xl border border-white/12 bg-black/25 px-4 py-3 text-base font-bold text-cream outline-none focus:border-gold/50"
-                      >
+                      <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                        <div class="min-w-0 flex-1">
+                          <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">
+                            ${editorText.subcategoryName}
+                          </label>
+                          <input
+                            type="text"
+                            value="${escapeHtml(subcategory.name || '')}"
+                            data-category-index="${categoryIndex}"
+                            data-subcategory-index="${subcategoryIndex}"
+                            data-field="subcategory-name"
+                            class="w-full rounded-xl border border-white/12 bg-black/25 px-4 py-3 text-base font-bold text-cream outline-none focus:border-gold/50"
+                          >
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 md:flex-shrink-0">
+                          <button
+                            type="button"
+                            data-action="move-subcategory-up"
+                            data-category-index="${categoryIndex}"
+                            data-subcategory-index="${subcategoryIndex}"
+                            class="rounded-xl border border-white/12 bg-black/30 px-2.5 py-1.5 text-lg font-bold text-cream hover:bg-white/8"
+                            title="Monter"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            data-action="move-subcategory-down"
+                            data-category-index="${categoryIndex}"
+                            data-subcategory-index="${subcategoryIndex}"
+                            class="rounded-xl border border-white/12 bg-black/30 px-2.5 py-1.5 text-lg font-bold text-cream hover:bg-white/8"
+                            title="Descendre"
+                          >
+                            ↓
+                          </button>
+                        </div>
+                      </div>
 
                       <div class="text-xs text-cream/45 mt-3">
                         ID : ${escapeHtml(subcategory.id || '—')} · ${editorText.order} : ${typeof subcategory.order === 'number' ? subcategory.order : subcategoryIndex + 1}
