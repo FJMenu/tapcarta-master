@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.3.1';
+        const APP_VERSION = 'V2.5.3.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14815,6 +14815,268 @@ async function saveRestaurantOptionsModal() {
       });
     }
   }
+
+  function normalizeRestaurantMenuSearchText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  function getRestaurantMenuSearchLabel(type) {
+    if (type === 'category') {
+      return currentLang === 'es'
+        ? 'Categoría'
+        : currentLang === 'en'
+          ? 'Category'
+          : currentLang === 'nl'
+            ? 'Categorie'
+            : 'Catégorie';
+    }
+
+    if (type === 'subcategory') {
+      return currentLang === 'es'
+        ? 'Subcategoría'
+        : currentLang === 'en'
+          ? 'Subcategory'
+          : currentLang === 'nl'
+            ? 'Subcategorie'
+            : 'Sous-catégorie';
+    }
+
+    return currentLang === 'es'
+      ? 'Plato'
+      : currentLang === 'en'
+        ? 'Dish'
+        : currentLang === 'nl'
+          ? 'Gerecht'
+          : 'Plat';
+  }
+
+  function clearRestaurantMenuSearchHighlights() {
+    document
+      .querySelectorAll('[data-menu-search-match="true"]')
+      .forEach((element) => {
+        element.removeAttribute('data-menu-search-match');
+        element.classList.remove(
+          'ring-2',
+          'ring-gold/80',
+          'shadow-[0_0_0_1px_rgba(242,199,68,0.38),0_18px_42px_rgba(0,0,0,0.36)]'
+        );
+      });
+  }
+
+  function getRestaurantMenuSearchTarget(result) {
+    if (!result) return null;
+
+    if (result.type === 'category') {
+      return document.querySelector(
+        `[data-menu-category-card="true"][data-menu-category-index="${result.categoryIndex}"]`
+      );
+    }
+
+    if (result.type === 'subcategory') {
+      return document.querySelector(
+        `[data-menu-subcategory-card="true"][data-menu-category-index="${result.categoryIndex}"][data-menu-subcategory-index="${result.subcategoryIndex}"]`
+      );
+    }
+
+    if (result.type === 'subcategory-item') {
+      return document.querySelector(
+        `[data-menu-item-card="true"][data-menu-category-index="${result.categoryIndex}"][data-menu-subcategory-index="${result.subcategoryIndex}"][data-menu-item-index="${result.itemIndex}"]`
+      );
+    }
+
+    return document.querySelector(
+      `[data-menu-item-card="true"][data-menu-category-index="${result.categoryIndex}"][data-menu-item-index="${result.itemIndex}"]:not([data-menu-subcategory-index])`
+    );
+  }
+
+  function collectRestaurantMenuSearchResults(query) {
+    const normalizedQuery = normalizeRestaurantMenuSearchText(query);
+    const results = [];
+
+    if (!normalizedQuery || !activeRestaurantData?.menu?.categories) {
+      return results;
+    }
+
+    activeRestaurantData.menu.categories.forEach((category, categoryIndex) => {
+      const categoryText = normalizeRestaurantMenuSearchText([
+        category.name,
+        category.id
+      ].join(' '));
+
+      if (categoryText.includes(normalizedQuery)) {
+        results.push({
+          type: 'category',
+          categoryIndex,
+          label: category.name || getRestaurantMenuSearchLabel('category')
+        });
+      }
+
+      if (Array.isArray(category.items)) {
+        category.items.forEach((item, itemIndex) => {
+          const itemText = normalizeRestaurantMenuSearchText([
+            item.name,
+            item.subtitle,
+            item.description,
+            item.id
+          ].join(' '));
+
+          if (itemText.includes(normalizedQuery)) {
+            results.push({
+              type: 'item',
+              categoryIndex,
+              itemIndex,
+              label: item.name || getRestaurantMenuSearchLabel('item')
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(category.subcategories)) {
+        category.subcategories.forEach((subcategory, subcategoryIndex) => {
+          const subcategoryText = normalizeRestaurantMenuSearchText([
+            subcategory.name,
+            subcategory.id
+          ].join(' '));
+
+          if (subcategoryText.includes(normalizedQuery)) {
+            results.push({
+              type: 'subcategory',
+              categoryIndex,
+              subcategoryIndex,
+              label: subcategory.name || getRestaurantMenuSearchLabel('subcategory')
+            });
+          }
+
+          if (Array.isArray(subcategory.items)) {
+            subcategory.items.forEach((item, itemIndex) => {
+              const subcategoryItemText = normalizeRestaurantMenuSearchText([
+                item.name,
+                item.subtitle,
+                item.description,
+                item.id,
+                subcategory.name,
+                category.name
+              ].join(' '));
+
+              if (subcategoryItemText.includes(normalizedQuery)) {
+                results.push({
+                  type: 'subcategory-item',
+                  categoryIndex,
+                  subcategoryIndex,
+                  itemIndex,
+                  label: item.name || getRestaurantMenuSearchLabel('item')
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+
+    return results;
+  }
+
+  function updateRestaurantMenuSearchStatus(results, query) {
+    const status = document.getElementById('restaurant-menu-search-status');
+    if (!status) return;
+
+    const normalizedQuery = normalizeRestaurantMenuSearchText(query);
+
+    if (!normalizedQuery) {
+      status.textContent = '';
+      return;
+    }
+
+    if (!results.length) {
+      status.textContent = currentLang === 'es'
+        ? 'Ningún resultado encontrado.'
+        : currentLang === 'en'
+          ? 'No result found.'
+          : currentLang === 'nl'
+            ? 'Geen resultaat gevonden.'
+            : 'Aucun résultat trouvé.';
+      return;
+    }
+
+    const firstResult = results[0];
+    const label = getRestaurantMenuSearchLabel(firstResult.type === 'subcategory-item' ? 'item' : firstResult.type);
+
+    status.textContent = currentLang === 'es'
+      ? `${results.length} resultado(s) · Primero: ${label} — ${firstResult.label}`
+      : currentLang === 'en'
+        ? `${results.length} result(s) · First: ${label} — ${firstResult.label}`
+        : currentLang === 'nl'
+          ? `${results.length} resultaat/resultaten · Eerste: ${label} — ${firstResult.label}`
+          : `${results.length} résultat(s) · Premier : ${label} — ${firstResult.label}`;
+  }
+
+  function runRestaurantMenuSearch({ scrollToFirst = false } = {}) {
+    const input = document.getElementById('restaurant-menu-search-input');
+    const clearButton = document.getElementById('restaurant-menu-search-clear-btn');
+    if (!input) return;
+
+    const query = input.value || '';
+    const results = collectRestaurantMenuSearchResults(query);
+
+    clearRestaurantMenuSearchHighlights();
+
+    if (clearButton) {
+      clearButton.classList.toggle('hidden', !query.trim());
+      clearButton.classList.toggle('flex', !!query.trim());
+    }
+
+    results.forEach((result) => {
+      const target = getRestaurantMenuSearchTarget(result);
+      if (!target) return;
+
+      target.setAttribute('data-menu-search-match', 'true');
+      target.classList.add(
+        'ring-2',
+        'ring-gold/80',
+        'shadow-[0_0_0_1px_rgba(242,199,68,0.38),0_18px_42px_rgba(0,0,0,0.36)]'
+      );
+    });
+
+    updateRestaurantMenuSearchStatus(results, query);
+
+    if (scrollToFirst && results.length) {
+      const target = getRestaurantMenuSearchTarget(results[0]);
+
+      if (target) {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }
+  }
+
+  function clearRestaurantMenuSearch() {
+    const input = document.getElementById('restaurant-menu-search-input');
+    const status = document.getElementById('restaurant-menu-search-status');
+    const clearButton = document.getElementById('restaurant-menu-search-clear-btn');
+
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+
+    if (status) {
+      status.textContent = '';
+    }
+
+    if (clearButton) {
+      clearButton.classList.add('hidden');
+      clearButton.classList.remove('flex');
+    }
+
+    clearRestaurantMenuSearchHighlights();
+  }
+
   let menuTranslationWarningNeeded = false;
   let menuEditorDirty = false;
 let dishEditorState = null;
