@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.1.8';
+        const APP_VERSION = 'V2.5.2.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -15279,9 +15279,17 @@ function deleteRestaurantSubcategory(categoryIndex, subcategoryIndex) {
   updateMenuEditorDirtyUi();
 }
 
-  function scrollToMenuEditorAction(action, categoryIndex, itemIndex = null) {
+  function scrollToMenuEditorAction(action, categoryIndex, itemIndex = null, subcategoryIndex = null) {
     requestAnimationFrame(() => {
       let selector = `[data-action="${action}"][data-category-index="${categoryIndex}"]`;
+
+      if (
+        subcategoryIndex !== null &&
+        subcategoryIndex !== undefined &&
+        !Number.isNaN(subcategoryIndex)
+      ) {
+        selector += `[data-subcategory-index="${subcategoryIndex}"]`;
+      }
 
       if (itemIndex !== null && itemIndex !== undefined && !Number.isNaN(itemIndex)) {
         selector += `[data-item-index="${itemIndex}"]`;
@@ -15297,21 +15305,33 @@ function deleteRestaurantSubcategory(categoryIndex, subcategoryIndex) {
     });
   }
 
-  function moveRestaurantItem(categoryIndex, itemIndex, direction, action = null) {
-    if (!activeRestaurantData?.menu?.categories?.[categoryIndex]?.items) return;
+  function moveRestaurantItem(categoryIndex, itemIndex, direction, action = null, subcategoryIndex = null) {
+    const category = activeRestaurantData?.menu?.categories?.[categoryIndex];
+    if (!category) return;
 
-    const category = activeRestaurantData.menu.categories[categoryIndex];
-    const items = category.items;
+    const hasSubcategory =
+      subcategoryIndex !== null &&
+      subcategoryIndex !== undefined &&
+      !Number.isNaN(subcategoryIndex);
+
+    const targetContainer = hasSubcategory
+      ? category.subcategories?.[subcategoryIndex]
+      : category;
+
+    if (!targetContainer || !Array.isArray(targetContainer.items)) return;
+
+    const items = targetContainer.items;
     const targetIndex = direction === 'up' ? itemIndex - 1 : itemIndex + 1;
 
     if (targetIndex < 0 || targetIndex >= items.length) return;
 
     [items[itemIndex], items[targetIndex]] = [items[targetIndex], items[itemIndex]];
-    syncRestaurantItemOrder(category);
+
+    syncRestaurantItemOrder(targetContainer);
     renderRestaurantMenuEditor();
 
     if (action) {
-      scrollToMenuEditorAction(action, categoryIndex, targetIndex);
+      scrollToMenuEditorAction(action, categoryIndex, targetIndex, hasSubcategory ? subcategoryIndex : null);
     }
   }
 
