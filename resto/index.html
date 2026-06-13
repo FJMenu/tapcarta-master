@@ -1095,7 +1095,7 @@
   border-radius: 14px;
   color: #f8f5eb;
   font-weight: 700;
-  z-index: 10050;
+  z-index: 12100;
   opacity: 0;
   transition: all 0.25s ease;
 }
@@ -4523,7 +4523,7 @@ function showRestaurantConfirmDialog({ title, message, confirmLabel, cancelLabel
 
     const overlay = document.createElement('div');
     overlay.id = 'restaurant-confirm-dialog';
-    overlay.className = 'fixed inset-0 z-[10000] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4';
+    overlay.className = 'fixed inset-0 z-[12000] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4';
 
     overlay.innerHTML = `
       <div class="w-full max-w-md rounded-[28px] border ${danger ? 'border-red-400/40' : 'border-gold/35'} bg-[#11100d] shadow-[0_24px_90px_rgba(0,0,0,0.65)] p-5">
