@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.3.5';
+        const APP_VERSION = 'V2.5.3.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -13922,29 +13922,66 @@ async function saveRestaurantOptionsModal() {
 
       if (!confirmed) return;
 
-      Object.keys(getRestaurantDayLabels()).forEach((dayKey) => {
-        const openInput = document.querySelector(`[data-hours-open="${fieldPrefix}-${dayKey}"]`);
-        const from0 = document.querySelector(`[data-hours-slot-from="${fieldPrefix}-${dayKey}-0"]`);
-        const to0 = document.querySelector(`[data-hours-slot-to="${fieldPrefix}-${dayKey}-0"]`);
-        const from1 = document.querySelector(`[data-hours-slot-from="${fieldPrefix}-${dayKey}-1"]`);
-        const to1 = document.querySelector(`[data-hours-slot-to="${fieldPrefix}-${dayKey}-1"]`);
-        const errorBox = document.querySelector(`[data-hours-error="${fieldPrefix}-${dayKey}"]`);
+      const dayLabels = getRestaurantDayLabels();
+
+      Object.keys(dayLabels).forEach((dayKey) => {
+        const dayKeyFull = `${fieldPrefix}-${dayKey}`;
+
+        const openInput = document.querySelector(`[data-hours-open="${dayKeyFull}"]`);
+        const fields = document.querySelector(`[data-hours-fields="${dayKeyFull}"]`);
+        const closedHint = document.querySelector(`[data-hours-closed-hint="${dayKeyFull}"]`);
+        const status = document.querySelector(`[data-hours-status="${dayKeyFull}"]`);
+        const card = document.querySelector(`[data-hours-day-card="${dayKeyFull}"]`);
+        const errorBox = document.querySelector(`[data-hours-error="${dayKeyFull}"]`);
+
+        document
+          .querySelectorAll(`[data-hours-slot-from^="${dayKeyFull}-"], [data-hours-slot-to^="${dayKeyFull}-"]`)
+          .forEach((input) => {
+            input.value = '';
+          });
 
         if (openInput) {
           openInput.checked = false;
           syncRestaurantHoursDayUi(openInput);
         }
 
-        if (from0) from0.value = '';
-        if (to0) to0.value = '';
-        if (from1) from1.value = '';
-        if (to1) to1.value = '';
+        if (fields) {
+          fields.classList.add('hidden');
+          fields.classList.remove('grid');
+        }
+
+        if (closedHint) {
+          closedHint.hidden = false;
+        }
+
+        if (status) {
+          status.textContent = currentLang === 'es'
+            ? 'Cerrado'
+            : currentLang === 'en'
+              ? 'Closed'
+              : currentLang === 'nl'
+                ? 'Gesloten'
+                : 'Fermé';
+        }
+
+        if (card) {
+          card.classList.remove('border-gold/28', 'bg-black/24', 'border-red-400/55', 'bg-red-500/10');
+          card.classList.add('border-white/10', 'bg-black/14');
+        }
 
         if (errorBox) {
           errorBox.classList.add('hidden');
           errorBox.textContent = '';
         }
       });
+
+      const saveButton = document.getElementById('restaurant-hours-save-btn');
+
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.classList.remove('border-emerald-300', 'bg-emerald-500', 'text-black');
+        saveButton.classList.add('border-gold/45', 'bg-gold/15', 'hover:bg-gold/20', 'text-cream');
+      }
 
       showTapCartaMessage(
         currentLang === 'es' ? 'Horarios reinicializados. Guarde para confirmar.' :
