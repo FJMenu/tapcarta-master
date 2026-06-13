@@ -13953,6 +13953,8 @@ async function saveRestaurantOptionsModal() {
         'Horaires réinitialisés. Enregistrez pour confirmer.'
       );
     }
+
+    function copyRestaurantHoursToEmptyDays(sourceKey) {
       const [fieldPrefix, dayKey] = sourceKey.split(/-(?=[^-]+$)/);
       const sourceOpen = document.querySelector(`[data-hours-open="${fieldPrefix}-${dayKey}"]`);
       const sourceFrom0 = document.querySelector(`[data-hours-slot-from="${fieldPrefix}-${dayKey}-0"]`)?.value || '';
