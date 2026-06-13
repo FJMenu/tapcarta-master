@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.3.3';
+        const APP_VERSION = 'V2.5.3.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14609,6 +14609,18 @@ async function saveRestaurantOptionsModal() {
                                           ? 'Wijzigen'
                                           : 'Modifier'}
                                   </button>
+
+                                  <button
+                                    type="button"
+                                    data-action="delete-item"
+                                    data-category-index="${categoryIndex}"
+                                    data-subcategory-index="${subcategoryIndex}"
+                                    data-item-index="${itemIndex}"
+                                    class="rounded-xl border border-red-400/35 bg-red-500/14 px-3 py-2 text-xs font-bold text-red-300 hover:bg-red-500/22 flex items-center justify-center gap-2"
+                                    title="Supprimer"
+                                  >
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                  </button>
                                 </div>
                               </div>
                             </div>
@@ -15747,13 +15759,66 @@ function deleteRestaurantSubcategory(categoryIndex, subcategoryIndex) {
     }
   }
 
-  function deleteRestaurantItem(categoryIndex, itemIndex) {
-    if (!activeRestaurantData?.menu?.categories?.[categoryIndex]?.items) return;
+  async function deleteRestaurantItem(categoryIndex, itemIndex, subcategoryIndex = null) {
+    const category = activeRestaurantData?.menu?.categories?.[categoryIndex];
+    if (!category) return false;
 
-    const category = activeRestaurantData.menu.categories[categoryIndex];
-    category.items.splice(itemIndex, 1);
-    syncRestaurantItemOrder(category);
+    const hasSubcategory =
+      subcategoryIndex !== null &&
+      subcategoryIndex !== undefined &&
+      !Number.isNaN(subcategoryIndex);
+
+    const targetContainer = hasSubcategory
+      ? category.subcategories?.[subcategoryIndex]
+      : category;
+
+    if (!targetContainer || !Array.isArray(targetContainer.items) || !targetContainer.items[itemIndex]) {
+      return false;
+    }
+
+    const confirmed = await showRestaurantConfirmDialog({
+      title: currentLang === 'es'
+        ? '¿Eliminar este plato?'
+        : currentLang === 'en'
+          ? 'Delete this dish?'
+          : currentLang === 'nl'
+            ? 'Dit gerecht verwijderen?'
+            : 'Supprimer ce plat ?',
+      message: currentLang === 'es'
+        ? 'Esta acción eliminará definitivamente el plato del menú.'
+        : currentLang === 'en'
+          ? 'This action will permanently remove the dish from the menu.'
+          : currentLang === 'nl'
+            ? 'Deze actie verwijdert het gerecht definitief uit het menu.'
+            : 'Cette action supprimera définitivement le plat du menu.',
+      confirmLabel: currentLang === 'es'
+        ? 'Eliminar'
+        : currentLang === 'en'
+          ? 'Delete'
+          : currentLang === 'nl'
+            ? 'Verwijderen'
+            : 'Supprimer',
+      cancelLabel: currentLang === 'es'
+        ? 'Cancelar'
+        : currentLang === 'en'
+          ? 'Cancel'
+          : currentLang === 'nl'
+            ? 'Annuleren'
+            : 'Annuler',
+      danger: true
+    });
+
+    if (!confirmed) return false;
+
+    targetContainer.items.splice(itemIndex, 1);
+
+    markMenuEditorDirty();
+    markMenuTranslationWarningNeeded();
+    syncRestaurantItemOrder(targetContainer);
     renderRestaurantMenuEditor();
+    updateMenuEditorDirtyUi();
+
+    return true;
   }
 
   function deleteRestaurantCategory(categoryIndex) {
@@ -17633,7 +17698,7 @@ if (dishFinishBtn) {
       }
     });
 
-    editorList.addEventListener('click', (e) => {
+    editorList.addEventListener('click', async (e) => {
       const actionButton = e.target.closest('[data-action]');
 
       if (actionButton) {
@@ -17736,9 +17801,11 @@ if (dishFinishBtn) {
         }
 
         if (action === 'delete-item') {
-          markMenuEditorDirty();
-          deleteRestaurantItem(categoryIndex, itemIndex);
-          updateMenuEditorDirtyUi();
+          await deleteRestaurantItem(
+            categoryIndex,
+            itemIndex,
+            hasSubcategoryIndex ? subcategoryIndex : null
+          );
           return;
         }
 
