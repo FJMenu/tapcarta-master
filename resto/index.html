@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.3.4';
+        const APP_VERSION = 'V2.5.3.5';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -12295,6 +12295,25 @@ async function saveRestaurantOptionsModal() {
     }).join('');
   }
 
+  function buildRestaurantHoursResetButton(fieldPrefix) {
+    const resetLabel =
+      currentLang === 'es' ? 'Reinicializar horarios'
+        : currentLang === 'en' ? 'Reset hours'
+          : currentLang === 'nl' ? 'Uren resetten'
+            : 'Réinitialiser les horaires';
+
+    return `
+      <button
+        type="button"
+        data-hours-reset="${fieldPrefix}"
+        class="btn-action inline-flex items-center justify-center gap-2 rounded-xl border border-red-400/35 bg-red-500/12 px-3 py-2 text-xs font-bold text-red-200 hover:bg-red-500/18"
+      >
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        <span>${resetLabel}</span>
+      </button>
+    `;
+  }
+
   function buildRestaurantModuleHoursCard(moduleKey, icon, title, hours) {
     const text = getRestaurantHoursText();
     const moduleData = hours[moduleKey];
@@ -12336,7 +12355,11 @@ async function saveRestaurantOptionsModal() {
           data-specific-hours-panel="${moduleKey}"
           class="${moduleData.mode === 'specific' ? '' : 'hidden'} rounded-[20px] border border-gold/18 bg-gold/[0.045] p-4 mb-4"
         >
-          <div class="text-sm font-semibold text-cream/72 mb-3">${specificExplanation}</div>
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+            <div class="text-sm font-semibold text-cream/72">${specificExplanation}</div>
+            ${buildRestaurantHoursResetButton(`${moduleKey}-specific`)}
+          </div>
+
           <div class="grid gap-3">
             ${buildRestaurantHoursRows(moduleData.specific, `${moduleKey}-specific`)}
           </div>
@@ -13787,7 +13810,11 @@ async function saveRestaurantOptionsModal() {
             </div>
 
             <div class="rounded-[24px] border border-gold/28 bg-white/[0.035] p-5">
-              <div class="font-display text-xl font-bold text-cream mb-4">${text.general}</div>
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                <div class="font-display text-xl font-bold text-cream">${text.general}</div>
+                ${buildRestaurantHoursResetButton('general')}
+              </div>
+
               <div class="grid gap-3">
                 ${buildRestaurantHoursRows(hours.general, 'general')}
               </div>
@@ -13860,7 +13887,72 @@ async function saveRestaurantOptionsModal() {
       }
     }
 
-    function copyRestaurantHoursToEmptyDays(sourceKey) {
+    async function resetRestaurantHoursSection(fieldPrefix) {
+      const confirmed = await showRestaurantConfirmDialog({
+        title: currentLang === 'es'
+          ? '¿Reinicializar los horarios?'
+          : currentLang === 'en'
+            ? 'Reset hours?'
+            : currentLang === 'nl'
+              ? 'Uren resetten?'
+              : 'Réinitialiser les horaires ?',
+        message: currentLang === 'es'
+          ? 'Esta acción eliminará los horarios configurados en este bloque. Podrá volver a introducirlos después.'
+          : currentLang === 'en'
+            ? 'This action will remove the configured hours in this section. You can enter them again afterwards.'
+            : currentLang === 'nl'
+              ? 'Deze actie verwijdert de ingestelde uren in dit blok. U kunt ze daarna opnieuw invoeren.'
+              : 'Cette action supprimera les horaires configurés dans ce bloc. Vous pourrez ensuite les encoder à nouveau.',
+        confirmLabel: currentLang === 'es'
+          ? 'Reinicializar'
+          : currentLang === 'en'
+            ? 'Reset'
+            : currentLang === 'nl'
+              ? 'Resetten'
+              : 'Réinitialiser',
+        cancelLabel: currentLang === 'es'
+          ? 'Cancelar'
+          : currentLang === 'en'
+            ? 'Cancel'
+            : currentLang === 'nl'
+              ? 'Annuleren'
+              : 'Annuler',
+        danger: true
+      });
+
+      if (!confirmed) return;
+
+      Object.keys(getRestaurantDayLabels()).forEach((dayKey) => {
+        const openInput = document.querySelector(`[data-hours-open="${fieldPrefix}-${dayKey}"]`);
+        const from0 = document.querySelector(`[data-hours-slot-from="${fieldPrefix}-${dayKey}-0"]`);
+        const to0 = document.querySelector(`[data-hours-slot-to="${fieldPrefix}-${dayKey}-0"]`);
+        const from1 = document.querySelector(`[data-hours-slot-from="${fieldPrefix}-${dayKey}-1"]`);
+        const to1 = document.querySelector(`[data-hours-slot-to="${fieldPrefix}-${dayKey}-1"]`);
+        const errorBox = document.querySelector(`[data-hours-error="${fieldPrefix}-${dayKey}"]`);
+
+        if (openInput) {
+          openInput.checked = false;
+          syncRestaurantHoursDayUi(openInput);
+        }
+
+        if (from0) from0.value = '';
+        if (to0) to0.value = '';
+        if (from1) from1.value = '';
+        if (to1) to1.value = '';
+
+        if (errorBox) {
+          errorBox.classList.add('hidden');
+          errorBox.textContent = '';
+        }
+      });
+
+      showTapCartaMessage(
+        currentLang === 'es' ? 'Horarios reinicializados. Guarde para confirmar.' :
+        currentLang === 'en' ? 'Hours reset. Save to confirm.' :
+        currentLang === 'nl' ? 'Uren gereset. Sla op om te bevestigen.' :
+        'Horaires réinitialisés. Enregistrez pour confirmer.'
+      );
+    }
       const [fieldPrefix, dayKey] = sourceKey.split(/-(?=[^-]+$)/);
       const sourceOpen = document.querySelector(`[data-hours-open="${fieldPrefix}-${dayKey}"]`);
       const sourceFrom0 = document.querySelector(`[data-hours-slot-from="${fieldPrefix}-${dayKey}-0"]`)?.value || '';
@@ -13924,6 +14016,13 @@ async function saveRestaurantOptionsModal() {
       button.addEventListener('click', () => {
         const sourceKey = button.getAttribute('data-hours-copy-empty');
         if (sourceKey) copyRestaurantHoursToEmptyDays(sourceKey);
+      });
+    });
+
+    document.querySelectorAll('[data-hours-reset]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const fieldPrefix = button.getAttribute('data-hours-reset');
+        if (fieldPrefix) await resetRestaurantHoursSection(fieldPrefix);
       });
     });
 
