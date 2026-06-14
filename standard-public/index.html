@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.4.1.6';
+    const APP_VERSION = 'V2.4.2.1';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -1320,11 +1320,10 @@ function renderInfoBlocks() {
 
   return `
   <section class="px-6 py-6 animate-fade-up delay-2">
-    <div class="space-y-3">
+    <div class="space-y-3 max-w-[720px] mx-auto">
       ${visibleInfoBlocks.map(block => `
-      <div class="flex items-start gap-3 p-4 rounded-lg bg-darkCard border border-gold/20">
-        <i data-lucide="${escapeBookingHtml(block.icon || 'info')}" class="w-5 h-5 text-gold flex-shrink-0 mt-0.5"></i>
-        <p class="text-sm text-cream/80">${escapeBookingHtml(getInfoBlockText(block))}</p>
+      <div class="flex items-center justify-center min-h-[58px] p-4 rounded-lg bg-darkCard border border-gold/20 text-center">
+        <p class="w-full text-sm leading-relaxed text-cream/80">${escapeBookingHtml(getInfoBlockText(block))}</p>
       </div>
       `).join('')}
     </div>
