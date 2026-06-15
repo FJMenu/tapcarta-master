@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.3.6';
+        const APP_VERSION = 'V2.5.3.7';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3325,7 +3325,15 @@ const VERSION_STORAGE_KEY = 'tapcarta-last-loaded-version';
 const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
 
     function isIos() {
-      return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+      const userAgent = window.navigator.userAgent || '';
+      const platform = window.navigator.platform || '';
+
+      return /iphone|ipad|ipod/i.test(userAgent)
+        || (platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+    }
+
+    function isAndroid() {
+      return /android/i.test(window.navigator.userAgent || '');
     }
 
     function isSamsungInternet() {
@@ -3336,6 +3344,14 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
       return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     }
 
+    function isMobileOrTabletDevice() {
+      const userAgent = window.navigator.userAgent || '';
+
+      return isIos()
+        || isAndroid()
+        || /mobile|tablet/i.test(userAgent);
+    }
+
     function updateLangButtons() {
       document.querySelectorAll('.lang-btn').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.lang === currentLang);
@@ -3343,37 +3359,43 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
     }
 
     function getInstallAppTexts() {
-      return currentLang === 'es'
-        ? {
-            button: 'Instalar la app',
-            samsungHelp: '<div class="install-help-box"><div class="install-help-title">Instalar la app en su teléfono</div><div class="install-help-step"><span class="install-help-num">1</span><span>Pulse <strong>☰ las 3 líneas abajo a la derecha</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Pulse <strong>+ Añadir a</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Pulse <strong>Pantalla de inicio</strong></span></div><div class="install-help-note">La app del restaurante aparecerá después en la pantalla de inicio.</div></div>',
-            androidHelp: '<div class="install-help-box"><div class="install-help-title">Instalar la app en su dispositivo</div><div class="install-help-step"><span class="install-help-num">1</span><span>Abra el menú del navegador <strong>(⋮ o Compartir)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Pulse <strong>Instalar app</strong>, <strong>Añadir a la pantalla de inicio</strong> o equivalente</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirme la instalación</span></div><div class="install-help-note">Según el navegador, el nombre exacto puede variar.</div></div>',
-            iosHelp: 'En iPhone o iPad: pulse <strong>Compartir</strong> y luego <strong>Añadir a la pantalla de inicio</strong>.'
-          }
-        : currentLang === 'en'
-          ? {
-              button: 'Install the app',
-              samsungHelp: '<div class="install-help-box"><div class="install-help-title">Install the app on your phone</div><div class="install-help-step"><span class="install-help-num">1</span><span>Tap <strong>☰ the 3 lines at the bottom right</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tap <strong>+ Add to</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Tap <strong>Home screen</strong></span></div><div class="install-help-note">The restaurant app will then appear on your home screen.</div></div>',
-              androidHelp: '<div class="install-help-box"><div class="install-help-title">Install the app on your device</div><div class="install-help-step"><span class="install-help-num">1</span><span>Open the browser menu <strong>(⋮ or Share)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tap <strong>Install app</strong>, <strong>Add to Home screen</strong> or the equivalent</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirm the installation</span></div><div class="install-help-note">The exact wording may vary depending on the browser.</div></div>',
-              iosHelp: 'On iPhone or iPad: tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.'
-            }
-          : currentLang === 'nl'
-            ? {
-                button: 'App installeren',
-                samsungHelp: '<div class="install-help-box"><div class="install-help-title">Installeer de app op uw telefoon</div><div class="install-help-step"><span class="install-help-num">1</span><span>Tik op <strong>☰ de 3 lijnen rechtsonder</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tik op <strong>+ Toevoegen aan</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Tik op <strong>Startscherm</strong></span></div><div class="install-help-note">De restaurantapp verschijnt daarna op uw startscherm.</div></div>',
-                androidHelp: '<div class="install-help-box"><div class="install-help-title">Installeer de app op uw toestel</div><div class="install-help-step"><span class="install-help-num">1</span><span>Open het browsermenu <strong>(⋮ of Delen)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tik op <strong>App installeren</strong>, <strong>Toevoegen aan startscherm</strong> of gelijkwaardig</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Bevestig de installatie</span></div><div class="install-help-note">De exacte benaming kan per browser verschillen.</div></div>',
-                iosHelp: 'Op iPhone of iPad: tik op <strong>Deel</strong> en daarna op <strong>Zet op beginscherm</strong>.'
-              }
-            : {
-                button: 'Installer l’app',
-                samsungHelp: '<div class="install-help-box"><div class="install-help-title">Installer l’app sur votre téléphone</div><div class="install-help-step"><span class="install-help-num">1</span><span>Appuyez sur <strong>☰ les 3 lignes en bas à droite</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Appuyez sur <strong>+ Ajouter à</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Appuyez sur <strong>Écran d’accueil</strong></span></div><div class="install-help-note">L’app restaurant apparaîtra ensuite sur votre écran d’accueil.</div></div>',
-                androidHelp: '<div class="install-help-box"><div class="install-help-title">Installer l’app sur votre appareil</div><div class="install-help-step"><span class="install-help-num">1</span><span>Ouvrez le menu du navigateur <strong>(⋮ ou Partager)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Appuyez sur <strong>Installer l’app</strong>, <strong>Ajouter à l’écran d’accueil</strong> ou l’équivalent</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirmez l’installation</span></div><div class="install-help-note">L’intitulé exact peut varier selon le navigateur.</div></div>',
-                iosHelp: 'Sur iPhone ou iPad : appuyez sur <strong>Partager</strong>, puis <strong>Sur l’écran d’accueil</strong>.'
-              };
+      const texts = {
+        es: {
+          button: 'Añadir a la pantalla de inicio',
+          desktopFavoriteHelp: 'En PC, pulse Ctrl + D para añadir Resto a sus favoritos.',
+          samsungHelp: '<div class="install-help-box"><div class="install-help-title">Añadir Resto a su teléfono</div><div class="install-help-step"><span class="install-help-num">1</span><span>Pulse <strong>☰ las 3 líneas abajo a la derecha</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Pulse <strong>+ Añadir a</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Pulse <strong>Pantalla de inicio</strong></span></div><div class="install-help-note">Resto aparecerá después en la pantalla de inicio.</div></div>',
+          androidHelp: '<div class="install-help-box"><div class="install-help-title">Añadir Resto a la pantalla de inicio</div><div class="install-help-step"><span class="install-help-num">1</span><span>Abra el menú del navegador <strong>(⋮ o Compartir)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Pulse <strong>Añadir a la pantalla de inicio</strong>, <strong>Instalar app</strong> o equivalente</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirme la acción</span></div><div class="install-help-note">Según el navegador, el nombre exacto puede variar.</div></div>',
+          iosHelp: 'En iPhone o iPad: pulse <strong>Compartir</strong> y luego <strong>Añadir a la pantalla de inicio</strong>.'
+        },
+        fr: {
+          button: 'Ajouter à l’écran d’accueil',
+          desktopFavoriteHelp: 'Sur PC, faites Ctrl + D pour ajouter Resto à vos favoris.',
+          samsungHelp: '<div class="install-help-box"><div class="install-help-title">Ajouter Resto à votre téléphone</div><div class="install-help-step"><span class="install-help-num">1</span><span>Appuyez sur <strong>☰ les 3 lignes en bas à droite</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Appuyez sur <strong>+ Ajouter à</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Appuyez sur <strong>Écran d’accueil</strong></span></div><div class="install-help-note">Resto apparaîtra ensuite sur votre écran d’accueil.</div></div>',
+          androidHelp: '<div class="install-help-box"><div class="install-help-title">Ajouter Resto à l’écran d’accueil</div><div class="install-help-step"><span class="install-help-num">1</span><span>Ouvrez le menu du navigateur <strong>(⋮ ou Partager)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Appuyez sur <strong>Ajouter à l’écran d’accueil</strong>, <strong>Installer l’app</strong> ou l’équivalent</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirmez l’action</span></div><div class="install-help-note">L’intitulé exact peut varier selon le navigateur.</div></div>',
+          iosHelp: 'Sur iPhone ou iPad : appuyez sur <strong>Partager</strong>, puis <strong>Sur l’écran d’accueil</strong>.'
+        },
+        en: {
+          button: 'Add to Home Screen',
+          desktopFavoriteHelp: 'On PC, press Ctrl + D to add Resto to your favorites.',
+          samsungHelp: '<div class="install-help-box"><div class="install-help-title">Add Resto to your phone</div><div class="install-help-step"><span class="install-help-num">1</span><span>Tap <strong>☰ the 3 lines at the bottom right</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tap <strong>+ Add to</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Tap <strong>Home screen</strong></span></div><div class="install-help-note">Resto will then appear on your home screen.</div></div>',
+          androidHelp: '<div class="install-help-box"><div class="install-help-title">Add Resto to the Home Screen</div><div class="install-help-step"><span class="install-help-num">1</span><span>Open the browser menu <strong>(⋮ or Share)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tap <strong>Add to Home Screen</strong>, <strong>Install app</strong> or the equivalent</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirm the action</span></div><div class="install-help-note">The exact wording may vary depending on the browser.</div></div>',
+          iosHelp: 'On iPhone or iPad: tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.'
+        },
+        nl: {
+          button: 'Toevoegen aan startscherm',
+          desktopFavoriteHelp: 'Op pc: druk op Ctrl + D om Resto aan uw favorieten toe te voegen.',
+          samsungHelp: '<div class="install-help-box"><div class="install-help-title">Voeg Resto toe aan uw telefoon</div><div class="install-help-step"><span class="install-help-num">1</span><span>Tik op <strong>☰ de 3 lijnen rechtsonder</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tik op <strong>+ Toevoegen aan</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Tik op <strong>Startscherm</strong></span></div><div class="install-help-note">Resto verschijnt daarna op uw startscherm.</div></div>',
+          androidHelp: '<div class="install-help-box"><div class="install-help-title">Voeg Resto toe aan het startscherm</div><div class="install-help-step"><span class="install-help-num">1</span><span>Open het browsermenu <strong>(⋮ of Delen)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tik op <strong>Toevoegen aan startscherm</strong>, <strong>App installeren</strong> of gelijkwaardig</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Bevestig de actie</span></div><div class="install-help-note">De exacte benaming kan per browser verschillen.</div></div>',
+          iosHelp: 'Op iPhone of iPad: tik op <strong>Deel</strong> en daarna op <strong>Zet op beginscherm</strong>.'
+        }
+      };
+
+      return texts[currentLang] || texts.es;
     }
 
     function updateInstallUI() {
       const installBtn = document.getElementById('install-app-btn');
+      const desktopFavoriteHelp = document.getElementById('desktop-favorite-help');
       const iosHelp = document.getElementById('ios-install-help');
       const installTexts = getInstallAppTexts();
 
@@ -3384,13 +3406,45 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
         buttonSpan.textContent = installTexts.button;
       }
 
+      if (desktopFavoriteHelp) {
+        const desktopHelpSpan = desktopFavoriteHelp.querySelector('span');
+        if (desktopHelpSpan) {
+          desktopHelpSpan.textContent = installTexts.desktopFavoriteHelp;
+        }
+      }
+
       if (isInStandaloneMode()) {
         installBtn.hidden = true;
+
+        if (desktopFavoriteHelp) {
+          desktopFavoriteHelp.hidden = true;
+        }
+
         if (iosHelp) {
           iosHelp.hidden = true;
           iosHelp.innerHTML = '';
         }
+
         return;
+      }
+
+      if (!isMobileOrTabletDevice()) {
+        installBtn.hidden = true;
+
+        if (desktopFavoriteHelp) {
+          desktopFavoriteHelp.hidden = false;
+        }
+
+        if (iosHelp) {
+          iosHelp.hidden = true;
+          iosHelp.innerHTML = '';
+        }
+
+        return;
+      }
+
+      if (desktopFavoriteHelp) {
+        desktopFavoriteHelp.hidden = true;
       }
 
       if (isSamsungInternet() || deferredInstallPrompt || isIos() || isAndroid()) {
@@ -10590,8 +10644,17 @@ function renderRequestRow(item, displayMode = 'active') {
                 class="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 text-sm font-semibold text-gold shadow-lg hover:bg-gold/10 transition-all min-h-[58px]"
               >
                 <i data-lucide="download" class="w-5 h-5 text-gold"></i>
-                <span>Installer l’app</span>
+                <span>Ajouter à l’écran d’accueil</span>
               </button>
+
+              <div
+                id="desktop-favorite-help"
+                hidden
+                class="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-gold/20 bg-black/15 text-sm font-semibold text-cream/80 shadow-lg min-h-[58px]"
+              >
+                <i data-lucide="star" class="w-5 h-5 text-gold"></i>
+                <span>Sur PC, faites Ctrl + D pour ajouter Resto à vos favoris.</span>
+              </div>
             </div>
           </div>
 
