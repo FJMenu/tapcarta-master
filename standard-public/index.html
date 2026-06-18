@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.4.2.1';
+    const APP_VERSION = 'V2.4.2.2';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -2664,7 +2664,7 @@ function applyStandardRestaurantSettings(settingsRow) {
     ...(siteConfig.modules || {}),
     ordering: orderingStatus !== 'hidden',
     booking: bookingStatus !== 'hidden',
-    preorderIndicative: siteConfig.modules?.preorderIndicative !== false,
+    preorderIndicative: modules.preorderIndicative === true,
     googleReviews: isStandardQuickModuleVisible(modules.googleReviews, siteConfig.modules?.googleReviews !== false),
     whatsapp: isStandardQuickModuleVisible(modules.whatsapp, siteConfig.modules?.whatsapp !== false),
     phone: isStandardQuickModuleVisible(modules.phone, siteConfig.modules?.phone !== false),
