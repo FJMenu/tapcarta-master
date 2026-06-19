@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.3.10';
+        const APP_VERSION = 'V2.5.4.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -7443,18 +7443,55 @@ function getManualOrderAvailableMenuItems() {
     ? activeRestaurantData.menu.categories
     : [];
 
+  const isOrderable = ({ category, subcategory = null, item }) => {
+    if (!item) return false;
+
+    return [
+      'visible',
+      'available',
+      'takeawayEnabled'
+    ].every((field) => {
+      const status = getRestaurantMenuEffectiveStatus({
+        category,
+        subcategory,
+        item,
+        field
+      });
+
+      return status.effective;
+    });
+  };
+
+  const formatItem = ({ item, categoryName, subcategoryName = '' }) => ({
+    id: item.id || `manual_item_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+    name: item.name || '',
+    category: subcategoryName
+      ? `${categoryName} — ${subcategoryName}`
+      : categoryName,
+    price: Number(item.price || 0)
+  });
+
   return categories.flatMap((category) => {
     const categoryName = category?.name || '';
-    const items = Array.isArray(category?.items) ? category.items : [];
 
-    return items
-      .filter((item) => item && item.visible !== false && item.available !== false)
-      .map((item) => ({
-        id: item.id || `manual_item_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-        name: item.name || '',
-        category: categoryName,
-        price: Number(item.price || 0)
-      }));
+    const directItems = (Array.isArray(category?.items) ? category.items : [])
+      .filter((item) => isOrderable({ category, item }))
+      .map((item) => formatItem({ item, categoryName }));
+
+    const subcategoryItems = (Array.isArray(category?.subcategories) ? category.subcategories : [])
+      .flatMap((subcategory) => {
+        const subcategoryName = subcategory?.name || '';
+
+        return (Array.isArray(subcategory?.items) ? subcategory.items : [])
+          .filter((item) => isOrderable({ category, subcategory, item }))
+          .map((item) => formatItem({
+            item,
+            categoryName,
+            subcategoryName
+          }));
+      });
+
+    return [...directItems, ...subcategoryItems];
   });
 }
 
@@ -14297,6 +14334,10 @@ async function saveRestaurantOptionsModal() {
         normalizedCategory.visible = true;
       }
 
+      if (typeof normalizedCategory.available !== 'boolean') {
+        normalizedCategory.available = true;
+      }
+
       if (typeof normalizedCategory.takeawayEnabled !== 'boolean') {
         normalizedCategory.takeawayEnabled = true;
       }
@@ -14338,8 +14379,12 @@ async function saveRestaurantOptionsModal() {
           normalizedSubcategory.visible = true;
         }
 
+        if (typeof normalizedSubcategory.available !== 'boolean') {
+          normalizedSubcategory.available = true;
+        }
+
         if (typeof normalizedSubcategory.takeawayEnabled !== 'boolean') {
-          normalizedSubcategory.takeawayEnabled = normalizedCategory.takeawayEnabled !== false;
+          normalizedSubcategory.takeawayEnabled = true;
         }
 
         if (!Array.isArray(normalizedSubcategory.items)) {
@@ -14387,6 +14432,146 @@ async function saveRestaurantOptionsModal() {
       syncRestaurantSubcategoryOrder(category);
     });
   }
+  function getRestaurantMenuEffectiveStatus({ category, subcategory = null, item = null, field }) {
+    const categoryEnabled = category?.[field] !== false;
+    const subcategoryEnabled = !subcategory || subcategory?.[field] !== false;
+    const itemEnabled = !item || item?.[field] !== false;
+
+    const blockedByCategory = !categoryEnabled;
+    const blockedBySubcategory = !blockedByCategory && Boolean(subcategory) && !subcategoryEnabled;
+
+    return {
+      effective: categoryEnabled && subcategoryEnabled && itemEnabled,
+      local: item
+        ? itemEnabled
+        : subcategory
+          ? subcategoryEnabled
+          : categoryEnabled,
+      blockedByCategory,
+      blockedBySubcategory,
+      blockedByParent: blockedByCategory || blockedBySubcategory
+    };
+  }
+
+  function applyRestaurantMenuEffectiveStatusUi(container, editorText) {
+    if (!container || !activeRestaurantData?.menu?.categories) return;
+
+    const statusFields = new Set([
+      'category-visible',
+      'category-available',
+      'category-takeaway',
+      'subcategory-visible',
+      'subcategory-available',
+      'subcategory-takeaway',
+      'item-visible',
+      'item-available',
+      'item-takeaway'
+    ]);
+
+    const getStatusFieldKey = (field) => {
+      if (field.endsWith('-visible')) return 'visible';
+      if (field.endsWith('-available')) return 'available';
+      if (field.endsWith('-takeaway')) return 'takeawayEnabled';
+      return '';
+    };
+
+    const getStatusLabel = (field, effective) => {
+      if (field.endsWith('-visible')) {
+        return effective ? editorText.visible : editorText.hidden;
+      }
+
+      if (field.endsWith('-available')) {
+        return effective ? editorText.available : editorText.unavailable;
+      }
+
+      if (field.endsWith('-takeaway')) {
+        return effective ? editorText.takeawayEnabled : editorText.takeawayDisabled;
+      }
+
+      return '';
+    };
+
+    const getBlockedText = (status) => {
+      if (status.blockedByCategory) {
+        if (currentLang === 'es') return 'Desactivado por la categoría';
+        if (currentLang === 'en') return 'Disabled by the category';
+        if (currentLang === 'nl') return 'Uitgeschakeld door de categorie';
+        return 'Désactivé par la catégorie';
+      }
+
+      if (status.blockedBySubcategory) {
+        if (currentLang === 'es') return 'Desactivado por la subcategoría';
+        if (currentLang === 'en') return 'Disabled by the subcategory';
+        if (currentLang === 'nl') return 'Uitgeschakeld door de subcategorie';
+        return 'Désactivé par la sous-catégorie';
+      }
+
+      return '';
+    };
+
+    container.querySelectorAll('input[type="checkbox"][data-field]').forEach((input) => {
+      const field = input.dataset.field || '';
+
+      if (!statusFields.has(field)) return;
+
+      const categoryIndex = Number(input.dataset.categoryIndex);
+      const subcategoryIndex = Number(input.dataset.subcategoryIndex);
+      const itemIndex = Number(input.dataset.itemIndex);
+
+      const category = activeRestaurantData.menu.categories?.[categoryIndex];
+      if (!category) return;
+
+      const hasSubcategory = Number.isInteger(subcategoryIndex) && subcategoryIndex >= 0;
+      const hasItem = Number.isInteger(itemIndex) && itemIndex >= 0;
+
+      const subcategory = hasSubcategory
+        ? category.subcategories?.[subcategoryIndex]
+        : null;
+
+      const item = hasItem
+        ? (subcategory
+          ? subcategory.items?.[itemIndex]
+          : category.items?.[itemIndex])
+        : null;
+
+      const statusField = getStatusFieldKey(field);
+      if (!statusField) return;
+
+      const status = getRestaurantMenuEffectiveStatus({
+        category,
+        subcategory,
+        item,
+        field: statusField
+      });
+
+      input.checked = status.effective;
+      input.disabled = status.blockedByParent;
+
+      const label = input.closest('label');
+
+      if (label) {
+        label.classList.toggle('opacity-55', status.blockedByParent);
+        label.classList.toggle('cursor-not-allowed', status.blockedByParent);
+        label.classList.toggle('cursor-pointer', !status.blockedByParent);
+
+        const textElement = label.querySelector('span');
+        if (textElement) {
+          textElement.textContent = getStatusLabel(field, status.effective);
+        }
+
+        const blockedText = getBlockedText(status);
+
+        if (blockedText) {
+          label.title = blockedText;
+          label.setAttribute('aria-label', blockedText);
+        } else {
+          label.removeAttribute('title');
+          label.removeAttribute('aria-label');
+        }
+      }
+    });
+  }
+
   function renderRestaurantMenuEditor() {
     const container = document.getElementById('restaurant-menu-categories-list');
     if (!container) return;
@@ -14627,8 +14812,8 @@ async function saveRestaurantOptionsModal() {
               <i data-lucide="trash-2" class="w-5 h-5 mx-auto"></i>
             </button>
 
-            <div class="col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <label class="flex items-center justify-between gap-3 rounded-2xl border ${category.visible !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+            <div class="col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <label class="flex items-center justify-between gap-3 rounded-2xl border ${category.visible !== false ? 'border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85' : 'border-white/8 bg-black/15 text-cream/45'} px-4 py-4 text-base font-bold">
                 <span>${category.visible !== false ? editorText.visible : editorText.hidden}</span>
                 <input
                   type="checkbox"
@@ -14639,7 +14824,18 @@ async function saveRestaurantOptionsModal() {
                 >
               </label>
 
-              <label class="flex items-center justify-between gap-3 rounded-2xl border ${category.takeawayEnabled !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+              <label class="flex items-center justify-between gap-3 rounded-2xl border ${category.available !== false ? 'border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85' : 'border-white/8 bg-black/15 text-cream/45'} px-4 py-4 text-base font-bold">
+                <span>${category.available !== false ? editorText.available : editorText.unavailable}</span>
+                <input
+                  type="checkbox"
+                  ${category.available !== false ? 'checked' : ''}
+                  data-category-index="${categoryIndex}"
+                  data-field="category-available"
+                  class="w-6 h-6 accent-yellow-400"
+                >
+              </label>
+
+              <label class="flex items-center justify-between gap-3 rounded-2xl border ${category.takeawayEnabled !== false ? 'border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85' : 'border-white/8 bg-black/15 text-cream/45'} px-4 py-4 text-base font-bold">
                 <span>${category.takeawayEnabled !== false ? editorText.takeawayEnabled : editorText.takeawayDisabled}</span>
                 <input
                   type="checkbox"
@@ -14837,7 +15033,7 @@ async function saveRestaurantOptionsModal() {
                                       data-subcategory-index="${subcategoryIndex}"
                                       data-item-index="${itemIndex}"
                                       data-field="item-visible"
-                                      border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85
+                                      class="w-5 h-5 accent-yellow-400"
                                     >
                                   </label>
 
@@ -14850,7 +15046,7 @@ async function saveRestaurantOptionsModal() {
                                       data-subcategory-index="${subcategoryIndex}"
                                       data-item-index="${itemIndex}"
                                       data-field="item-available"
-                                      border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85
+                                      class="w-5 h-5 accent-yellow-400"
                                     >
                                   </label>
 
@@ -14863,7 +15059,7 @@ async function saveRestaurantOptionsModal() {
                                       data-subcategory-index="${subcategoryIndex}"
                                       data-item-index="${itemIndex}"
                                       data-field="item-takeaway"
-                                      border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85
+                                      class="w-5 h-5 accent-yellow-400"
                                     >
                                   </label>
                                 </div>
@@ -14879,7 +15075,7 @@ async function saveRestaurantOptionsModal() {
                     </div>
 
                     <div class="space-y-2">
-                      <label class="flex items-center justify-between gap-3 rounded-2xl border ${subcategory.visible !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+                      <label class="flex items-center justify-between gap-3 rounded-2xl border ${subcategory.visible !== false ? 'border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85' : 'border-white/8 bg-black/15 text-cream/45'} px-4 py-4 text-base font-bold">
                         <span>${subcategory.visible !== false ? editorText.visible : editorText.hidden}</span>
                         <input
                           type="checkbox"
@@ -14891,7 +15087,19 @@ async function saveRestaurantOptionsModal() {
                         >
                       </label>
 
-                      <label class="flex items-center justify-between gap-3 rounded-2xl border ${subcategory.takeawayEnabled !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+                      <label class="flex items-center justify-between gap-3 rounded-2xl border ${subcategory.available !== false ? 'border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85' : 'border-white/8 bg-black/15 text-cream/45'} px-4 py-4 text-base font-bold">
+                        <span>${subcategory.available !== false ? editorText.available : editorText.unavailable}</span>
+                        <input
+                          type="checkbox"
+                          ${subcategory.available !== false ? 'checked' : ''}
+                          data-category-index="${categoryIndex}"
+                          data-subcategory-index="${subcategoryIndex}"
+                          data-field="subcategory-available"
+                          class="w-6 h-6 accent-yellow-400"
+                        >
+                      </label>
+
+                      <label class="flex items-center justify-between gap-3 rounded-2xl border ${subcategory.takeawayEnabled !== false ? 'border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85' : 'border-white/8 bg-black/15 text-cream/45'} px-4 py-4 text-base font-bold">
                         <span>${subcategory.takeawayEnabled !== false ? editorText.takeawayEnabled : editorText.takeawayDisabled}</span>
                         <input
                           type="checkbox"
@@ -15024,7 +15232,7 @@ async function saveRestaurantOptionsModal() {
                       data-category-index="${categoryIndex}"
                       data-item-index="${itemIndex}"
                       data-field="item-visible"
-                      border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85
+                      class="w-5 h-5 accent-yellow-400"
                     >
                   </label>
 
@@ -15036,7 +15244,7 @@ async function saveRestaurantOptionsModal() {
                       data-category-index="${categoryIndex}"
                       data-item-index="${itemIndex}"
                       data-field="item-available"
-                      border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85
+                      class="w-5 h-5 accent-yellow-400"
                     >
                   </label>
 
@@ -15048,7 +15256,7 @@ async function saveRestaurantOptionsModal() {
                       data-category-index="${categoryIndex}"
                       data-item-index="${itemIndex}"
                       data-field="item-takeaway"
-                      border-[#B58A3C]/35 bg-[#B58A3C]/[0.06] text-cream/85
+                      class="w-5 h-5 accent-yellow-400"
                     >
                   </label>
                 </div>
@@ -15063,6 +15271,8 @@ async function saveRestaurantOptionsModal() {
         </div>
       </div>
     `).join('');
+
+    applyRestaurantMenuEffectiveStatusUi(container, editorText);
 
     if (window.lucide) {
       requestAnimationFrame(() => {
@@ -15847,6 +16057,7 @@ function createCategory(categoryName) {
     id: 'cat_' + Date.now(),
     name: categoryName,
     visible: true,
+    available: true,
     takeawayEnabled: true,
     items: [],
     subcategories: []
@@ -15886,7 +16097,8 @@ function createRestaurantSubcategory(categoryIndex) {
     id: `${category.id || 'cat'}_sub_${Date.now()}`,
     name: subcategoryName,
     visible: true,
-    takeawayEnabled: category.takeawayEnabled !== false,
+    available: true,
+    takeawayEnabled: true,
     items: [],
     order: category.subcategories.length + 1,
     updatedAt: new Date().toISOString()
@@ -17870,43 +18082,53 @@ if (dishFinishBtn) {
       const itemIndex = Number(e.target.dataset.itemIndex);
       const field = e.target.dataset.field;
 
-      if (field === 'category-visible') {
-        if (!activeRestaurantData.menu?.categories?.[categoryIndex]) return;
-        activeRestaurantData.menu.categories[categoryIndex].visible = e.target.checked;
+      if (
+        field === 'category-visible' ||
+        field === 'category-available' ||
+        field === 'category-takeaway'
+      ) {
+        const category = activeRestaurantData.menu?.categories?.[categoryIndex];
+        if (!category) return;
+
+        if (field === 'category-visible') {
+          category.visible = e.target.checked;
+        }
+
+        if (field === 'category-available') {
+          category.available = e.target.checked;
+        }
+
+        if (field === 'category-takeaway') {
+          category.takeawayEnabled = e.target.checked;
+        }
+
         markMenuEditorDirty();
         renderRestaurantMenuEditor();
         updateMenuEditorDirtyUi();
         return;
       }
 
-      if (field === 'category-takeaway') {
-        if (!activeRestaurantData.menu?.categories?.[categoryIndex]) return;
-        activeRestaurantData.menu.categories[categoryIndex].takeawayEnabled = e.target.checked;
-        markMenuEditorDirty();
-        renderRestaurantMenuEditor();
-        updateMenuEditorDirtyUi();
-        return;
-      }
-
-      if (field === 'subcategory-visible') {
+      if (
+        field === 'subcategory-visible' ||
+        field === 'subcategory-available' ||
+        field === 'subcategory-takeaway'
+      ) {
         const subcategoryIndex = Number(e.target.dataset.subcategoryIndex);
         const subcategory = activeRestaurantData.menu?.categories?.[categoryIndex]?.subcategories?.[subcategoryIndex];
         if (!subcategory) return;
 
-        subcategory.visible = e.target.checked;
-        subcategory.updatedAt = new Date().toISOString();
-        markMenuEditorDirty();
-        renderRestaurantMenuEditor();
-        updateMenuEditorDirtyUi();
-        return;
-      }
+        if (field === 'subcategory-visible') {
+          subcategory.visible = e.target.checked;
+        }
 
-      if (field === 'subcategory-takeaway') {
-        const subcategoryIndex = Number(e.target.dataset.subcategoryIndex);
-        const subcategory = activeRestaurantData.menu?.categories?.[categoryIndex]?.subcategories?.[subcategoryIndex];
-        if (!subcategory) return;
+        if (field === 'subcategory-available') {
+          subcategory.available = e.target.checked;
+        }
 
-        subcategory.takeawayEnabled = e.target.checked;
+        if (field === 'subcategory-takeaway') {
+          subcategory.takeawayEnabled = e.target.checked;
+        }
+
         subcategory.updatedAt = new Date().toISOString();
         markMenuEditorDirty();
         renderRestaurantMenuEditor();
