@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.4.1';
+        const APP_VERSION = 'V2.5.4.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14544,15 +14544,18 @@ async function saveRestaurantOptionsModal() {
         field: statusField
       });
 
+      const isCategoryControl = field.startsWith('category-');
+      const isBlockedByParent = !isCategoryControl && status.blockedByParent;
+
       input.checked = status.effective;
-      input.disabled = status.blockedByParent;
+      input.disabled = isBlockedByParent;
 
       const label = input.closest('label');
 
       if (label) {
-        label.classList.toggle('opacity-55', status.blockedByParent);
-        label.classList.toggle('cursor-not-allowed', status.blockedByParent);
-        label.classList.toggle('cursor-pointer', !status.blockedByParent);
+        label.classList.toggle('opacity-55', isBlockedByParent);
+        label.classList.toggle('cursor-not-allowed', isBlockedByParent);
+        label.classList.toggle('cursor-pointer', !isBlockedByParent);
 
         const textElement = label.querySelector('span');
         if (textElement) {
