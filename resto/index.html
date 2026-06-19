@@ -14545,7 +14545,13 @@ async function saveRestaurantOptionsModal() {
       });
 
       const isCategoryControl = field.startsWith('category-');
-      const isBlockedByParent = !isCategoryControl && status.blockedByParent;
+      const isSubcategoryControl = field.startsWith('subcategory-');
+
+      const isBlockedByParent = isCategoryControl
+        ? false
+        : isSubcategoryControl
+          ? status.blockedByCategory
+          : status.blockedByParent;
 
       input.checked = status.effective;
       input.disabled = isBlockedByParent;
