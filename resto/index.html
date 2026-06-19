@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.3.7';
+        const APP_VERSION = 'V2.5.3.8';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -14764,64 +14764,105 @@ async function saveRestaurantOptionsModal() {
                                   </div>
                                 </div>
 
-                                <div class="flex flex-wrap items-center gap-2 md:justify-end">
-                                  <div class="grid grid-cols-2 gap-2">
-                                    <button
-                                      type="button"
-                                      data-action="move-item-up"
-                                      data-category-index="${categoryIndex}"
-                                      data-subcategory-index="${subcategoryIndex}"
-                                      data-item-index="${itemIndex}"
-                                      class="rounded-xl border border-white/12 bg-black/30 px-2.5 py-1.5 text-lg font-bold text-cream hover:bg-white/8"
-                                      title="Monter"
-                                    >
-                                      ↑
-                                    </button>
-                                    <button
-                                      type="button"
-                                      data-action="move-item-down"
-                                      data-category-index="${categoryIndex}"
-                                      data-subcategory-index="${subcategoryIndex}"
-                                      data-item-index="${itemIndex}"
-                                      class="rounded-xl border border-white/12 bg-black/30 px-2.5 py-1.5 text-lg font-bold text-cream hover:bg-white/8"
-                                      title="Descendre"
-                                    >
-                                      ↓
-                                    </button>
-                                  </div>
+<div class="flex flex-wrap items-center gap-2 md:justify-end">
+  <div class="grid grid-cols-2 gap-2">
+    <button
+      type="button"
+      data-action="move-item-up"
+      data-category-index="${categoryIndex}"
+      data-subcategory-index="${subcategoryIndex}"
+      data-item-index="${itemIndex}"
+      class="rounded-xl border border-white/12 bg-black/30 px-2.5 py-1.5 text-lg font-bold text-cream hover:bg-white/8"
+      title="Monter"
+    >
+      ↑
+    </button>
 
-                                  <div class="rounded-xl border border-gold/25 bg-gold/10 px-3 py-2 text-sm font-black text-gold">
-                                  ${escapeHtml(formatDishPriceForDisplay(item.price))}
-                                  </div>
+    <button
+      type="button"
+      data-action="move-item-down"
+      data-category-index="${categoryIndex}"
+      data-subcategory-index="${subcategoryIndex}"
+      data-item-index="${itemIndex}"
+      class="rounded-xl border border-white/12 bg-black/30 px-2.5 py-1.5 text-lg font-bold text-cream hover:bg-white/8"
+      title="Descendre"
+    >
+      ↓
+    </button>
+  </div>
 
-                                  <button
-                                    type="button"
-                                    data-action="edit-subcategory-item"
-                                    data-category-index="${categoryIndex}"
-                                    data-subcategory-index="${subcategoryIndex}"
-                                    data-item-index="${itemIndex}"
-                                    class="rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-xs font-bold text-cream hover:bg-white/[0.08]"
-                                  >
-                                    ${currentLang === 'es'
-                                      ? 'Modificar'
-                                      : currentLang === 'en'
-                                        ? 'Edit'
-                                        : currentLang === 'nl'
-                                          ? 'Wijzigen'
-                                          : 'Modifier'}
-                                  </button>
+  <div class="rounded-xl border border-gold/25 bg-gold/10 px-3 py-2 text-sm font-black text-gold">
+    ${escapeHtml(formatDishPriceForDisplay(item.price))}
+  </div>
 
-                                  <button
-                                    type="button"
-                                    data-action="delete-item"
-                                    data-category-index="${categoryIndex}"
-                                    data-subcategory-index="${subcategoryIndex}"
-                                    data-item-index="${itemIndex}"
-                                    class="rounded-xl border border-red-400/35 bg-red-500/14 px-3 py-2 text-xs font-bold text-red-300 hover:bg-red-500/22 flex items-center justify-center gap-2"
-                                    title="Supprimer"
-                                  >
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                  </button>
+  <button
+    type="button"
+    data-action="edit-subcategory-item"
+    data-category-index="${categoryIndex}"
+    data-subcategory-index="${subcategoryIndex}"
+    data-item-index="${itemIndex}"
+    class="rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-xs font-bold text-cream hover:bg-white/[0.08]"
+  >
+    ${currentLang === 'es'
+      ? 'Modificar'
+      : currentLang === 'en'
+        ? 'Edit'
+        : currentLang === 'nl'
+          ? 'Wijzigen'
+          : 'Modifier'}
+  </button>
+
+  <label class="flex items-center justify-between gap-3 rounded-xl border ${item.visible !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-3 py-2 text-sm font-bold">
+    <span>${item.visible !== false ? editorText.visible : editorText.hidden}</span>
+    <input
+      type="checkbox"
+      ${item.visible !== false ? 'checked' : ''}
+      data-category-index="${categoryIndex}"
+      data-subcategory-index="${subcategoryIndex}"
+      data-item-index="${itemIndex}"
+      data-field="item-visible"
+      class="w-6 h-6 accent-yellow-400"
+    >
+  </label>
+
+  <label class="flex items-center justify-between gap-3 rounded-xl border ${item.available !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-3 py-2 text-sm font-bold">
+    <span>${item.available !== false ? editorText.available : editorText.unavailable}</span>
+    <input
+      type="checkbox"
+      ${item.available !== false ? 'checked' : ''}
+      data-category-index="${categoryIndex}"
+      data-subcategory-index="${subcategoryIndex}"
+      data-item-index="${itemIndex}"
+      data-field="item-available"
+      class="w-6 h-6 accent-yellow-400"
+    >
+  </label>
+
+  <label class="flex items-center justify-between gap-3 rounded-xl border ${item.takeawayEnabled !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-3 py-2 text-sm font-bold">
+    <span>${item.takeawayEnabled !== false ? editorText.takeawayEnabled : editorText.takeawayDisabled}</span>
+    <input
+      type="checkbox"
+      ${item.takeawayEnabled !== false ? 'checked' : ''}
+      data-category-index="${categoryIndex}"
+      data-subcategory-index="${subcategoryIndex}"
+      data-item-index="${itemIndex}"
+      data-field="item-takeaway"
+      class="w-6 h-6 accent-yellow-400"
+    >
+  </label>
+
+  <button
+    type="button"
+    data-action="delete-item"
+    data-category-index="${categoryIndex}"
+    data-subcategory-index="${subcategoryIndex}"
+    data-item-index="${itemIndex}"
+    class="rounded-xl border border-red-400/35 bg-red-500/14 px-3 py-2 text-xs font-bold text-red-300 hover:bg-red-500/22 flex items-center justify-center gap-2"
+    title="Supprimer"
+  >
+    <i data-lucide="trash-2" class="w-4 h-4"></i>
+  </button>
+</div>
                                 </div>
                               </div>
                             </div>
@@ -17872,30 +17913,33 @@ if (dishFinishBtn) {
         return;
       }
 
-      if (field === 'item-visible') {
-        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
-        activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].visible = e.target.checked;
+      if (['item-visible', 'item-available', 'item-takeaway'].includes(field)) {
+        const subcategoryIndex = Number(e.target.dataset.subcategoryIndex);
+        const hasSubcategoryIndex = !Number.isNaN(subcategoryIndex);
+
+        const item = hasSubcategoryIndex
+          ? activeRestaurantData.menu?.categories?.[categoryIndex]?.subcategories?.[subcategoryIndex]?.items?.[itemIndex]
+          : activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex];
+
+        if (!item) return;
+
+        if (field === 'item-visible') {
+          item.visible = e.target.checked;
+        }
+
+        if (field === 'item-available') {
+          item.available = e.target.checked;
+        }
+
+        if (field === 'item-takeaway') {
+          item.takeawayEnabled = e.target.checked;
+        }
+
+        item.updatedAt = new Date().toISOString();
         markMenuEditorDirty();
         renderRestaurantMenuEditor();
         updateMenuEditorDirtyUi();
         return;
-      }
-
-      if (field === 'item-available') {
-        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
-        activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].available = e.target.checked;
-        markMenuEditorDirty();
-        renderRestaurantMenuEditor();
-        updateMenuEditorDirtyUi();
-        return;
-      }
-
-      if (field === 'item-takeaway') {
-        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
-        activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].takeawayEnabled = e.target.checked;
-        markMenuEditorDirty();
-        renderRestaurantMenuEditor();
-        updateMenuEditorDirtyUi();
       }
     });
 
