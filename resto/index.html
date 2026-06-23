@@ -7197,11 +7197,6 @@ function openManualBookingModal() {
     button.addEventListener('click', () => overlay.remove());
   });
 
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) {
-      overlay.remove();
-    }
-  });
 
   const form = overlay.querySelector('#restaurant-manual-booking-form');
   const manualBookingErrorBox = overlay.querySelector('[data-manual-booking-error]');
@@ -8305,12 +8300,6 @@ function openManualOrderModal() {
 
   overlay.querySelectorAll('[data-close-manual-order]').forEach((button) => {
     button.addEventListener('click', () => overlay.remove());
-  });
-
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) {
-      overlay.remove();
-    }
   });
 
   continueButton?.addEventListener('click', () => {
