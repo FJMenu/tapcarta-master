@@ -6903,10 +6903,10 @@ async function createManualBookingInSupabase(manualBooking) {
     return manualBooking;
   }
 
-  const payload = {
+  const pendingPayload = {
     restaurant_id: manualBooking.restaurantId,
     type: 'booking',
-    status: 'confirmed',
+    status: 'pending',
     client_name: manualBooking.customer?.name || '',
     client_phone: manualBooking.customer?.phone || '',
     client_language: manualBooking.customer?.language || currentLang,
@@ -6921,24 +6921,45 @@ async function createManualBookingInSupabase(manualBooking) {
   };
 
   try {
-    const { data, error } = await supabaseClient
+    const { data: createdRequest, error: createError } = await supabaseClient
       .from('requests')
-      .insert(payload)
+      .insert(pendingPayload)
       .select('*')
       .single();
 
-    if (error) throw error;
+    if (createError) throw createError;
 
-    if (!data?.id) {
+    if (!createdRequest?.id) {
+      return manualBooking;
+    }
+
+    const confirmedAt = manualBooking.confirmedAt || new Date().toISOString();
+
+    const { data: confirmedRequest, error: confirmError } = await supabaseClient
+      .from('requests')
+      .update({
+        status: 'confirmed',
+        restaurant_message: manualBooking.restaurantResponse?.message || '',
+        updated_at: confirmedAt
+      })
+      .eq('id', createdRequest.id)
+      .eq('restaurant_id', manualBooking.restaurantId)
+      .select('*')
+      .single();
+
+    if (confirmError) throw confirmError;
+
+    if (!confirmedRequest?.id) {
       return manualBooking;
     }
 
     return {
       ...manualBooking,
-      requestId: data.id,
-      liveRequestId: data.id,
-      createdAt: data.created_at || manualBooking.createdAt,
-      updatedAt: data.updated_at || manualBooking.updatedAt
+      requestId: confirmedRequest.id,
+      liveRequestId: confirmedRequest.id,
+      createdAt: confirmedRequest.created_at || createdRequest.created_at || manualBooking.createdAt,
+      updatedAt: confirmedRequest.updated_at || confirmedAt,
+      confirmedAt
     };
   } catch (error) {
     console.warn('TapCarta Restaurant: impossible de créer la réservation manuelle dans Supabase', error);
