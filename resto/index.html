@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.4.2';
+        const APP_VERSION = 'V2.5.4.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -6899,7 +6899,7 @@ function saveManualBookingToLocalStorage(manualBooking) {
 }
 
 async function createManualBookingInSupabase(manualBooking) {
-  if (!window.supabaseClient || !manualBooking?.restaurantId) {
+  if (typeof supabaseClient === 'undefined' || !supabaseClient || !manualBooking?.restaurantId) {
     return manualBooking;
   }
 
@@ -7526,7 +7526,7 @@ function saveManualOrderToLocalStorage(manualOrder) {
 }
 
 async function createManualOrderInSupabase(manualOrder) {
-  if (!window.supabaseClient || !manualOrder?.restaurantId) {
+  if (typeof supabaseClient === 'undefined' || !supabaseClient || !manualOrder?.restaurantId) {
     return manualOrder;
   }
 
