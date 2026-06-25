@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.4.3';
+        const APP_VERSION = 'V2.5.5.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -24,11 +24,73 @@
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script>
-    const SUPABASE_URL = 'https://uzuejudgccpnuzqefjre.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_FUtVznXw3Y0dftgEE7zgHg_aTbK669l';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  </script>
+<script>
+  const SUPABASE_URL = 'https://uzuejudgccpnuzqefjre.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_FUtVznXw3Y0dftgEE7zgHg_aTbK669l';
+
+  const tapCartaRestoUpdateState = {
+    pendingWrites: 0,
+    lastInteractionAt: Date.now(),
+    activationRequested: false,
+    targetRelease: null
+  };
+
+  const nativeTapCartaFetch = window.fetch.bind(window);
+
+  function getTapCartaRequestUrl(input) {
+    if (typeof input === 'string') return input;
+    if (input instanceof Request) return input.url;
+    return input?.url || '';
+  }
+
+  function getTapCartaRequestMethod(input, init) {
+    return String(
+      init?.method ||
+      (input instanceof Request ? input.method : 'GET')
+    ).toUpperCase();
+  }
+
+  async function tapCartaTrackedFetch(input, init) {
+    const requestUrl = getTapCartaRequestUrl(input);
+    const requestMethod = getTapCartaRequestMethod(input, init);
+
+    const isSupabaseRequest = requestUrl.startsWith(SUPABASE_URL);
+    const isWriteRequest =
+      isSupabaseRequest &&
+      !['GET', 'HEAD', 'OPTIONS'].includes(requestMethod);
+
+    if (isWriteRequest) {
+      tapCartaRestoUpdateState.pendingWrites += 1;
+    }
+
+    try {
+      return await nativeTapCartaFetch(input, init);
+    } finally {
+      if (isWriteRequest) {
+        tapCartaRestoUpdateState.pendingWrites = Math.max(
+          0,
+          tapCartaRestoUpdateState.pendingWrites - 1
+        );
+      }
+    }
+  }
+
+  ['pointerdown', 'keydown', 'input', 'change', 'focusin'].forEach((eventName) => {
+    document.addEventListener(eventName, () => {
+      tapCartaRestoUpdateState.lastInteractionAt = Date.now();
+    }, { passive: true });
+  });
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    {
+      global: {
+        fetch: tapCartaTrackedFetch
+      }
+    }
+  );
+</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
@@ -18459,14 +18521,334 @@ function ensureFreshHtmlVersion() {
   return false;
 }
 
+const TAPCARTA_RESTO_RELEASE_APP_KEY = 'tapcarta-resto';
+const TAPCARTA_RESTO_RELEASE_CHECK_INTERVAL_MS = 30 * 60 * 1000;
+const TAPCARTA_RESTO_RELEASE_SAFE_RETRY_MS = 2 * 60 * 1000;
+const TAPCARTA_RESTO_RELEASE_PENDING_KEY = 'tapcarta-resto-pending-release';
+
+let tapCartaRestoServiceWorkerRegistration = null;
+let tapCartaRestoSafeRetryTimer = null;
+let tapCartaRestoNightlyTimer = null;
+let hasReloadedForAuthorizedRelease = false;
+
+function parseTapCartaRestoVersion(version) {
+  const match = String(version || '')
+    .trim()
+    .match(/^V?(\d+)\.(\d+)\.(\d+)\.(\d+)$/i);
+
+  if (!match) return null;
+
+  return match.slice(1).map(Number);
+}
+
+function isTapCartaRestoPatchRelease(fromVersion, toVersion) {
+  const from = parseTapCartaRestoVersion(fromVersion);
+  const to = parseTapCartaRestoVersion(toVersion);
+
+  if (!from || !to) return false;
+
+  return (
+    from[0] === to[0] &&
+    from[1] === to[1] &&
+    from[2] === to[2] &&
+    from[3] !== to[3]
+  );
+}
+
+function hasTapCartaRestoReleaseNotes(releaseNotes) {
+  if (!releaseNotes || typeof releaseNotes !== 'object') {
+    return false;
+  }
+
+  return ['fr', 'es', 'en', 'nl'].some((lang) => {
+    const notes = releaseNotes[lang];
+
+    if (Array.isArray(notes)) {
+      return notes.some((note) => String(note || '').trim());
+    }
+
+    return Boolean(String(notes || '').trim());
+  });
+}
+
+function isTapCartaRestoElementOpen(selector) {
+  const element = document.querySelector(selector);
+
+  if (!element) return false;
+
+  return (
+    !element.classList.contains('hidden') &&
+    window.getComputedStyle(element).display !== 'none'
+  );
+}
+
+function isTapCartaRestoMenuDirty() {
+  try {
+    return typeof menuEditorDirty === 'boolean' && menuEditorDirty;
+  } catch (error) {
+    return false;
+  }
+}
+
+function isTapCartaRestoSafeToUpdate() {
+  const hasOpenWorkScreen = [
+    '#restaurant-menu-editor-section',
+    '#restaurant-info-modal',
+    '#restaurant-options-modal',
+    '#restaurant-manual-order-modal',
+    '#restaurant-manual-booking-modal',
+    '#dishEditorScreen',
+    '#dish-editor-screen'
+  ].some(isTapCartaRestoElementOpen);
+
+  const inactiveForEnoughTime =
+    Date.now() - tapCartaRestoUpdateState.lastInteractionAt >=
+    TAPCARTA_RESTO_RELEASE_SAFE_RETRY_MS;
+
+  return (
+    tapCartaRestoUpdateState.pendingWrites === 0 &&
+    !isTapCartaRestoMenuDirty() &&
+    !hasOpenWorkScreen &&
+    inactiveForEnoughTime
+  );
+}
+
+async function fetchTapCartaRestoDeployableRelease() {
+  const { data, error } = await supabaseClient.rpc(
+    'get_app_deployable_release',
+    {
+      p_app_key: TAPCARTA_RESTO_RELEASE_APP_KEY
+    }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  const release = Array.isArray(data) ? data[0] : data;
+
+  if (!release?.version) {
+    return null;
+  }
+
+  return release;
+}
+
+function getTapCartaRestoWaitingWorkerVersion(worker) {
+  return new Promise((resolve) => {
+    if (!worker) {
+      resolve('');
+      return;
+    }
+
+    let finished = false;
+
+    const finish = (version = '') => {
+      if (finished) return;
+
+      finished = true;
+      window.clearTimeout(timeoutId);
+      navigator.serviceWorker.removeEventListener('message', onMessage);
+      resolve(String(version || '').trim());
+    };
+
+    const onMessage = (event) => {
+      const message = event.data || {};
+
+      if (message.type !== 'TAPCARTA_RESTO_RELEASE_VERSION') {
+        return;
+      }
+
+      finish(message.version);
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      finish('');
+    }, 2500);
+
+    navigator.serviceWorker.addEventListener('message', onMessage);
+
+    try {
+      worker.postMessage({
+        type: 'GET_RELEASE_VERSION'
+      });
+    } catch (error) {
+      console.warn(
+        'TapCarta Resto: impossible de lire la version du worker en attente.',
+        error
+      );
+
+      finish('');
+    }
+  });
+}
+
+function scheduleTapCartaRestoSafeRetry() {
+  if (tapCartaRestoSafeRetryTimer) {
+    window.clearTimeout(tapCartaRestoSafeRetryTimer);
+  }
+
+  tapCartaRestoSafeRetryTimer = window.setTimeout(() => {
+    tapCartaRestoSafeRetryTimer = null;
+    evaluateTapCartaRestoWaitingRelease();
+  }, TAPCARTA_RESTO_RELEASE_SAFE_RETRY_MS);
+}
+
+async function activateTapCartaRestoWaitingRelease(
+  waitingWorker,
+  waitingVersion,
+  release
+) {
+  if (
+    !waitingWorker ||
+    !waitingVersion ||
+    tapCartaRestoUpdateState.activationRequested
+  ) {
+    return;
+  }
+
+  const latestRelease = await fetchTapCartaRestoDeployableRelease();
+
+  if (!latestRelease || latestRelease.version !== waitingVersion) {
+    return;
+  }
+
+  const isPatch = isTapCartaRestoPatchRelease(
+    APP_VERSION,
+    waitingVersion
+  );
+
+  if (!isPatch && !hasTapCartaRestoReleaseNotes(latestRelease.release_notes)) {
+    console.warn(
+      'TapCarta Resto: mise à jour non appliquée, notes de version manquantes.',
+      waitingVersion
+    );
+
+    return;
+  }
+
+  if (!isTapCartaRestoSafeToUpdate()) {
+    scheduleTapCartaRestoSafeRetry();
+    return;
+  }
+
+  const pendingRelease = {
+    fromVersion: APP_VERSION,
+    toVersion: waitingVersion,
+    releaseNotes: latestRelease.release_notes || {},
+    appliedAt: new Date().toISOString()
+  };
+
+  try {
+    localStorage.setItem(
+      TAPCARTA_RESTO_RELEASE_PENDING_KEY,
+      JSON.stringify(pendingRelease)
+    );
+  } catch (error) {
+    console.warn(
+      'TapCarta Resto: impossible de mémoriser la mise à jour appliquée.',
+      error
+    );
+  }
+
+  tapCartaRestoUpdateState.activationRequested = true;
+  tapCartaRestoUpdateState.targetRelease = pendingRelease;
+
+  waitingWorker.postMessage({
+    type: 'ACTIVATE_RELEASE',
+    version: waitingVersion
+  });
+}
+
+async function evaluateTapCartaRestoWaitingRelease() {
+  const registration = tapCartaRestoServiceWorkerRegistration;
+
+  if (!registration || tapCartaRestoUpdateState.activationRequested) {
+    return;
+  }
+
+  const waitingWorker = registration.waiting;
+
+  if (!waitingWorker) {
+    return;
+  }
+
+  try {
+    const [release, waitingVersion] = await Promise.all([
+      fetchTapCartaRestoDeployableRelease(),
+      getTapCartaRestoWaitingWorkerVersion(waitingWorker)
+    ]);
+
+    if (!release || !waitingVersion || release.version !== waitingVersion) {
+      return;
+    }
+
+    await activateTapCartaRestoWaitingRelease(
+      waitingWorker,
+      waitingVersion,
+      release
+    );
+  } catch (error) {
+    console.warn(
+      'TapCarta Resto: vérification de mise à jour impossible.',
+      error
+    );
+  }
+}
+
+async function checkTapCartaRestoUpdates() {
+  const registration = tapCartaRestoServiceWorkerRegistration;
+
+  if (!registration) {
+    return;
+  }
+
+  try {
+    await registration.update();
+  } catch (error) {
+    console.warn(
+      'TapCarta Resto: recherche de nouvelle version impossible.',
+      error
+    );
+  }
+
+  await evaluateTapCartaRestoWaitingRelease();
+}
+
+function scheduleTapCartaRestoNightlyCheck() {
+  if (tapCartaRestoNightlyTimer) {
+    window.clearTimeout(tapCartaRestoNightlyTimer);
+  }
+
+  const now = new Date();
+  const nextCheck = new Date(now);
+
+  nextCheck.setHours(4, 0, 0, 0);
+
+  if (nextCheck <= now) {
+    nextCheck.setDate(nextCheck.getDate() + 1);
+  }
+
+  tapCartaRestoNightlyTimer = window.setTimeout(async () => {
+    await checkTapCartaRestoUpdates();
+    scheduleTapCartaRestoNightlyCheck();
+  }, nextCheck.getTime() - now.getTime());
+}
+
 let hasReloadedForNewSW = false;
 
 async function registerFreshServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (hasReloadedForNewSW) return;
-    hasReloadedForNewSW = true;
+    if (
+      !tapCartaRestoUpdateState.activationRequested ||
+      hasReloadedForAuthorizedRelease
+    ) {
+      return;
+    }
+
+    hasReloadedForAuthorizedRelease = true;
     window.location.reload();
   });
 
@@ -18476,24 +18858,37 @@ async function registerFreshServiceWorker() {
       updateViaCache: 'none'
     });
 
-    if (registration) {
-      await registration.update();
+    tapCartaRestoServiceWorkerRegistration = registration;
 
-      if (registration.waiting) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }
+    registration.addEventListener('updatefound', () => {
+      const newWorker = registration.installing;
 
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (!newWorker) return;
+      if (!newWorker) return;
 
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            newWorker.postMessage({ type: 'SKIP_WAITING' });
-          }
-        });
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed') {
+          evaluateTapCartaRestoWaitingRelease();
+        }
       });
-    }
+    });
+
+    window.addEventListener('focus', () => {
+      checkTapCartaRestoUpdates();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        checkTapCartaRestoUpdates();
+      }
+    });
+
+    window.setInterval(() => {
+      checkTapCartaRestoUpdates();
+    }, TAPCARTA_RESTO_RELEASE_CHECK_INTERVAL_MS);
+
+    scheduleTapCartaRestoNightlyCheck();
+
+    await checkTapCartaRestoUpdates();
   } catch (err) {
     console.error('SW registration error:', err);
   }
