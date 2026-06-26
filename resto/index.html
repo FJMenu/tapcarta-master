@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.6.1';
+        const APP_VERSION = 'V2.5.6.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -18824,6 +18824,20 @@ function ensureFreshHtmlVersion() {
 }
 
 const TAPCARTA_RESTO_RELEASE_APP_KEY = 'tapcarta-resto';
+
+/*
+  Phase actuelle :
+  GitHub Pages publie directement main.
+  Les tablettes détectent et appliquent donc une nouvelle version
+  après leur contrôle de 30 min, dans une fenêtre sûre.
+
+  À la migration Vercel, cette seule valeur passera à :
+  'vercel_gated'
+  Les futures versions seront alors bloquées tant que Supabase
+  ne les renvoie pas comme réellement publiées après stabilisation.
+*/
+const TAPCARTA_RESTO_DEPLOYMENT_MODE = 'github_pages_direct';
+
 const TAPCARTA_RESTO_RELEASE_CHECK_INTERVAL_MS = 30 * 60 * 1000;
 const TAPCARTA_RESTO_RELEASE_SAFE_RETRY_MS = 2 * 60 * 1000;
 const TAPCARTA_RESTO_RELEASE_PENDING_KEY = 'tapcarta-resto-pending-release';
@@ -19261,77 +19275,59 @@ function scheduleTapCartaRestoSafeRetry() {
   }, TAPCARTA_RESTO_RELEASE_SAFE_RETRY_MS);
 }
 
-async function activateTapCartaRestoWaitingRelease(
-  waitingWorker,
-  waitingVersion,
-  release
-) {
-  if (
-    !waitingWorker ||
-    !waitingVersion ||
-    tapCartaRestoUpdateState.activationRequested
-  ) {
+async function evaluateTapCartaRestoWaitingRelease() {
+  const registration = tapCartaRestoServiceWorkerRegistration;
+
+  if (!registration || tapCartaRestoUpdateState.activationRequested) {
     return;
   }
 
-  /*
-    Vérification finale : la release doit toujours être la dernière
-    réellement déployable au tout dernier moment avant activation.
-  */
-  const latestRelease = await fetchTapCartaRestoDeployableRelease();
+  const waitingWorker = registration.waiting;
 
-  if (!latestRelease || latestRelease.version !== waitingVersion) {
+  if (!waitingWorker) {
     return;
   }
-
-  const isPatch = isTapCartaRestoPatchRelease(
-    APP_VERSION,
-    waitingVersion
-  );
-
-  if (!isPatch && !hasTapCartaRestoReleaseNotes(latestRelease.release_notes)) {
-    console.warn(
-      'TapCarta Resto: mise à jour non appliquée, notes de version manquantes.',
-      waitingVersion
-    );
-
-    return;
-  }
-
-  if (!isTapCartaRestoSafeToUpdate()) {
-    scheduleTapCartaRestoSafeRetry();
-    return;
-  }
-
-  /*
-    Cette donnée reste uniquement en mémoire.
-    Elle ne sera enregistrée dans localStorage qu'après controllerchange,
-    donc après activation réelle du nouveau worker.
-  */
-  const targetRelease = {
-    fromVersion: APP_VERSION,
-    toVersion: waitingVersion,
-    releaseNotes: latestRelease.release_notes || {},
-    authorizedAt: new Date().toISOString()
-  };
-
-  tapCartaRestoUpdateState.activationRequested = true;
-  tapCartaRestoUpdateState.targetRelease = targetRelease;
 
   try {
-    waitingWorker.postMessage({
-      type: 'ACTIVATE_RELEASE',
-      version: waitingVersion
-    });
+    const waitingVersion =
+      await getTapCartaRestoWaitingWorkerVersion(waitingWorker);
+
+    if (!waitingVersion) {
+      return;
+    }
+
+    /*
+      Phase GitHub Pages actuelle :
+      toute nouvelle version détectée est autorisée,
+      mais seulement lorsque la tablette est inactive,
+      sans écriture en cours ni écran de travail ouvert.
+
+      Phase Vercel future :
+      la version devra aussi être validée par Supabase.
+    */
+    let release = {
+      version: waitingVersion,
+      release_notes: {}
+    };
+
+    if (TAPCARTA_RESTO_DEPLOYMENT_MODE === 'vercel_gated') {
+      release = await fetchTapCartaRestoDeployableRelease();
+
+      if (!release || release.version !== waitingVersion) {
+        return;
+      }
+    }
+
+    await activateTapCartaRestoWaitingRelease(
+      waitingWorker,
+      waitingVersion,
+      release
+    );
   } catch (error) {
     console.warn(
-      'TapCarta Resto: impossible de demander l’activation de la mise à jour.',
+      'TapCarta Resto: vérification de mise à jour impossible.',
       error
     );
-
-    tapCartaRestoUpdateState.activationRequested = false;
-    tapCartaRestoUpdateState.targetRelease = null;
-    scheduleTapCartaRestoSafeRetry();
   }
 }
 
