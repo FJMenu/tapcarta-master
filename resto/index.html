@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.6.2';
+        const APP_VERSION = 'V2.5.6.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -19215,55 +19215,6 @@ async function fetchTapCartaRestoDeployableRelease() {
   return release;
 }
 
-function getTapCartaRestoWaitingWorkerVersion(worker) {
-  return new Promise((resolve) => {
-    if (!worker) {
-      resolve('');
-      return;
-    }
-
-    let finished = false;
-
-    const finish = (version = '') => {
-      if (finished) return;
-
-      finished = true;
-      window.clearTimeout(timeoutId);
-      navigator.serviceWorker.removeEventListener('message', onMessage);
-      resolve(String(version || '').trim());
-    };
-
-    const onMessage = (event) => {
-      const message = event.data || {};
-
-      if (message.type !== 'TAPCARTA_RESTO_RELEASE_VERSION') {
-        return;
-      }
-
-      finish(message.version);
-    };
-
-    const timeoutId = window.setTimeout(() => {
-      finish('');
-    }, 2500);
-
-    navigator.serviceWorker.addEventListener('message', onMessage);
-
-    try {
-      worker.postMessage({
-        type: 'GET_RELEASE_VERSION'
-      });
-    } catch (error) {
-      console.warn(
-        'TapCarta Resto: impossible de lire la version du worker en attente.',
-        error
-      );
-
-      finish('');
-    }
-  });
-}
-
 function scheduleTapCartaRestoSafeRetry() {
   if (tapCartaRestoSafeRetryTimer) {
     window.clearTimeout(tapCartaRestoSafeRetryTimer);
@@ -19275,59 +19226,32 @@ function scheduleTapCartaRestoSafeRetry() {
   }, TAPCARTA_RESTO_RELEASE_SAFE_RETRY_MS);
 }
 
-async function evaluateTapCartaRestoWaitingRelease() {
-  const registration = tapCartaRestoServiceWorkerRegistration;
-
-  if (!registration || tapCartaRestoUpdateState.activationRequested) {
+function activateTapCartaRestoWaitingRelease(waitingWorker) {
+  if (!waitingWorker || tapCartaRestoUpdateState.activationRequested) {
     return;
   }
 
-  const waitingWorker = registration.waiting;
-
-  if (!waitingWorker) {
+  if (!isTapCartaRestoSafeToUpdate()) {
+    scheduleTapCartaRestoSafeRetry();
     return;
   }
+
+  tapCartaRestoUpdateState.activationRequested = true;
+  tapCartaRestoUpdateState.targetRelease = null;
 
   try {
-    const waitingVersion =
-      await getTapCartaRestoWaitingWorkerVersion(waitingWorker);
-
-    if (!waitingVersion) {
-      return;
-    }
-
-    /*
-      Phase GitHub Pages actuelle :
-      toute nouvelle version détectée est autorisée,
-      mais seulement lorsque la tablette est inactive,
-      sans écriture en cours ni écran de travail ouvert.
-
-      Phase Vercel future :
-      la version devra aussi être validée par Supabase.
-    */
-    let release = {
-      version: waitingVersion,
-      release_notes: {}
-    };
-
-    if (TAPCARTA_RESTO_DEPLOYMENT_MODE === 'vercel_gated') {
-      release = await fetchTapCartaRestoDeployableRelease();
-
-      if (!release || release.version !== waitingVersion) {
-        return;
-      }
-    }
-
-    await activateTapCartaRestoWaitingRelease(
-      waitingWorker,
-      waitingVersion,
-      release
-    );
+    waitingWorker.postMessage({
+      type: 'ACTIVATE_RELEASE'
+    });
   } catch (error) {
+    tapCartaRestoUpdateState.activationRequested = false;
+
     console.warn(
-      'TapCarta Resto: vérification de mise à jour impossible.',
+      'TapCarta Resto: impossible d’activer la mise à jour.',
       error
     );
+
+    scheduleTapCartaRestoSafeRetry();
   }
 }
 
@@ -19344,27 +19268,14 @@ async function evaluateTapCartaRestoWaitingRelease() {
     return;
   }
 
-  try {
-    const [release, waitingVersion] = await Promise.all([
-      fetchTapCartaRestoDeployableRelease(),
-      getTapCartaRestoWaitingWorkerVersion(waitingWorker)
-    ]);
-
-    if (!release || !waitingVersion || release.version !== waitingVersion) {
-      return;
-    }
-
-    await activateTapCartaRestoWaitingRelease(
-      waitingWorker,
-      waitingVersion,
-      release
-    );
-  } catch (error) {
-    console.warn(
-      'TapCarta Resto: vérification de mise à jour impossible.',
-      error
-    );
-  }
+  /*
+    GitHub Pages :
+    tout nouveau SW réellement détecté est celui à appliquer.
+    Aucune consultation Supabase.
+    Aucune comparaison de versions.
+    L’activation attend uniquement une fenêtre sûre.
+  */
+  activateTapCartaRestoWaitingRelease(waitingWorker);
 }
 
 async function checkTapCartaRestoUpdates() {
@@ -19409,46 +19320,17 @@ function scheduleTapCartaRestoNightlyCheck() {
 async function registerFreshServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (
-      !tapCartaRestoUpdateState.activationRequested ||
-      hasReloadedForAuthorizedRelease
-    ) {
-      return;
-    }
+ navigator.serviceWorker.addEventListener('controllerchange', () => {
+  if (
+    !tapCartaRestoUpdateState.activationRequested ||
+    hasReloadedForAuthorizedRelease
+  ) {
+    return;
+  }
 
-    const targetRelease = tapCartaRestoUpdateState.targetRelease;
-
-    if (!targetRelease?.toVersion) {
-      return;
-    }
-
-    /*
-      controllerchange signifie que le worker autorisé a réellement pris
-      le contrôle de cette application. C’est seulement maintenant que la
-      version est considérée comme installée pour cette tablette.
-    */
-    const appliedRelease = {
-      ...targetRelease,
-      appliedAt: new Date().toISOString()
-    };
-
-    hasReloadedForAuthorizedRelease = true;
-
-    try {
-      localStorage.setItem(
-        TAPCARTA_RESTO_RELEASE_PENDING_KEY,
-        JSON.stringify(appliedRelease)
-      );
-    } catch (error) {
-      console.warn(
-        'TapCarta Resto: impossible de mémoriser la mise à jour installée.',
-        error
-      );
-    }
-
-    window.location.reload();
-  });
+  hasReloadedForAuthorizedRelease = true;
+  window.location.reload();
+});
 
   try {
     const registration = await navigator.serviceWorker.register(SW_URL, {

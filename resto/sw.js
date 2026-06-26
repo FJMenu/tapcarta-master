@@ -1,13 +1,6 @@
-const SW_VERSION = 'V2.5.5.2';
+const SW_VERSION = 'V2.5.5.3';
 
-/*
-  Version de déploiement commune :
-  elle doit toujours correspondre à APP_VERSION dans resto/index.html.
-  Elle est distincte de la version propre du fichier sw.js.
-*/
-const RELEASE_VERSION = 'V2.5.6.2';
-
-const CACHE_NAME = `tapcarta-cache-${SW_VERSION}`;
+const CACHE_NAME = `tapcarta-resto-${SW_VERSION}`;
 
 const APP_SHELL = [
   './manifest.webmanifest',
@@ -16,9 +9,9 @@ const APP_SHELL = [
 
 self.addEventListener('install', (event) => {
   /*
-    Pas de skipWaiting automatique :
-    une future version reste en attente jusqu’à autorisation du contrôleur.
-    Sur une installation neuve, le worker devient actif normalement.
+    Un nouveau worker reste en attente.
+    Il sera activé uniquement lorsque index.html confirmera
+    que la tablette est dans une fenêtre sûre.
   */
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
@@ -31,7 +24,11 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_NAME)
+            .filter(
+              (key) =>
+                key.startsWith('tapcarta-resto-') &&
+                key !== CACHE_NAME
+            )
             .map((key) => caches.delete(key))
         )
       )
@@ -54,37 +51,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (!['http:', 'https:'].includes(requestUrl.protocol)) {
-    return;
-  }
-
   if (requestUrl.origin !== self.location.origin) {
     return;
   }
 
+  /*
+    index.html n’est jamais servi depuis un ancien cache.
+    Après activation autorisée + reload, la tablette récupère
+    donc l’HTML réellement publié dans GitHub Pages.
+  */
   if (request.mode === 'navigate' || request.destination === 'document') {
-    event.respondWith(
-      fetch(request, { cache: 'no-store' })
-        .catch(() => fetch('./', { cache: 'no-store' }))
-    );
+    event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
 
   event.respondWith(
-    fetch(request)
+    fetch(request, { cache: 'no-store' })
       .then((response) => {
-        if (!response || response.status !== 200 || response.type === 'opaque') {
-          return response || new Response('', {
-            status: 502,
-            statusText: 'Bad Gateway'
-          });
+        if (!response || !response.ok || response.type === 'opaque') {
+          return response;
         }
 
         const responseClone = response.clone();
 
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, responseClone).catch(() => {});
-        });
+        caches.open(CACHE_NAME)
+          .then((cache) => cache.put(request, responseClone))
+          .catch(() => {});
 
         return response;
       })
@@ -96,8 +88,8 @@ self.addEventListener('fetch', (event) => {
         }
 
         return new Response('', {
-          status: 200,
-          statusText: 'OK',
+          status: 503,
+          statusText: 'Offline',
           headers: {
             'Content-Type': 'text/plain; charset=utf-8'
           }
@@ -109,19 +101,25 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
   const message = event.data || {};
 
+  /*
+    Le HTML demande seulement l’identité du worker en attente.
+    Ce n’est pas une règle métier de version.
+  */
   if (message.type === 'GET_RELEASE_VERSION') {
     event.source?.postMessage({
       type: 'TAPCARTA_RESTO_RELEASE_VERSION',
-      version: RELEASE_VERSION
+      version: SW_VERSION
     });
 
     return;
   }
 
-  if (
-    message.type === 'ACTIVATE_RELEASE' &&
-    message.version === RELEASE_VERSION
-  ) {
+  /*
+    L’autorisation d’activer vient uniquement du HTML,
+    après vérification que la tablette est inactive.
+    Aucune comparaison de V ne décide ici.
+  */
+  if (message.type === 'ACTIVATE_RELEASE') {
     event.waitUntil(self.skipWaiting());
   }
 });
