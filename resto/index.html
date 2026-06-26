@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.5.1';
+        const APP_VERSION = 'V2.5.6.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2636,6 +2636,13 @@ restaurantDetailsPreorder: 'Précommande indicative',
 restaurantDetailsDisabled: 'Désactivée',
 restaurantDetailsNone: 'Aucune',
 restaurantDetailsNoArticle: 'Aucun article',
+restaurantEditBookingButton: 'Modifier la réservation',
+restaurantEditBookingTitle: 'Modifier la réservation',
+restaurantEditBookingSaveButton: 'Enregistrer les modifications',
+restaurantEditBookingCancelButton: 'Annuler',
+restaurantEditBookingSuccess: 'Réservation modifiée.',
+restaurantEditBookingError: 'La modification n’a pas pu être enregistrée. Vérifiez la connexion puis réessayez.',
+restaurantEditBookingInvalidPeople: 'Indiquez au moins une personne.',
 restaurantTypeOrder: 'Commande',
 restaurantTypeBooking: 'Réservation',
 restaurantReceivedNow: 'reçue à l’instant',
@@ -2844,6 +2851,13 @@ restaurantDetailsPreorder: 'Prepedido indicativo',
 restaurantDetailsDisabled: 'Desactivado',
 restaurantDetailsNone: 'Ninguna',
 restaurantDetailsNoArticle: 'Ningún artículo',
+restaurantEditBookingButton: 'Modificar la reserva',
+restaurantEditBookingTitle: 'Modificar la reserva',
+restaurantEditBookingSaveButton: 'Guardar cambios',
+restaurantEditBookingCancelButton: 'Cancelar',
+restaurantEditBookingSuccess: 'Reserva modificada.',
+restaurantEditBookingError: 'No se ha podido guardar el cambio. Compruebe la conexión e inténtelo de nuevo.',
+restaurantEditBookingInvalidPeople: 'Indique al menos una persona.',
 restaurantTypeOrder: 'Pedido',
 restaurantTypeBooking: 'Reserva',
 restaurantReceivedNow: 'recibida ahora mismo',
@@ -3053,6 +3067,13 @@ restaurantDetailsPreorder: 'Indicative preorder',
 restaurantDetailsDisabled: 'Disabled',
 restaurantDetailsNone: 'None',
 restaurantDetailsNoArticle: 'No items',
+restaurantEditBookingButton: 'Edit booking',
+restaurantEditBookingTitle: 'Edit booking',
+restaurantEditBookingSaveButton: 'Save changes',
+restaurantEditBookingCancelButton: 'Cancel',
+restaurantEditBookingSuccess: 'Booking updated.',
+restaurantEditBookingError: 'The change could not be saved. Check your connection and try again.',
+restaurantEditBookingInvalidPeople: 'Enter at least one guest.',
 restaurantTypeOrder: 'Order',
 restaurantTypeBooking: 'Booking',
 restaurantReceivedNow: 'received just now',
@@ -3262,6 +3283,13 @@ restaurantDetailsPreorder: 'Indicatieve voorbestelling',
 restaurantDetailsDisabled: 'Uitgeschakeld',
 restaurantDetailsNone: 'Geen',
 restaurantDetailsNoArticle: 'Geen artikelen',
+restaurantEditBookingButton: 'Reservatie wijzigen',
+restaurantEditBookingTitle: 'Reservatie wijzigen',
+restaurantEditBookingSaveButton: 'Wijzigingen opslaan',
+restaurantEditBookingCancelButton: 'Annuleren',
+restaurantEditBookingSuccess: 'Reservatie gewijzigd.',
+restaurantEditBookingError: 'De wijziging kon niet worden opgeslagen. Controleer de verbinding en probeer opnieuw.',
+restaurantEditBookingInvalidPeople: 'Vul minstens één persoon in.',
 restaurantTypeOrder: 'Bestelling',
 restaurantTypeBooking: 'Reservatie',
 restaurantReceivedNow: 'zojuist ontvangen',
@@ -6250,7 +6278,24 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
       query = query.eq('restaurant_id', activeRestaurantId);
     }
 
-    return await query;
+    const { data, error } = await query
+      .select('id')
+      .maybeSingle();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    if (!data?.id) {
+      return {
+        data: null,
+        error: new Error(
+          'Aucune réservation correspondante n’a été modifiée dans Supabase.'
+        )
+      };
+    }
+
+    return { data, error: null };
   }
 
   try {
@@ -6269,10 +6314,22 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
       return false;
     }
 
+    const bookingFieldsPayload = !isOrderRequest && updatedRequest?.booking
+      ? {
+          client_name: String(updatedRequest.customer?.name || '').trim(),
+          client_phone: String(updatedRequest.customer?.phone || '').trim(),
+          booking_date: String(updatedRequest.booking.date || '').trim(),
+          booking_time: String(updatedRequest.booking.time || '').trim().slice(0, 5),
+          party_size: Number(updatedRequest.booking.people),
+          note: String(updatedRequest.booking.note || '').trim()
+        }
+      : {};
+
     const livePayload = {
       status: updatedRequest.status || 'pending',
       updated_at: updatedAt,
-      restaurant_message: restaurantResponse?.message || null
+      restaurant_message: restaurantResponse?.message || null,
+      ...bookingFieldsPayload
     };
 
     if (modifiedItems.length) {
@@ -6294,7 +6351,8 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
         updated_at: livePayload.updated_at,
         restaurant_message: updatedRequest.historyDeleted === true
           ? `${livePayload.restaurant_message || ''} ${TAPCARTA_HISTORY_DELETED_MARKER}`.trim()
-          : livePayload.restaurant_message
+          : livePayload.restaurant_message,
+        ...bookingFieldsPayload
       };
 
       if (modifiedItems.length) {
@@ -9376,14 +9434,152 @@ function buildRequestDetailsRows(item) {
     </div>
   `;
 }
+function buildConfirmedBookingEditFormHtml(item) {
+  const source = item?.sourceRequest || {};
+  const customer = source.customer || {};
+  const booking = source.booking || {};
 
+  return `
+    <form
+      id="restaurant-confirmed-booking-edit-form"
+      onsubmit="saveConfirmedBookingEdit('${item.id}'); return false;"
+      class="rounded-2xl border border-gold/25 bg-gold/[0.05] p-4 md:p-5 space-y-4"
+    >
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label
+            for="restaurant-booking-edit-name"
+            class="block text-[11px] uppercase tracking-wide text-cream/55 mb-2"
+          >
+            ${t.restaurantDetailsCustomer}
+          </label>
 
+          <input
+            id="restaurant-booking-edit-name"
+            type="text"
+            autocomplete="name"
+            value="${escapeRequestDetailsHtml(customer.name || '')}"
+            class="w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm font-semibold text-cream outline-none focus:border-gold/65 focus:ring-2 focus:ring-gold/15"
+          >
+        </div>
 
-function buildRequestDetailsModalHtml(item) {
+        <div>
+          <label
+            for="restaurant-booking-edit-phone"
+            class="block text-[11px] uppercase tracking-wide text-cream/55 mb-2"
+          >
+            ${t.restaurantDetailsPhone}
+          </label>
+
+          <input
+            id="restaurant-booking-edit-phone"
+            type="tel"
+            inputmode="tel"
+            autocomplete="tel"
+            value="${escapeRequestDetailsHtml(customer.phone || '')}"
+            class="w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm font-semibold text-cream outline-none focus:border-gold/65 focus:ring-2 focus:ring-gold/15"
+          >
+        </div>
+
+        <div>
+          <label
+            for="restaurant-booking-edit-date"
+            class="block text-[11px] uppercase tracking-wide text-cream/55 mb-2"
+          >
+            ${t.restaurantDetailsDate}
+          </label>
+
+          <input
+            id="restaurant-booking-edit-date"
+            type="date"
+            required
+            value="${escapeRequestDetailsHtml(String(booking.date || '').slice(0, 10))}"
+            class="w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm font-semibold text-cream outline-none focus:border-gold/65 focus:ring-2 focus:ring-gold/15"
+          >
+        </div>
+
+        <div>
+          <label
+            for="restaurant-booking-edit-time"
+            class="block text-[11px] uppercase tracking-wide text-cream/55 mb-2"
+          >
+            ${t.restaurantDetailsTime}
+          </label>
+
+          <input
+            id="restaurant-booking-edit-time"
+            type="time"
+            required
+            value="${escapeRequestDetailsHtml(String(booking.time || '').slice(0, 5))}"
+            class="w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm font-semibold text-cream outline-none focus:border-gold/65 focus:ring-2 focus:ring-gold/15"
+          >
+        </div>
+
+        <div>
+          <label
+            for="restaurant-booking-edit-people"
+            class="block text-[11px] uppercase tracking-wide text-cream/55 mb-2"
+          >
+            ${t.restaurantDetailsPeople}
+          </label>
+
+          <input
+            id="restaurant-booking-edit-people"
+            type="number"
+            min="1"
+            step="1"
+            required
+            inputmode="numeric"
+            value="${escapeRequestDetailsHtml(String(booking.people ?? 1))}"
+            class="w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm font-semibold text-cream outline-none focus:border-gold/65 focus:ring-2 focus:ring-gold/15"
+          >
+        </div>
+
+        <div class="hidden md:block"></div>
+
+        <div class="md:col-span-2">
+          <label
+            for="restaurant-booking-edit-note"
+            class="block text-[11px] uppercase tracking-wide text-cream/55 mb-2"
+          >
+            ${t.restaurantDetailsNote}
+          </label>
+
+          <textarea
+            id="restaurant-booking-edit-note"
+            rows="4"
+            class="w-full resize-y rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm font-semibold text-cream outline-none focus:border-gold/65 focus:ring-2 focus:ring-gold/15"
+          >${escapeRequestDetailsHtml(booking.note || '')}</textarea>
+        </div>
+      </div>
+
+      <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2 border-t border-white/8">
+        <button
+          type="button"
+          onclick="openRequestDetails('${item.id}')"
+          class="btn-action px-5 py-3 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+        >
+          ${t.restaurantEditBookingCancelButton}
+        </button>
+
+        <button
+          type="submit"
+          class="btn-action px-5 py-3 rounded-xl border border-gold/45 bg-gold/15 text-sm font-extrabold text-gold hover:bg-gold/22 transition-all"
+        >
+          ${t.restaurantEditBookingSaveButton}
+        </button>
+      </div>
+    </form>
+  `;
+}
+
+function buildRequestDetailsModalHtml(item, editBooking = false) {
   const actionTexts = getRequestActionTexts();
   const sourceStatus = item?.sourceRequest?.status || '';
   const isOrder = !!item?.sourceRequest?.order;
   const isAlreadyConfirmed = sourceStatus === 'confirmed' || sourceStatus === 'accepted_by_client';
+  const canEditConfirmedBooking = !isOrder && sourceStatus === 'confirmed';
+  const showBookingEditForm = canEditConfirmedBooking && editBooking === true;
 
   const confirmedLabel = isOrder
     ? (currentLang === 'es'
@@ -9423,7 +9619,9 @@ function buildRequestDetailsModalHtml(item) {
         <div class="sticky top-0 z-10 bg-[#0D0D0D]/95 backdrop-blur border-b border-white/8 px-5 py-4 flex items-center justify-between gap-4">
           <div class="min-w-0">
             <div class="text-xs uppercase tracking-[0.18em] text-gold/70 mb-1">${item.type}</div>
-            <h3 class="font-display text-xl font-bold text-cream">${t.restaurantDetailsTitle}</h3>
+            <h3 class="font-display text-xl font-bold text-cream">
+              ${showBookingEditForm ? t.restaurantEditBookingTitle : t.restaurantDetailsTitle}
+            </h3>
           </div>
 
           <button
@@ -9436,16 +9634,31 @@ function buildRequestDetailsModalHtml(item) {
         </div>
 
         <div class="p-5 md:p-6 space-y-5">
-          ${buildRequestDetailsRows(item)}
+          ${showBookingEditForm
+            ? buildConfirmedBookingEditFormHtml(item)
+            : buildRequestDetailsRows(item)}
 
           ${isAlreadyConfirmed ? `
             <div class="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3">
               <div class="text-sm font-extrabold text-emerald-200">
                 ${confirmedLabel}
               </div>
+
               <div class="text-xs text-cream/60 mt-1">
                 ${confirmedHelpText}
               </div>
+
+              ${canEditConfirmedBooking && !showBookingEditForm ? `
+                <div class="pt-3">
+                  <button
+                    type="button"
+                    onclick="openRequestDetails('${item.id}', true)"
+                    class="btn-action px-4 py-3 rounded-xl border border-gold/40 bg-gold/10 text-sm font-extrabold text-gold hover:bg-gold/18 transition-all"
+                  >
+                    ${t.restaurantEditBookingButton}
+                  </button>
+                </div>
+              ` : ''}
             </div>
           ` : ''}
 
@@ -9477,27 +9690,28 @@ function buildRequestDetailsModalHtml(item) {
             </div>
           ` : ''}
 
-          <div class="flex justify-end pt-2 border-t border-white/8">
-            <button
-              type="button"
-              onclick="closeRequestDetailsModal()"
-              class="btn-action px-5 py-3 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
-            >
-              ${t.restaurantDetailsCloseButton}
-            </button>
-          </div>
+          ${showBookingEditForm ? '' : `
+            <div class="flex justify-end pt-2 border-t border-white/8">
+              <button
+                type="button"
+                onclick="closeRequestDetailsModal()"
+                class="btn-action px-5 py-3 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+              >
+                ${t.restaurantDetailsCloseButton}
+              </button>
+            </div>
+          `}
         </div>
       </div>
     </div>
   `;
 }
 
-
 window.closeRequestDetailsModal = function() {
   removeRequestDetailsModal();
 };
 
-window.openRequestDetails = function(requestId) {
+window.openRequestDetails = function(requestId, editBooking = false) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
   if (!item || !item.sourceRequest) {
@@ -9506,9 +9720,13 @@ window.openRequestDetails = function(requestId) {
   }
 
   removeRequestDetailsModal();
-  document.body.insertAdjacentHTML('beforeend', buildRequestDetailsModalHtml(item));
+  document.body.insertAdjacentHTML(
+    'beforeend',
+    buildRequestDetailsModalHtml(item, editBooking)
+  );
 
   const modal = document.getElementById('restaurant-request-details-modal');
+
   if (modal) {
     modal.addEventListener('click', (event) => {
       if (event.target === modal) {
@@ -9518,6 +9736,90 @@ window.openRequestDetails = function(requestId) {
   }
 };
 
+window.saveConfirmedBookingEdit = async function(requestId) {
+  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
+  const sourceRequest = item?.sourceRequest;
+
+  if (
+    !item ||
+    !sourceRequest ||
+    sourceRequest?.order ||
+    sourceRequest.status !== 'confirmed'
+  ) {
+    showRestaurantToast(t.restaurantEditBookingError, 'danger');
+    return;
+  }
+
+  const form = document.getElementById('restaurant-confirmed-booking-edit-form');
+
+  if (!form) {
+    showRestaurantToast(t.restaurantEditBookingError, 'danger');
+    return;
+  }
+
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  const nameField = document.getElementById('restaurant-booking-edit-name');
+  const phoneField = document.getElementById('restaurant-booking-edit-phone');
+  const dateField = document.getElementById('restaurant-booking-edit-date');
+  const timeField = document.getElementById('restaurant-booking-edit-time');
+  const peopleField = document.getElementById('restaurant-booking-edit-people');
+  const noteField = document.getElementById('restaurant-booking-edit-note');
+
+  const people = Number.parseInt(String(peopleField?.value || ''), 10);
+
+  if (!Number.isInteger(people) || people < 1) {
+    showRestaurantToast(t.restaurantEditBookingInvalidPeople, 'danger');
+    return;
+  }
+
+  const previousCustomer = {
+    ...(sourceRequest.customer || {})
+  };
+
+  const previousBooking = {
+    ...(sourceRequest.booking || {})
+  };
+
+  const previousUpdatedAt = sourceRequest.updatedAt || null;
+
+  sourceRequest.customer = {
+    ...(sourceRequest.customer || {}),
+    name: String(nameField?.value || '').trim(),
+    phone: String(phoneField?.value || '').trim()
+  };
+
+  sourceRequest.booking = {
+    ...(sourceRequest.booking || {}),
+    date: String(dateField?.value || '').trim(),
+    time: String(timeField?.value || '').trim().slice(0, 5),
+    people,
+    note: String(noteField?.value || '').trim()
+  };
+
+  sourceRequest.status = 'confirmed';
+  sourceRequest.updatedAt = new Date().toISOString();
+
+  const persisted = await persistRestaurantRequestUpdate(sourceRequest);
+
+  if (!persisted) {
+    sourceRequest.customer = previousCustomer;
+    sourceRequest.booking = previousBooking;
+    sourceRequest.updatedAt = previousUpdatedAt;
+
+    showRestaurantToast(t.restaurantEditBookingError, 'danger');
+    return;
+  }
+
+  syncRequestsState();
+  renderMenu();
+
+  showRestaurantToast(t.restaurantEditBookingSuccess, 'info');
+  openRequestDetails(requestId);
+};
 
 window.validateRequest = async function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
@@ -18571,6 +18873,252 @@ function hasTapCartaRestoReleaseNotes(releaseNotes) {
   });
 }
 
+function getTapCartaRestoReleasePopupLanguage() {
+  return ['fr', 'es', 'en', 'nl'].includes(currentLang)
+    ? currentLang
+    : 'es';
+}
+
+function getTapCartaRestoReleasePopupTexts(lang) {
+  const texts = {
+    fr: {
+      title: 'Mise à jour terminée',
+      intro: 'Votre application TapCarta Resto est maintenant à jour.',
+      versionLabel: 'Version installée',
+      changesLabel: 'Ce qui a changé',
+      confirm: 'Compris',
+      generic: 'Cette mise à jour améliore votre application TapCarta Resto.',
+      patch: 'Amélioration de la sécurité et de la stabilité de votre application.'
+    },
+    es: {
+      title: 'Actualización finalizada',
+      intro: 'Su aplicación TapCarta Resto ya está actualizada.',
+      versionLabel: 'Versión instalada',
+      changesLabel: 'Cambios realizados',
+      confirm: 'Entendido',
+      generic: 'Esta actualización mejora su aplicación TapCarta Resto.',
+      patch: 'Mejora de la seguridad y la estabilidad de su aplicación.'
+    },
+    en: {
+      title: 'Update completed',
+      intro: 'Your TapCarta Resto application is now up to date.',
+      versionLabel: 'Installed version',
+      changesLabel: 'What changed',
+      confirm: 'Understood',
+      generic: 'This update improves your TapCarta Resto application.',
+      patch: 'Improved security and stability of your application.'
+    },
+    nl: {
+      title: 'Update voltooid',
+      intro: 'Uw TapCarta Resto-applicatie is nu bijgewerkt.',
+      versionLabel: 'Geïnstalleerde versie',
+      changesLabel: 'Wat is er gewijzigd',
+      confirm: 'Begrepen',
+      generic: 'Deze update verbetert uw TapCarta Resto-applicatie.',
+      patch: 'Verbetering van de beveiliging en stabiliteit van uw applicatie.'
+    }
+  };
+
+  return texts[lang] || texts.es;
+}
+
+function getTapCartaRestoReleasePopupNotes(release, lang) {
+  const releaseNotes =
+    release?.releaseNotes &&
+    typeof release.releaseNotes === 'object'
+      ? release.releaseNotes
+      : {};
+
+  const selectedNotes =
+    releaseNotes[lang] ??
+    releaseNotes.es;
+
+  const notes = Array.isArray(selectedNotes)
+    ? selectedNotes
+    : [selectedNotes];
+
+  const cleanedNotes = notes
+    .map((note) => String(note || '').trim())
+    .filter(Boolean);
+
+  if (cleanedNotes.length) {
+    return cleanedNotes;
+  }
+
+  const texts = getTapCartaRestoReleasePopupTexts(lang);
+
+  if (
+    isTapCartaRestoPatchRelease(
+      release?.fromVersion,
+      release?.toVersion
+    )
+  ) {
+    return [texts.patch];
+  }
+
+  return [texts.generic];
+}
+
+function showTapCartaRestoAppliedReleasePopup() {
+  let appliedRelease;
+
+  try {
+    const rawRelease = localStorage.getItem(
+      TAPCARTA_RESTO_RELEASE_PENDING_KEY
+    );
+
+    if (!rawRelease) {
+      return;
+    }
+
+    appliedRelease = JSON.parse(rawRelease);
+  } catch (error) {
+    console.warn(
+      'TapCarta Resto: impossible de lire la confirmation de mise à jour.',
+      error
+    );
+
+    return;
+  }
+
+  const installedVersion = String(
+    appliedRelease?.toVersion || ''
+  ).trim();
+
+  /*
+    La pop-up ne peut apparaître que lorsque le nouvel index.html
+    est réellement chargé avec la version qui vient d’être activée.
+  */
+  if (!installedVersion || installedVersion !== APP_VERSION) {
+    return;
+  }
+
+  const releaseShownKey =
+    `tapcarta-resto-release-shown:${installedVersion}`;
+
+  try {
+    if (localStorage.getItem(releaseShownKey) === '1') {
+      localStorage.removeItem(TAPCARTA_RESTO_RELEASE_PENDING_KEY);
+      return;
+    }
+
+    /*
+      Marqué avant affichage : la même version ne peut jamais créer
+      une seconde pop-up sur cette tablette, même après un nouveau refresh.
+    */
+    localStorage.setItem(releaseShownKey, '1');
+    localStorage.removeItem(TAPCARTA_RESTO_RELEASE_PENDING_KEY);
+  } catch (error) {
+    console.warn(
+      'TapCarta Resto: impossible de mémoriser l’affichage de la mise à jour.',
+      error
+    );
+  }
+
+  document
+    .getElementById('tapcarta-resto-release-modal')
+    ?.remove();
+
+  const lang = getTapCartaRestoReleasePopupLanguage();
+  const texts = getTapCartaRestoReleasePopupTexts(lang);
+  const notes = getTapCartaRestoReleasePopupNotes(
+    appliedRelease,
+    lang
+  );
+
+  const modal = document.createElement('div');
+
+  modal.id = 'tapcarta-resto-release-modal';
+  modal.className =
+    'fixed inset-0 z-[13000] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md';
+
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+
+  modal.innerHTML = `
+    <div class="w-full max-w-lg overflow-hidden rounded-[28px] border border-gold/35 bg-[#17120a] shadow-[0_30px_90px_rgba(0,0,0,0.62)]">
+      <div class="border-b border-gold/15 bg-gradient-to-br from-gold/15 via-transparent to-transparent px-6 pb-5 pt-6">
+        <div class="flex items-start gap-4">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-gold/35 bg-gold/10">
+            <i data-lucide="sparkles" class="h-6 w-6 text-gold"></i>
+          </div>
+
+          <div class="min-w-0">
+            <h2 data-release-title class="font-display text-2xl font-bold text-gold"></h2>
+            <p data-release-intro class="mt-2 text-sm leading-relaxed text-cream/75"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-5 px-6 py-5">
+        <div class="rounded-2xl border border-gold/20 bg-black/20 px-4 py-3">
+          <div class="text-xs font-bold uppercase tracking-[0.14em] text-cream/45" data-release-version-label></div>
+          <div class="mt-1 text-lg font-extrabold text-gold" data-release-version></div>
+        </div>
+
+        <div>
+          <div data-release-changes-label class="text-sm font-extrabold text-cream"></div>
+          <ul data-release-notes class="mt-3 space-y-2"></ul>
+        </div>
+
+        <button
+          type="button"
+          data-release-confirm
+          class="btn-action flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl border border-gold/60 bg-gold px-5 py-3 font-extrabold text-black shadow-[0_12px_26px_rgba(242,199,68,0.18)]"
+        >
+          <i data-lucide="check" class="h-5 w-5"></i>
+          <span data-release-confirm-label></span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  modal.querySelector('[data-release-title]').textContent = texts.title;
+  modal.querySelector('[data-release-intro]').textContent = texts.intro;
+  modal.querySelector('[data-release-version-label]').textContent =
+    texts.versionLabel;
+  modal.querySelector('[data-release-version]').textContent =
+    installedVersion;
+  modal.querySelector('[data-release-changes-label]').textContent =
+    texts.changesLabel;
+  modal.querySelector('[data-release-confirm-label]').textContent =
+    texts.confirm;
+
+  const notesList = modal.querySelector('[data-release-notes]');
+
+  notes.forEach((note) => {
+    const item = document.createElement('li');
+
+    item.className =
+      'flex items-start gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-3 text-sm leading-relaxed text-cream/82';
+
+    const icon = document.createElement('span');
+
+    icon.className =
+      'mt-1 h-2 w-2 shrink-0 rotate-45 bg-gold';
+
+    const text = document.createElement('span');
+    text.textContent = note;
+
+    item.append(icon, text);
+    notesList.appendChild(item);
+  });
+
+  modal
+    .querySelector('[data-release-confirm]')
+    ?.addEventListener('click', () => {
+      modal.remove();
+    });
+
+  document.body.appendChild(modal);
+
+  if (window.lucide) {
+    requestAnimationFrame(() => {
+      lucide.createIcons();
+    });
+  }
+}
+
 function isTapCartaRestoElementOpen(selector) {
   const element = document.querySelector(selector);
 
@@ -18592,14 +19140,32 @@ function isTapCartaRestoMenuDirty() {
 
 function isTapCartaRestoSafeToUpdate() {
   const hasOpenWorkScreen = [
-    '#restaurant-menu-editor-section',
-    '#restaurant-info-modal',
-    '#restaurant-options-modal',
-    '#restaurant-manual-order-modal',
+    '#restaurant-request-action-modal',
+    '#restaurant-request-details-modal',
+    '#restaurant-confirm-dialog',
     '#restaurant-manual-booking-modal',
+    '#restaurant-manual-order-modal',
+    '#restaurant-theme-choice-modal',
+    '#restaurant-options-modal',
+    '#restaurant-info-modal',
+    '#restaurant-menu-editor-section',
+    '#leave-menu-editor-dialog',
+    '#restaurant-menu-translations-modal',
     '#dishEditorScreen',
-    '#dish-editor-screen'
+    '#dishEditorFlow',
+    '#dish-finish-confirm-dialog',
+    '#dish-saved-auto-dialog',
+    '#add-category-dialog',
+    '#restaurant-qr-framed-modal'
   ].some(isTapCartaRestoElementOpen);
+
+  const activeElement = document.activeElement;
+
+  const hasActiveEditableField =
+    activeElement instanceof HTMLInputElement ||
+    activeElement instanceof HTMLTextAreaElement ||
+    activeElement instanceof HTMLSelectElement ||
+    activeElement?.isContentEditable === true;
 
   const inactiveForEnoughTime =
     Date.now() - tapCartaRestoUpdateState.lastInteractionAt >=
@@ -18609,6 +19175,7 @@ function isTapCartaRestoSafeToUpdate() {
     tapCartaRestoUpdateState.pendingWrites === 0 &&
     !isTapCartaRestoMenuDirty() &&
     !hasOpenWorkScreen &&
+    !hasActiveEditableField &&
     inactiveForEnoughTime
   );
 }
@@ -18707,6 +19274,10 @@ async function activateTapCartaRestoWaitingRelease(
     return;
   }
 
+  /*
+    Vérification finale : la release doit toujours être la dernière
+    réellement déployable au tout dernier moment avant activation.
+  */
   const latestRelease = await fetchTapCartaRestoDeployableRelease();
 
   if (!latestRelease || latestRelease.version !== waitingVersion) {
@@ -18732,32 +19303,36 @@ async function activateTapCartaRestoWaitingRelease(
     return;
   }
 
-  const pendingRelease = {
+  /*
+    Cette donnée reste uniquement en mémoire.
+    Elle ne sera enregistrée dans localStorage qu'après controllerchange,
+    donc après activation réelle du nouveau worker.
+  */
+  const targetRelease = {
     fromVersion: APP_VERSION,
     toVersion: waitingVersion,
     releaseNotes: latestRelease.release_notes || {},
-    appliedAt: new Date().toISOString()
+    authorizedAt: new Date().toISOString()
   };
 
+  tapCartaRestoUpdateState.activationRequested = true;
+  tapCartaRestoUpdateState.targetRelease = targetRelease;
+
   try {
-    localStorage.setItem(
-      TAPCARTA_RESTO_RELEASE_PENDING_KEY,
-      JSON.stringify(pendingRelease)
-    );
+    waitingWorker.postMessage({
+      type: 'ACTIVATE_RELEASE',
+      version: waitingVersion
+    });
   } catch (error) {
     console.warn(
-      'TapCarta Resto: impossible de mémoriser la mise à jour appliquée.',
+      'TapCarta Resto: impossible de demander l’activation de la mise à jour.',
       error
     );
+
+    tapCartaRestoUpdateState.activationRequested = false;
+    tapCartaRestoUpdateState.targetRelease = null;
+    scheduleTapCartaRestoSafeRetry();
   }
-
-  tapCartaRestoUpdateState.activationRequested = true;
-  tapCartaRestoUpdateState.targetRelease = pendingRelease;
-
-  waitingWorker.postMessage({
-    type: 'ACTIVATE_RELEASE',
-    version: waitingVersion
-  });
 }
 
 async function evaluateTapCartaRestoWaitingRelease() {
@@ -18835,8 +19410,6 @@ function scheduleTapCartaRestoNightlyCheck() {
   }, nextCheck.getTime() - now.getTime());
 }
 
-let hasReloadedForNewSW = false;
-
 async function registerFreshServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
@@ -18848,7 +19421,36 @@ async function registerFreshServiceWorker() {
       return;
     }
 
+    const targetRelease = tapCartaRestoUpdateState.targetRelease;
+
+    if (!targetRelease?.toVersion) {
+      return;
+    }
+
+    /*
+      controllerchange signifie que le worker autorisé a réellement pris
+      le contrôle de cette application. C’est seulement maintenant que la
+      version est considérée comme installée pour cette tablette.
+    */
+    const appliedRelease = {
+      ...targetRelease,
+      appliedAt: new Date().toISOString()
+    };
+
     hasReloadedForAuthorizedRelease = true;
+
+    try {
+      localStorage.setItem(
+        TAPCARTA_RESTO_RELEASE_PENDING_KEY,
+        JSON.stringify(appliedRelease)
+      );
+    } catch (error) {
+      console.warn(
+        'TapCarta Resto: impossible de mémoriser la mise à jour installée.',
+        error
+      );
+    }
+
     window.location.reload();
   });
 
@@ -18889,8 +19491,11 @@ async function registerFreshServiceWorker() {
     scheduleTapCartaRestoNightlyCheck();
 
     await checkTapCartaRestoUpdates();
-  } catch (err) {
-    console.error('SW registration error:', err);
+  } catch (error) {
+    console.error(
+      'TapCarta Resto: erreur d’enregistrement du service worker.',
+      error
+    );
   }
 }
 
