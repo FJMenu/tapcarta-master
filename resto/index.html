@@ -4632,33 +4632,56 @@ function ensureRestaurantNotificationSet(value) {
 
   return new Set();
 }
+
 function showRestaurantToast(message, variant = 'info') {
-  const existingToast = document.getElementById('restaurant-toast-message');
-  if (existingToast) existingToast.remove();
+const existingToast = document.getElementById('restaurant-toast-message');
 
-  const isDanger = variant === 'danger';
-  const toast = document.createElement('div');
-  toast.id = 'restaurant-toast-message';
-  toast.className = `fixed left-3 right-3 bottom-4 z-[10150] md:left-auto md:right-6 md:bottom-6 md:w-[380px] rounded-2xl border ${isDanger ? 'border-red-400/45 bg-red-950/90' : 'border-gold/40 bg-black/95'} shadow-[0_18px_60px_rgba(0,0,0,0.55)] px-4 py-4 text-sm font-semibold ${isDanger ? 'text-red-100' : 'text-cream'}`;
+if (existingToast) {
+existingToast.remove();
+}
 
-  toast.innerHTML = `
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl ${isDanger ? 'bg-red-500/20 text-red-100' : 'bg-gold text-black'} flex items-center justify-center flex-shrink-0">
-        <i data-lucide="${isDanger ? 'alert-triangle' : 'info'}" class="w-5 h-5"></i>
-      </div>
-      <div>${message}</div>
-    </div>
+const isDanger = variant === 'danger';
+const isSuccess = variant === 'success';
+
+const toast = document.createElement('div');
+
+toast.id = 'restaurant-toast-message';
+
+const toastStyle = isDanger
+? 'border-red-400/45 bg-red-950/90 text-red-100'
+: isSuccess
+? 'border-emerald-400/45 bg-emerald-950/90 text-emerald-50'
+: 'border-gold/40 bg-black/95 text-cream';
+
+const iconStyle = isDanger
+? 'bg-red-500/20 text-red-100'
+: isSuccess
+? 'bg-emerald-500/20 text-emerald-100'
+: 'bg-gold text-black';
+
+const iconName = isDanger
+? 'alert-triangle'
+: isSuccess
+? 'check-circle-2'
+: 'info';
+
+toast.className =
+`fixed left-3 right-3 bottom-4 z-[10150] md:left-auto md:right-6 ` +
+`md:bottom-6 md:w-[380px] rounded-2xl border ${toastStyle} ` +
+`shadow-[0_18px_60px_rgba(0,0,0,0.55)] px-4 py-4 text-sm font-semibold`;
+
+toast.innerHTML = `     <div class="flex items-center gap-3">       <div class="w-10 h-10 rounded-xl ${iconStyle} flex items-center justify-center flex-shrink-0">         <i data-lucide="${iconName}" class="w-5 h-5"></i>       </div>       <div>${message}</div>     </div>
   `;
 
-  document.body.appendChild(toast);
+document.body.appendChild(toast);
 
-  if (window.lucide) {
-    requestAnimationFrame(() => lucide.createIcons());
-  }
+if (window.lucide) {
+requestAnimationFrame(() => lucide.createIcons());
+}
 
-  window.setTimeout(() => {
-    document.getElementById('restaurant-toast-message')?.remove();
-  }, 4500);
+window.setTimeout(() => {
+document.getElementById('restaurant-toast-message')?.remove();
+}, 4500);
 }
 
 function showRestaurantConfirmDialog({ title, message, confirmLabel, cancelLabel, danger = false }) {
@@ -6885,8 +6908,8 @@ function getManualOriginLabel(origin) {
 }
 
 function getManualBookingTexts() {
-  if (currentLang === 'es') {
-    return {
+  const texts = {
+    es: {
       title: 'Añadir una reserva',
       subtitle: 'Reserva recibida por teléfono, mostrador, WhatsApp u otro canal.',
       name: 'Nombre del cliente',
@@ -6899,20 +6922,96 @@ function getManualBookingTexts() {
       notePlaceholder: 'Nota interna opcional',
       cancel: 'Cancelar',
       save: 'Guardar reserva',
-      required: 'El nombre del cliente es obligatorio.',
+
+      nameRequired: 'El nombre del cliente es obligatorio.',
+      phoneRequired: 'El teléfono es obligatorio.',
+      phoneInvalid: 'Introduzca un número de teléfono válido.',
       dateRequired: 'La fecha es obligatoria.',
       timeRequired: 'La hora es obligatoria.',
       peopleRequired: 'El número de personas debe ser válido.',
-      saved: 'Reserva añadida.',
+
+      savedTitle: 'Reserva registrada',
+      saved: 'La reserva se ha añadido correctamente.',
+
+      checkingTitle: 'Comprobación de la reserva en curso',
+      checkingMessage: 'Estamos comprobando automáticamente si la reserva se ha registrado correctamente.',
+      checkingMaximum: 'Duración máxima de comprobación: {time}',
+      checkingContinue: 'Puede seguir trabajando.',
+      continueWorking: 'Continuar trabajando',
+      remainingTime: 'Tiempo restante: {time}',
+
+      finalTitle: 'Comprobación terminada',
+      finalMessage: 'No hemos podido confirmar esta reserva. Compruebe primero la lista de reservas antes de volver a registrarla.',
+      viewBookings: 'Ver las reservas',
+      retryEntry: 'Reintentar el registro',
+      retryModified: 'Registrar como nueva reserva',
+      retryModifiedConfirmTitle: 'Nueva reserva',
+      retryModifiedConfirmMessage: 'Ha modificado la información. Se creará una nueva tentativa con un nuevo identificador.',
+      retryModifiedConfirm: 'Crear nueva tentativa',
+
+      assistanceCodeLabel: 'Código de asistencia: R-MANUAL-04',
+      assistanceMessage: 'Comunique este código a TapCarta si el problema persiste.',
+      copySupportInfo: 'Copiar la información para TapCarta',
+      copiedSupportInfo: 'Información copiada.',
+
       originPhone: 'Teléfono',
       originCounter: 'Mostrador',
       originWhatsapp: 'WhatsApp',
       originOther: 'Otro'
-    };
-  }
+    },
 
-  if (currentLang === 'en') {
-    return {
+    fr: {
+      title: 'Ajouter une réservation',
+      subtitle: 'Réservation reçue par téléphone, comptoir, WhatsApp ou autre canal.',
+      name: 'Nom du client',
+      phone: 'Téléphone',
+      date: 'Date',
+      time: 'Heure',
+      people: 'Couverts',
+      origin: 'Origine',
+      note: 'Note',
+      notePlaceholder: 'Note interne facultative',
+      cancel: 'Annuler',
+      save: 'Enregistrer',
+
+      nameRequired: 'Le nom du client est obligatoire.',
+      phoneRequired: 'Le téléphone est obligatoire.',
+      phoneInvalid: 'Indiquez un numéro de téléphone valide.',
+      dateRequired: 'La date est obligatoire.',
+      timeRequired: 'L’heure est obligatoire.',
+      peopleRequired: 'Le nombre de couverts doit être valide.',
+
+      savedTitle: 'Réservation enregistrée',
+      saved: 'La réservation a bien été ajoutée.',
+
+      checkingTitle: 'Vérification de la réservation en cours',
+      checkingMessage: 'Nous vérifions automatiquement si la réservation a bien été enregistrée.',
+      checkingMaximum: 'Durée maximale de contrôle : {time}',
+      checkingContinue: 'Vous pouvez continuer à travailler.',
+      continueWorking: 'Continuer à travailler',
+      remainingTime: 'Temps restant : {time}',
+
+      finalTitle: 'Vérification terminée',
+      finalMessage: 'Nous n’avons pas pu confirmer cette réservation. Vérifiez d’abord la liste des réservations avant de l’encoder à nouveau.',
+      viewBookings: 'Voir les réservations',
+      retryEntry: 'Réessayer l’encodage',
+      retryModified: 'Encoder comme nouvelle réservation',
+      retryModifiedConfirmTitle: 'Nouvelle réservation',
+      retryModifiedConfirmMessage: 'Vous avez modifié les informations. Une nouvelle tentative sera créée avec un nouvel identifiant.',
+      retryModifiedConfirm: 'Créer une nouvelle tentative',
+
+      assistanceCodeLabel: 'Code assistance : R-MANUAL-04',
+      assistanceMessage: 'Communiquez ce code à TapCarta si le problème persiste.',
+      copySupportInfo: 'Copier les informations pour TapCarta',
+      copiedSupportInfo: 'Informations copiées.',
+
+      originPhone: 'Téléphone',
+      originCounter: 'Comptoir',
+      originWhatsapp: 'WhatsApp',
+      originOther: 'Autre'
+    },
+
+    en: {
       title: 'Add a booking',
       subtitle: 'Booking received by phone, counter, WhatsApp or another channel.',
       name: 'Customer name',
@@ -6925,20 +7024,45 @@ function getManualBookingTexts() {
       notePlaceholder: 'Optional internal note',
       cancel: 'Cancel',
       save: 'Save booking',
-      required: 'Customer name is required.',
+
+      nameRequired: 'Customer name is required.',
+      phoneRequired: 'Phone number is required.',
+      phoneInvalid: 'Enter a valid phone number.',
       dateRequired: 'Date is required.',
       timeRequired: 'Time is required.',
       peopleRequired: 'The number of guests must be valid.',
-      saved: 'Booking added.',
+
+      savedTitle: 'Booking recorded',
+      saved: 'The booking has been added successfully.',
+
+      checkingTitle: 'Checking booking status',
+      checkingMessage: 'We are automatically checking whether the booking was recorded successfully.',
+      checkingMaximum: 'Maximum checking time: {time}',
+      checkingContinue: 'You can continue working.',
+      continueWorking: 'Continue working',
+      remainingTime: 'Time remaining: {time}',
+
+      finalTitle: 'Check completed',
+      finalMessage: 'We could not confirm this booking. Check the booking list before entering it again.',
+      viewBookings: 'View bookings',
+      retryEntry: 'Retry entry',
+      retryModified: 'Create a new booking',
+      retryModifiedConfirmTitle: 'New booking',
+      retryModifiedConfirmMessage: 'You changed the information. A new attempt will be created with a new identifier.',
+      retryModifiedConfirm: 'Create new attempt',
+
+      assistanceCodeLabel: 'Support code: R-MANUAL-04',
+      assistanceMessage: 'Share this code with TapCarta if the problem persists.',
+      copySupportInfo: 'Copy information for TapCarta',
+      copiedSupportInfo: 'Information copied.',
+
       originPhone: 'Phone',
       originCounter: 'Counter',
       originWhatsapp: 'WhatsApp',
       originOther: 'Other'
-    };
-  }
+    },
 
-  if (currentLang === 'nl') {
-    return {
+    nl: {
       title: 'Reservatie toevoegen',
       subtitle: 'Reservatie ontvangen via telefoon, balie, WhatsApp of een ander kanaal.',
       name: 'Naam klant',
@@ -6951,41 +7075,46 @@ function getManualBookingTexts() {
       notePlaceholder: 'Optionele interne notitie',
       cancel: 'Annuleren',
       save: 'Reservatie opslaan',
-      required: 'Naam van de klant is verplicht.',
+
+      nameRequired: 'Naam van de klant is verplicht.',
+      phoneRequired: 'Telefoonnummer is verplicht.',
+      phoneInvalid: 'Voer een geldig telefoonnummer in.',
       dateRequired: 'Datum is verplicht.',
       timeRequired: 'Uur is verplicht.',
       peopleRequired: 'Het aantal personen moet geldig zijn.',
-      saved: 'Reservatie toegevoegd.',
+
+      savedTitle: 'Reservatie geregistreerd',
+      saved: 'De reservatie is correct toegevoegd.',
+
+      checkingTitle: 'Reservatie wordt gecontroleerd',
+      checkingMessage: 'We controleren automatisch of de reservatie correct werd geregistreerd.',
+      checkingMaximum: 'Maximale controletijd: {time}',
+      checkingContinue: 'U kunt verder werken.',
+      continueWorking: 'Verder werken',
+      remainingTime: 'Resterende tijd: {time}',
+
+      finalTitle: 'Controle voltooid',
+      finalMessage: 'We konden deze reservatie niet bevestigen. Controleer eerst de reservatielijst voordat u deze opnieuw invoert.',
+      viewBookings: 'Reservaties bekijken',
+      retryEntry: 'Opnieuw invoeren',
+      retryModified: 'Nieuwe reservatie aanmaken',
+      retryModifiedConfirmTitle: 'Nieuwe reservatie',
+      retryModifiedConfirmMessage: 'U hebt de gegevens gewijzigd. Er wordt een nieuwe poging gemaakt met een nieuwe identificatie.',
+      retryModifiedConfirm: 'Nieuwe poging aanmaken',
+
+      assistanceCodeLabel: 'Assistentiecode: R-MANUAL-04',
+      assistanceMessage: 'Geef deze code door aan TapCarta als het probleem blijft bestaan.',
+      copySupportInfo: 'Informatie voor TapCarta kopiëren',
+      copiedSupportInfo: 'Informatie gekopieerd.',
+
       originPhone: 'Telefoon',
       originCounter: 'Balie',
       originWhatsapp: 'WhatsApp',
       originOther: 'Andere'
-    };
-  }
-
-  return {
-    title: 'Ajouter une réservation',
-    subtitle: 'Réservation reçue par téléphone, comptoir, WhatsApp ou autre canal.',
-    name: 'Nom du client',
-    phone: 'Téléphone',
-    date: 'Date',
-    time: 'Heure',
-    people: 'Couverts',
-    origin: 'Origine',
-    note: 'Note',
-    notePlaceholder: 'Note interne facultative',
-    cancel: 'Annuler',
-    save: 'Enregistrer',
-    required: 'Le nom du client est obligatoire.',
-    dateRequired: 'La date est obligatoire.',
-    timeRequired: 'L’heure est obligatoire.',
-    peopleRequired: 'Le nombre de couverts doit être valide.',
-    saved: 'Réservation ajoutée.',
-    originPhone: 'Téléphone',
-    originCounter: 'Comptoir',
-    originWhatsapp: 'WhatsApp',
-    originOther: 'Autre'
+    }
   };
+
+  return texts[currentLang] || texts.es;
 }
 
 function saveManualBookingToLocalStorage(manualBooking) {
@@ -7019,11 +7148,17 @@ function saveManualBookingToLocalStorage(manualBooking) {
 }
 
 async function createManualBookingInSupabase(manualBooking) {
-  if (typeof supabaseClient === 'undefined' || !supabaseClient || !manualBooking?.restaurantId) {
+  if (
+    typeof supabaseClient === 'undefined' ||
+    !supabaseClient ||
+    !manualBooking?.restaurantId ||
+    !isUuid(manualBooking?.requestId)
+  ) {
     return manualBooking;
   }
 
   const pendingPayload = {
+    id: manualBooking.requestId,
     restaurant_id: manualBooking.restaurantId,
     type: 'booking',
     status: 'pending',
@@ -7040,6 +7175,17 @@ async function createManualBookingInSupabase(manualBooking) {
     updated_at: manualBooking.updatedAt
   };
 
+  const confirmedMessage =
+    currentLang === 'es'
+      ? 'Reserva añadida manualmente por el restaurante.'
+      : currentLang === 'en'
+        ? 'Booking manually added by the restaurant.'
+        : currentLang === 'nl'
+          ? 'Reservatie handmatig toegevoegd door het restaurant.'
+          : 'Réservation ajoutée manuellement par le restaurant.';
+
+  let stage = 'pending_insert';
+
   try {
     const { data: createdRequest, error: createError } = await supabaseClient
       .from('requests')
@@ -7049,45 +7195,310 @@ async function createManualBookingInSupabase(manualBooking) {
 
     if (createError) throw createError;
 
-    if (!createdRequest?.id) {
-      return manualBooking;
+    if (createdRequest?.id !== manualBooking.requestId) {
+      throw new Error('La réservation créée ne correspond pas à l’identifiant attendu.');
     }
 
-    const confirmedAt = manualBooking.confirmedAt || new Date().toISOString();
+    const confirmedAt = new Date().toISOString();
+    stage = 'confirm_update';
 
     const { data: confirmedRequest, error: confirmError } = await supabaseClient
       .from('requests')
       .update({
         status: 'confirmed',
-        restaurant_message: manualBooking.restaurantResponse?.message || '',
+        restaurant_message: confirmedMessage,
         updated_at: confirmedAt
       })
-      .eq('id', createdRequest.id)
+      .eq('id', manualBooking.requestId)
       .eq('restaurant_id', manualBooking.restaurantId)
+      .eq('type', 'booking')
       .select('*')
       .single();
 
     if (confirmError) throw confirmError;
 
-    if (!confirmedRequest?.id) {
-      return manualBooking;
+    if (confirmedRequest?.id !== manualBooking.requestId) {
+      throw new Error('La réservation confirmée ne correspond pas à l’identifiant attendu.');
     }
 
     return {
       ...manualBooking,
       requestId: confirmedRequest.id,
       liveRequestId: confirmedRequest.id,
-      createdAt: confirmedRequest.created_at || createdRequest.created_at || manualBooking.createdAt,
+      status: 'confirmed',
+      createdAt:
+        confirmedRequest.created_at ||
+        createdRequest.created_at ||
+        manualBooking.createdAt,
       updatedAt: confirmedRequest.updated_at || confirmedAt,
-      confirmedAt
+      confirmedAt,
+      restaurantResponse: {
+        ...(manualBooking.restaurantResponse || {}),
+        reason: 'confirmed',
+        message: confirmedMessage,
+        updatedBy: 'restaurant'
+      }
     };
   } catch (error) {
-    console.warn('TapCarta Restaurant: impossible de créer la réservation manuelle dans Supabase', error);
-    return manualBooking;
+    console.warn(
+      'TapCarta Restaurant: impossible de créer ou confirmer la réservation manuelle dans Supabase',
+      error
+    );
+
+    return {
+      ...manualBooking,
+      syncError: {
+        stage,
+        code: String(error?.code || ''),
+        message: String(error?.message || 'unknown_error')
+      }
+    };
+  }
+}
+async function recoverManualBookingFromSupabase(manualBooking) {
+  if (
+    typeof supabaseClient === 'undefined' ||
+    !supabaseClient ||
+    !manualBooking?.restaurantId ||
+    !isUuid(manualBooking?.requestId)
+  ) {
+    return {
+      ...manualBooking,
+      recoveryState: 'unavailable'
+    };
+  }
+
+  const readExactBooking = async () => {
+    const { data, error } = await supabaseClient
+      .from('requests')
+      .select('*')
+      .eq('id', manualBooking.requestId)
+      .eq('restaurant_id', manualBooking.restaurantId)
+      .eq('type', 'booking')
+      .maybeSingle();
+
+    if (error) throw error;
+
+    return data;
+  };
+
+  try {
+    let recoveredRequest = await readExactBooking();
+
+    if (!recoveredRequest?.id) {
+      return {
+        ...manualBooking,
+        recoveryState: 'not_found'
+      };
+    }
+
+    if (recoveredRequest.status === 'pending') {
+      const confirmedAt = new Date().toISOString();
+
+      const { data: confirmedRequest, error: confirmError } = await supabaseClient
+        .from('requests')
+        .update({
+          status: 'confirmed',
+          restaurant_message:
+            currentLang === 'es'
+              ? 'Reserva añadida manualmente por el restaurante.'
+              : currentLang === 'en'
+                ? 'Booking manually added by the restaurant.'
+                : currentLang === 'nl'
+                  ? 'Reservatie handmatig toegevoegd door het restaurant.'
+                  : 'Réservation ajoutée manuellement par le restaurant.',
+          updated_at: confirmedAt
+        })
+        .eq('id', manualBooking.requestId)
+        .eq('restaurant_id', manualBooking.restaurantId)
+        .eq('type', 'booking')
+        .select('*')
+        .single();
+
+      if (confirmError) throw confirmError;
+
+      if (confirmedRequest?.id !== manualBooking.requestId) {
+        throw new Error('La réservation récupérée ne correspond pas à l’identifiant attendu.');
+      }
+
+      recoveredRequest = await readExactBooking();
+    }
+
+    if (
+      recoveredRequest?.id !== manualBooking.requestId ||
+      recoveredRequest?.status !== 'confirmed'
+    ) {
+      return {
+        ...manualBooking,
+        recoveryState: 'not_confirmed'
+      };
+    }
+
+    return {
+      ...manualBooking,
+      requestId: recoveredRequest.id,
+      liveRequestId: recoveredRequest.id,
+      status: 'confirmed',
+      createdAt: recoveredRequest.created_at || manualBooking.createdAt,
+      updatedAt: recoveredRequest.updated_at || manualBooking.updatedAt,
+      confirmedAt: recoveredRequest.updated_at || manualBooking.confirmedAt || new Date().toISOString(),
+      recoveryState: 'confirmed',
+      restaurantResponse: {
+        ...(manualBooking.restaurantResponse || {}),
+        reason: 'confirmed',
+        message: recoveredRequest.restaurant_message || '',
+        updatedBy: 'restaurant'
+      }
+    };
+  } catch (error) {
+    console.warn(
+      'TapCarta Restaurant: impossible de relire la réservation manuelle exacte dans Supabase',
+      error
+    );
+
+    return {
+      ...manualBooking,
+      recoveryState: 'read_error',
+      recoveryError: {
+        code: String(error?.code || ''),
+        message: String(error?.message || 'unknown_error')
+      }
+    };
+  }
+}
+const MANUAL_BOOKING_RECOVERY_MAX_MS = 75000;
+const MANUAL_BOOKING_RECOVERY_INTERVAL_MS = 5000;
+
+function waitForManualBookingRecoveryDelay(delayMs, signal) {
+  return new Promise((resolve) => {
+    if (signal?.aborted) {
+      resolve(false);
+      return;
+    }
+
+    const onAbort = () => {
+      window.clearTimeout(timer);
+      resolve(false);
+    };
+
+    const timer = window.setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve(true);
+    }, delayMs);
+
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
+}
+
+async function runManualBookingRecovery(manualBooking, options = {}) {
+  const startedAt = Date.now();
+  const maxDurationMs = Number.isFinite(options.maxDurationMs)
+    ? options.maxDurationMs
+    : MANUAL_BOOKING_RECOVERY_MAX_MS;
+
+  const signal = options.signal;
+  const onTick = typeof options.onTick === 'function'
+    ? options.onTick
+    : null;
+
+  let lastRecoveryResult = null;
+  let lastKnownRemainingMs = maxDurationMs;
+
+  const notifyTick = () => {
+    const elapsedMs = Date.now() - startedAt;
+    const remainingMs = Math.max(0, maxDurationMs - elapsedMs);
+
+    lastKnownRemainingMs = remainingMs;
+
+    onTick?.({
+      elapsedMs,
+      remainingMs
+    });
+
+    return remainingMs;
+  };
+
+  const countdownTimer = window.setInterval(() => {
+    if (signal?.aborted) {
+      return;
+    }
+
+    notifyTick();
+  }, 1000);
+
+  try {
+    while (Date.now() - startedAt <= maxDurationMs) {
+      if (signal?.aborted) {
+        return {
+          state: 'aborted',
+          booking: manualBooking,
+          lastRecoveryResult
+        };
+      }
+
+      const remainingBeforeReadMs = notifyTick();
+
+      lastRecoveryResult = await recoverManualBookingFromSupabase(manualBooking);
+
+      if (lastRecoveryResult?.recoveryState === 'confirmed') {
+        return {
+          state: 'confirmed',
+          booking: lastRecoveryResult,
+          lastRecoveryResult
+        };
+      }
+
+      const remainingAfterReadMs = Math.max(
+        0,
+        maxDurationMs - (Date.now() - startedAt)
+      );
+
+      if (remainingAfterReadMs === 0) {
+        break;
+      }
+
+      let nextDelayMs = Math.min(
+        MANUAL_BOOKING_RECOVERY_INTERVAL_MS,
+        remainingAfterReadMs
+      );
+
+      const crossedFinalControlWindow =
+        remainingBeforeReadMs > 15000 &&
+        remainingAfterReadMs > 15000 &&
+        remainingAfterReadMs - nextDelayMs < 15000;
+
+      if (crossedFinalControlWindow) {
+        nextDelayMs = remainingAfterReadMs - 15000;
+      }
+
+      const shouldContinue = await waitForManualBookingRecoveryDelay(
+        Math.max(0, nextDelayMs),
+        signal
+      );
+
+      if (!shouldContinue) {
+        return {
+          state: 'aborted',
+          booking: manualBooking,
+          lastRecoveryResult
+        };
+      }
+    }
+
+    notifyTick();
+
+    return {
+      state: 'unresolved',
+      booking: manualBooking,
+      lastRecoveryResult,
+      remainingMs: lastKnownRemainingMs
+    };
+  } finally {
+    window.clearInterval(countdownTimer);
   }
 }
 
-function buildManualBookingRequestFromForm(form) {
+function buildManualBookingRequestFromForm(form, requestIdOverride = '') {
   const formData = new FormData(form);
   const nowIso = new Date().toISOString();
   const activeRestaurantId = getActiveRestaurantIdForManualRequest();
@@ -7098,19 +7509,23 @@ function buildManualBookingRequestFromForm(form) {
   const bookingTime = String(formData.get('bookingTime') || '').trim();
   const bookingPeople = Math.max(1, Number(formData.get('bookingPeople') || 2));
   const bookingNote = String(formData.get('bookingNote') || '').trim();
-  const localRequestId =
-    window.crypto?.randomUUID
-      ? `manual_booking_${window.crypto.randomUUID()}`
-      : `manual_booking_${Date.now()}`;
+
+  const requestId = isUuid(requestIdOverride)
+  ? requestIdOverride
+  : window.crypto?.randomUUID?.();
+
+  if (!isUuid(requestId)) {
+    throw new Error('Impossible de générer un identifiant de réservation sécurisé.');
+  }
 
   return {
     restaurantId: activeRestaurantId,
-    requestId: localRequestId,
+    requestId,
     requestType: 'booking',
     createdAt: nowIso,
     updatedAt: nowIso,
-    status: 'confirmed',
-    confirmedAt: nowIso,
+    status: 'pending',
+    confirmedAt: null,
     createdBy: 'restaurant',
     sourceChannel: 'manual',
     manualOrigin,
@@ -7131,21 +7546,233 @@ function buildManualBookingRequestFromForm(form) {
       preorderItems: []
     },
     restaurantResponse: {
-      reason: 'confirmed',
+      reason: 'pending',
       message:
         currentLang === 'es'
-          ? 'Reserva añadida manualmente por el restaurante.'
+          ? 'Reserva en proceso de registro.'
           : currentLang === 'en'
-            ? 'Booking manually added by the restaurant.'
+            ? 'Booking is being registered.'
             : currentLang === 'nl'
-              ? 'Reservatie handmatig toegevoegd door het restaurant.'
-              : 'Réservation ajoutée manuellement par le restaurant.',
+              ? 'Reservatie wordt geregistreerd.'
+              : 'Réservation en cours d’enregistrement.',
       updatedBy: 'restaurant'
     }
   };
 }
+let activeManualBookingRecoverySession = null;
+let manualBookingRecoverySequence = 0;
+let persistentManualBookingRecovery = null;
 
-function openManualBookingModal() {
+function formatManualBookingRecoveryClock(milliseconds) {
+  const totalSeconds = Math.max(0, Math.ceil(Number(milliseconds || 0) / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+  return `${String(minutes).padStart(2, '0')}:${seconds}`;
+}
+
+function getManualBookingRecoveryBanner() {
+  return document.getElementById('tapcarta-manual-booking-recovery-banner');
+}
+
+function removeManualBookingRecoveryBanner() {
+  getManualBookingRecoveryBanner()?.remove();
+}
+
+function rememberPersistentManualBookingRecovery(session, state, remainingMs = 0) {
+  if (!session?.manualBooking?.requestId) {
+    return;
+  }
+
+  persistentManualBookingRecovery = {
+    sessionId: session.id,
+    restaurantId: session.manualBooking.restaurantId,
+    manualBooking: { ...session.manualBooking },
+    state,
+    remainingMs: Math.max(0, Number(remainingMs) || 0),
+    updatedAt: Date.now()
+  };
+}
+
+function clearPersistentManualBookingRecovery(sessionId = '') {
+  if (
+    sessionId &&
+    persistentManualBookingRecovery?.sessionId !== sessionId
+  ) {
+    return;
+  }
+
+  persistentManualBookingRecovery = null;
+  removeManualBookingRecoveryBanner();
+}
+
+function renderPersistentManualBookingRecovery() {
+  const recovery = persistentManualBookingRecovery;
+
+  if (
+    !recovery?.manualBooking?.requestId ||
+    (
+      recovery.restaurantId &&
+      siteConfig.restaurantId &&
+      recovery.restaurantId !== siteConfig.restaurantId
+    )
+  ) {
+    clearPersistentManualBookingRecovery();
+    return;
+  }
+
+  const texts = getManualBookingTexts();
+  const isChecking = recovery.state === 'checking';
+  const formattedRemaining = formatManualBookingRecoveryClock(
+    recovery.remainingMs
+  );
+
+  let banner = getManualBookingRecoveryBanner();
+
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'tapcarta-manual-booking-recovery-banner';
+    banner.className =
+      'fixed left-3 right-3 bottom-24 z-[9999] mx-auto max-w-md rounded-2xl border border-gold/35 bg-[#1a160d]/95 px-4 py-3 shadow-2xl backdrop-blur';
+    document.body.appendChild(banner);
+  }
+
+  banner.innerHTML = isChecking
+    ? `
+      <div class="flex items-start gap-3">
+        <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gold/35 bg-gold/15">
+          <i data-lucide="refresh-cw" class="h-4 w-4 text-gold"></i>
+        </div>
+
+        <div class="min-w-0">
+          <p class="text-sm font-extrabold text-cream">${texts.checkingTitle}</p>
+          <p class="mt-1 text-xs leading-relaxed text-cream/70">${texts.checkingContinue}</p>
+          <p class="mt-1 text-xs font-semibold text-gold">
+            ${texts.remainingTime.replace('{time}', formattedRemaining)}
+          </p>
+        </div>
+      </div>
+    `
+    : `
+      <div class="flex items-start gap-3">
+        <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-400/35 bg-red-950/45">
+          <i data-lucide="triangle-alert" class="h-4 w-4 text-red-200"></i>
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-extrabold text-cream">${texts.finalTitle}</p>
+          <p class="mt-1 text-xs leading-relaxed text-cream/70">${texts.finalMessage}</p>
+
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              data-persistent-manual-booking-view
+              class="btn-action rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-extrabold text-cream"
+            >
+              ${texts.viewBookings}
+            </button>
+
+            <button
+              type="button"
+              data-persistent-manual-booking-retry
+              class="btn-action rounded-xl border border-gold/45 bg-gold/15 px-3 py-2 text-xs font-extrabold text-gold"
+            >
+              ${texts.retryEntry}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+  banner
+    .querySelector('[data-persistent-manual-booking-view]')
+    ?.addEventListener('click', () => {
+      window.setRestaurantRequestTypeFilter?.('bookings');
+
+      void (async () => {
+        try {
+          await window.syncLiveBookingsToLocalStorage?.();
+        } finally {
+          syncRequestsState();
+          renderMenu();
+        }
+      })();
+    });
+
+  banner
+    .querySelector('[data-persistent-manual-booking-retry]')
+    ?.addEventListener('click', () => {
+      if (
+        persistentManualBookingRecovery?.state !== 'unresolved' ||
+        !persistentManualBookingRecovery.manualBooking?.requestId
+      ) {
+        return;
+      }
+
+      openManualBookingModal(
+        persistentManualBookingRecovery.manualBooking
+      );
+    });
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+}
+
+function renderManualBookingRecoveryBanner(session, remainingMs) {
+  if (!isCurrentManualBookingRecoverySession(session)) {
+    return;
+  }
+
+  rememberPersistentManualBookingRecovery(
+    session,
+    'checking',
+    remainingMs
+  );
+
+  renderPersistentManualBookingRecovery();
+}
+
+function createManualBookingRecoverySession(manualBooking) {
+  if (activeManualBookingRecoverySession?.controller) {
+    activeManualBookingRecoverySession.controller.abort();
+  }
+
+  removeManualBookingRecoveryBanner();
+
+  const session = {
+    id: `manual_booking_recovery_${Date.now()}_${++manualBookingRecoverySequence}`,
+    manualBooking,
+    controller: new AbortController(),
+    startedAt: Date.now(),
+    detachedFromModal: false,
+    completed: false
+  };
+
+  activeManualBookingRecoverySession = session;
+
+  return session;
+}
+
+function isCurrentManualBookingRecoverySession(session) {
+  return Boolean(
+    session &&
+    activeManualBookingRecoverySession &&
+    activeManualBookingRecoverySession.id === session.id &&
+    !session.controller.signal.aborted
+  );
+}
+
+function completeManualBookingRecoverySession(session) {
+  if (!isCurrentManualBookingRecoverySession(session)) {
+    return;
+  }
+
+  session.completed = true;
+  activeManualBookingRecoverySession = null;
+}
+
+function openManualBookingModal(initialManualBooking = null) {
   document.getElementById('restaurant-manual-booking-modal')?.remove();
 
   const texts = getManualBookingTexts();
@@ -7185,58 +7812,192 @@ function openManualBookingModal() {
             class="hidden mb-3 rounded-2xl border border-red-400/45 bg-red-950/80 px-4 py-3 text-sm font-semibold text-red-100"
           ></div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.name} *</label>
-              <input
-                name="customerName"
-                type="text"
-                autocomplete="off"
-                class="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-cream outline-none focus:border-gold/70"
-              >
+          <div
+            data-manual-booking-recovery
+            class="hidden mb-3 rounded-2xl border border-gold/35 bg-gold/10 px-4 py-4"
+          >
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gold/35 bg-gold/15">
+                <i data-lucide="refresh-cw" class="h-4 w-4 text-gold"></i>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <p
+                  data-manual-booking-recovery-title
+                  class="text-sm font-extrabold text-cream"
+                ></p>
+
+                <p
+                  data-manual-booking-recovery-message
+                  class="mt-1 text-xs leading-relaxed text-cream/75"
+                ></p>
+
+                <p
+                  data-manual-booking-recovery-maximum
+                  class="mt-2 text-xs font-semibold text-gold"
+                ></p>
+
+                <p
+                  data-manual-booking-recovery-remaining
+                  class="mt-1 text-xs font-semibold text-cream/75"
+                ></p>
+                <p
+                  data-manual-booking-recovery-continue
+                  class="mt-2 text-xs text-cream/65"
+                ></p>
+                <button
+  type="button"
+  data-manual-booking-continue-working
+  class="btn-action mt-3 inline-flex min-h-10 items-center justify-center rounded-xl border border-gold/40 bg-gold/10 px-4 py-2 text-xs font-extrabold text-gold hover:bg-gold/15"
+></button>
+              </div>
             </div>
+          </div>
+<div
+  data-manual-booking-recovery-final
+  class="hidden mb-3 rounded-2xl border border-red-400/45 bg-red-950/45 px-4 py-4"
+>
+  <p
+    data-manual-booking-recovery-final-title
+    class="text-sm font-extrabold text-cream"
+  ></p>
+
+  <p
+    data-manual-booking-recovery-final-message
+    class="mt-1 text-xs leading-relaxed text-cream/75"
+  ></p>
+
+  <div class="mt-3 grid gap-2 sm:grid-cols-2">
+    <button
+      type="button"
+      data-manual-booking-view-bookings
+      class="btn-action min-h-10 rounded-xl border border-gold/45 bg-gold/10 px-4 py-2 text-xs font-extrabold text-gold"
+    ></button>
+
+    <button
+      type="button"
+      data-manual-booking-retry-entry
+      class="btn-action min-h-10 rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-xs font-extrabold text-cream"
+    ></button>
+  </div>
+
+  <div class="mt-3 border-t border-red-300/15 pt-3">
+    <p
+      data-manual-booking-support-code
+      class="text-xs font-extrabold text-red-100"
+    ></p>
+
+    <p
+      data-manual-booking-support-message
+      class="mt-1 text-xs leading-relaxed text-cream/60"
+    ></p>
+
+    <button
+      type="button"
+      data-manual-booking-copy-support
+      class="btn-action mt-2 text-xs font-bold text-gold underline decoration-gold/45 underline-offset-4"
+    ></button>
+  </div>
+</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<div>
+  <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.name} *</label>
+
+  <input
+    name="customerName"
+    type="text"
+    autocomplete="off"
+    data-manual-booking-input="customerName"
+    aria-describedby="manual-booking-error-customerName"
+    class="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-cream outline-none focus:border-gold/70"
+  >
+
+  <p
+    id="manual-booking-error-customerName"
+    data-manual-booking-field-error="customerName"
+    class="hidden mt-1.5 text-xs font-semibold text-red-300"
+  ></p>
+</div>
 
             <div>
-              <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.phone}</label>
+              <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.phone} *</label>
+
               <input
                 name="customerPhone"
                 type="tel"
+                inputmode="tel"
                 autocomplete="off"
+                data-manual-booking-input="customerPhone"
+                aria-describedby="manual-booking-error-customerPhone"
                 class="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-cream outline-none focus:border-gold/70"
               >
+
+              <p
+                id="manual-booking-error-customerPhone"
+                data-manual-booking-field-error="customerPhone"
+                class="hidden mt-1.5 text-xs font-semibold text-red-300"
+              ></p>
             </div>
 
             <div class="grid grid-cols-3 gap-2 md:col-span-2">
               <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.date}</label>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.date} *</label>
+
                 <input
                   name="bookingDate"
                   type="date"
                   value="${todayValue}"
+                  data-manual-booking-input="bookingDate"
+                  aria-describedby="manual-booking-error-bookingDate"
                   class="w-full rounded-2xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
                 >
+
+                <p
+                  id="manual-booking-error-bookingDate"
+                  data-manual-booking-field-error="bookingDate"
+                  class="hidden mt-1.5 text-xs font-semibold text-red-300"
+                ></p>
               </div>
 
               <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.time}</label>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.time} *</label>
+
                 <input
                   name="bookingTime"
                   type="time"
                   value="${nextTimeValue}"
+                  data-manual-booking-input="bookingTime"
+                  aria-describedby="manual-booking-error-bookingTime"
                   class="w-full rounded-2xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
                 >
+
+                <p
+                  id="manual-booking-error-bookingTime"
+                  data-manual-booking-field-error="bookingTime"
+                  class="hidden mt-1.5 text-xs font-semibold text-red-300"
+                ></p>
               </div>
 
               <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.people}</label>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.people} *</label>
+
                 <input
                   name="bookingPeople"
                   type="number"
                   min="1"
                   step="1"
                   value="2"
+                  inputmode="numeric"
+                  data-manual-booking-input="bookingPeople"
+                  aria-describedby="manual-booking-error-bookingPeople"
                   class="w-full rounded-2xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
                 >
+
+                <p
+                  id="manual-booking-error-bookingPeople"
+                  data-manual-booking-field-error="bookingPeople"
+                  class="hidden mt-1.5 text-xs font-semibold text-red-300"
+                ></p>
               </div>
             </div>
 
@@ -7314,33 +8075,225 @@ function openManualBookingModal() {
   document.body.appendChild(overlay);
 
   overlay.querySelectorAll('[data-close-manual-booking]').forEach((button) => {
-    button.addEventListener('click', () => overlay.remove());
+    button.addEventListener('click', () => {
+      const session = activeManualBookingRecoverySession;
+
+      if (isCurrentManualBookingRecoverySession(session)) {
+        session.detachedFromModal = true;
+
+        const remainingMs = Math.max(
+          0,
+          MANUAL_BOOKING_RECOVERY_MAX_MS - (Date.now() - session.startedAt)
+        );
+
+        renderManualBookingRecoveryBanner(session, remainingMs);
+      }
+
+      overlay.remove();
+    });
   });
 
 
   const form = overlay.querySelector('#restaurant-manual-booking-form');
   const manualBookingErrorBox = overlay.querySelector('[data-manual-booking-error]');
+  const manualBookingRecoveryBox = overlay.querySelector('[data-manual-booking-recovery]');
+  const manualBookingRecoveryTitle = overlay.querySelector('[data-manual-booking-recovery-title]');
+  const manualBookingRecoveryMessage = overlay.querySelector('[data-manual-booking-recovery-message]');
+  const manualBookingRecoveryMaximum = overlay.querySelector('[data-manual-booking-recovery-maximum]');
+  const manualBookingRecoveryRemaining = overlay.querySelector('[data-manual-booking-recovery-remaining]');
+  const manualBookingRecoveryContinue = overlay.querySelector('[data-manual-booking-recovery-continue]');
+  const manualBookingContinueWorkingButton = overlay.querySelector(
+    '[data-manual-booking-continue-working]'
+  );
+  const manualBookingRecoveryFinalBox = overlay.querySelector(
+    '[data-manual-booking-recovery-final]'
+  );
+  const manualBookingRecoveryFinalTitle = overlay.querySelector(
+    '[data-manual-booking-recovery-final-title]'
+  );
+  const manualBookingRecoveryFinalMessage = overlay.querySelector(
+    '[data-manual-booking-recovery-final-message]'
+  );
+  const manualBookingViewBookingsButton = overlay.querySelector(
+    '[data-manual-booking-view-bookings]'
+  );
+  const manualBookingRetryEntryButton = overlay.querySelector(
+    '[data-manual-booking-retry-entry]'
+  );
+  const manualBookingSupportCode = overlay.querySelector(
+    '[data-manual-booking-support-code]'
+  );
+  const manualBookingSupportMessage = overlay.querySelector(
+    '[data-manual-booking-support-message]'
+  );
+  const manualBookingCopySupportButton = overlay.querySelector(
+    '[data-manual-booking-copy-support]'
+  );
   const manualOriginInput = overlay.querySelector('input[name="manualOrigin"]');
   const manualOriginButtons = overlay.querySelectorAll('[data-manual-origin]');
 
-  const showManualBookingFormError = (message, selector) => {
-    if (manualBookingErrorBox) {
-      manualBookingErrorBox.textContent = message;
-      manualBookingErrorBox.classList.remove('hidden');
+    let lastUnresolvedManualBooking = initialManualBooking
+? { ...initialManualBooking }
+: null;
+
+      const getManualBookingRetrySignatureFromForm = () => {
+    const formData = new FormData(form);
+
+    return JSON.stringify({
+      manualOrigin: String(formData.get('manualOrigin') || 'phone').trim(),
+      customerName: String(formData.get('customerName') || '').trim(),
+      customerPhone: String(formData.get('customerPhone') || '').trim(),
+      bookingDate: String(formData.get('bookingDate') || '').trim(),
+      bookingTime: String(formData.get('bookingTime') || '').trim(),
+      bookingPeople: Number(formData.get('bookingPeople') || 0),
+      bookingNote: String(formData.get('bookingNote') || '').trim()
+    });
+  };
+
+  const getManualBookingRetrySignatureFromBooking = (manualBooking) => {
+    return JSON.stringify({
+      manualOrigin: String(manualBooking?.manualOrigin || 'phone').trim(),
+      customerName: String(manualBooking?.customer?.name || '').trim(),
+      customerPhone: String(manualBooking?.customer?.phone || '').trim(),
+      bookingDate: String(manualBooking?.booking?.date || '').trim(),
+      bookingTime: String(manualBooking?.booking?.time || '').trim(),
+      bookingPeople: Number(manualBooking?.booking?.people || 0),
+      bookingNote: String(manualBooking?.booking?.note || '').trim()
+    });
+  };
+
+  const canReuseLastUnresolvedManualBookingId = () => {
+    if (!lastUnresolvedManualBooking?.requestId) {
+      return false;
     }
 
-    const targetField = selector ? overlay.querySelector(selector) : null;
+    return (
+      getManualBookingRetrySignatureFromForm() ===
+      getManualBookingRetrySignatureFromBooking(lastUnresolvedManualBooking)
+    );
+  };
+  const formatManualBookingRecoveryTime = (milliseconds) => {
+    const totalSeconds = Math.max(0, Math.ceil(Number(milliseconds || 0) / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
 
-    if (targetField) {
-      targetField.focus();
-    }
+    return `${String(minutes).padStart(2, '0')}:${seconds}`;
+  };
+
+  const hideManualBookingRecovery = () => {
+    manualBookingRecoveryBox?.classList.add('hidden');
+  };
+  const hideManualBookingRecoveryFinal = () => {
+    manualBookingRecoveryFinalBox?.classList.add('hidden');
+  };
+
+  const showManualBookingRecoveryFinal = () => {
+    const currentTexts = getManualBookingTexts();
+
+    hideManualBookingRecovery();
+    clearManualBookingFormError();
+
+    manualBookingRecoveryFinalTitle.textContent = currentTexts.finalTitle;
+    manualBookingRecoveryFinalMessage.textContent = currentTexts.finalMessage;
+    manualBookingViewBookingsButton.textContent = currentTexts.viewBookings;
+    manualBookingRetryEntryButton.textContent = currentTexts.retryEntry;
+    manualBookingSupportCode.textContent = currentTexts.assistanceCodeLabel;
+    manualBookingSupportMessage.textContent = currentTexts.assistanceMessage;
+    manualBookingCopySupportButton.textContent = currentTexts.copySupportInfo;
+
+    manualBookingRecoveryFinalBox?.classList.remove('hidden');
+  };
+  const showManualBookingRecovery = (remainingMs = MANUAL_BOOKING_RECOVERY_MAX_MS) => {
+    const currentTexts = getManualBookingTexts();
+    const formattedMaximum = formatManualBookingRecoveryTime(MANUAL_BOOKING_RECOVERY_MAX_MS);
+    const formattedRemaining = formatManualBookingRecoveryTime(remainingMs);
+
+    manualBookingRecoveryTitle.textContent = currentTexts.checkingTitle;
+    manualBookingRecoveryMessage.textContent = currentTexts.checkingMessage;
+    manualBookingRecoveryMaximum.textContent =
+      currentTexts.checkingMaximum.replace('{time}', formattedMaximum);
+    manualBookingRecoveryRemaining.textContent =
+      currentTexts.remainingTime.replace('{time}', formattedRemaining);
+    manualBookingRecoveryContinue.textContent = currentTexts.checkingContinue;
+    manualBookingContinueWorkingButton.textContent = currentTexts.continueWorking;
+    manualBookingRecoveryBox?.classList.remove('hidden');
   };
 
   const clearManualBookingFormError = () => {
-    if (manualBookingErrorBox) {
-      manualBookingErrorBox.textContent = '';
-      manualBookingErrorBox.classList.add('hidden');
+    if (!manualBookingErrorBox) return;
+
+    manualBookingErrorBox.textContent = '';
+    manualBookingErrorBox.classList.add('hidden');
+  };
+
+  const showManualBookingFormError = (message) => {
+    if (!manualBookingErrorBox) return;
+
+    manualBookingErrorBox.textContent = message;
+    manualBookingErrorBox.classList.remove('hidden');
+  };
+
+  const clearManualBookingFieldError = (fieldName) => {
+    const fieldInput = overlay.querySelector(`[data-manual-booking-input="${fieldName}"]`);
+    const fieldError = overlay.querySelector(`[data-manual-booking-field-error="${fieldName}"]`);
+
+    fieldInput?.classList.remove('border-red-400/80', 'bg-red-950/30');
+    fieldInput?.classList.add('border-white/10');
+
+    if (fieldError) {
+      fieldError.textContent = '';
+      fieldError.classList.add('hidden');
     }
+  };
+
+  const clearAllManualBookingFieldErrors = () => {
+    [
+      'customerName',
+      'customerPhone',
+      'bookingDate',
+      'bookingTime',
+      'bookingPeople'
+    ].forEach(clearManualBookingFieldError);
+  };
+
+  const showManualBookingFieldError = (fieldName, message) => {
+    const fieldInput = overlay.querySelector(`[data-manual-booking-input="${fieldName}"]`);
+    const fieldError = overlay.querySelector(`[data-manual-booking-field-error="${fieldName}"]`);
+
+    fieldInput?.classList.remove('border-white/10');
+    fieldInput?.classList.add('border-red-400/80', 'bg-red-950/30');
+
+    if (fieldError) {
+      fieldError.textContent = message;
+      fieldError.classList.remove('hidden');
+    }
+  };
+
+  const scrollThenFocusManualBookingField = (fieldName) => {
+    const fieldInput = overlay.querySelector(`[data-manual-booking-input="${fieldName}"]`);
+
+    fieldInput?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest'
+    });
+
+    window.setTimeout(() => {
+      try {
+        fieldInput?.focus({ preventScroll: true });
+      } catch (error) {
+        fieldInput?.focus();
+      }
+    }, 220);
+  };
+
+  const isPlausibleInternationalPhone = (value) => {
+    const phone = String(value || '').trim();
+
+    if (!phone) return false;
+    if (!/^[0-9+\s().-]+$/.test(phone)) return false;
+
+    return (phone.match(/\d/g) || []).length >= 6;
   };
 
   manualOriginButtons.forEach((button) => {
@@ -7368,6 +8321,246 @@ function openManualBookingModal() {
       });
     });
   });
+    if (initialManualBooking?.requestId) {
+    const restoredValues = {
+      customerName: String(initialManualBooking.customer?.name || ''),
+      customerPhone: String(initialManualBooking.customer?.phone || ''),
+      bookingDate: String(initialManualBooking.booking?.date || ''),
+      bookingTime: String(initialManualBooking.booking?.time || ''),
+      bookingPeople: String(initialManualBooking.booking?.people || ''),
+      bookingNote: String(initialManualBooking.booking?.note || '')
+    };
+
+    Object.entries(restoredValues).forEach(([fieldName, value]) => {
+      const field = form?.elements?.namedItem(fieldName);
+
+      if (field && 'value' in field) {
+        field.value = value;
+      }
+    });
+
+    const restoredOrigin = String(
+      initialManualBooking.manualOrigin || 'phone'
+    ).trim();
+
+    manualOriginButtons.forEach((button) => {
+      if (button.getAttribute('data-manual-origin') === restoredOrigin) {
+        button.click();
+      }
+    });
+  }
+  overlay.querySelectorAll('[data-manual-booking-input]').forEach((fieldInput) => {
+    const fieldName = fieldInput.getAttribute('data-manual-booking-input');
+
+    const clearCurrentFieldError = () => {
+      if (fieldName) {
+        clearManualBookingFieldError(fieldName);
+      }
+
+      clearManualBookingFormError();
+    };
+
+    fieldInput.addEventListener('input', clearCurrentFieldError);
+    fieldInput.addEventListener('change', clearCurrentFieldError);
+  });
+  manualBookingContinueWorkingButton?.addEventListener('click', () => {
+    const session = activeManualBookingRecoverySession;
+
+    if (!isCurrentManualBookingRecoverySession(session)) {
+      return;
+    }
+
+    session.detachedFromModal = true;
+
+    const remainingMs = Math.max(
+      0,
+      MANUAL_BOOKING_RECOVERY_MAX_MS - (Date.now() - session.startedAt)
+    );
+
+    renderManualBookingRecoveryBanner(session, remainingMs);
+    overlay.remove();
+  });
+
+const isManualBookingAmbiguousSyncFailure = (manualBooking) => {
+const syncError = manualBooking?.syncError || {};
+const code = String(syncError.code || '').toUpperCase();
+const message = String(syncError.message || '').toLowerCase();
+
+if (code === '23505') {
+  return true;
+}
+
+return [
+  'failed to fetch',
+  'networkerror',
+  'network error',
+  'network request failed',
+  'load failed',
+  'timeout',
+  'timed out',
+  'abort',
+  'aborted',
+  'connection',
+  'offline',
+  'socket',
+  'econnreset'
+].some((keyword) => message.includes(keyword));
+
+};
+
+ const setManualBookingSubmitBusy = (isBusy) => {
+    const submitButton = form?.querySelector('button[type="submit"]');
+
+    if (!submitButton) return;
+
+    submitButton.disabled = Boolean(isBusy);
+    submitButton.classList.toggle('opacity-60', Boolean(isBusy));
+    submitButton.classList.toggle('pointer-events-none', Boolean(isBusy));
+  };
+
+  const finalizeManualBookingConfirmed = (confirmedBooking, session = null) => {
+    if (!confirmedBooking?.liveRequestId) {
+      return false;
+    }
+
+    if (session && !isCurrentManualBookingRecoverySession(session)) {
+      return false;
+    }
+
+    if (session) {
+      clearPersistentManualBookingRecovery(session.id);
+      completeManualBookingRecoverySession(session);
+    } else if (
+      persistentManualBookingRecovery?.manualBooking?.requestId ===
+      confirmedBooking.requestId
+    ) {
+      clearPersistentManualBookingRecovery();
+    }
+
+    saveManualBookingToLocalStorage(confirmedBooking);
+
+    syncRequestsState();
+    renderMenu();
+
+    if (overlay.isConnected) {
+      overlay.remove();
+    }
+
+    showRestaurantToast(getManualBookingTexts().saved, 'success');
+
+    return true;
+  };
+
+  const startManualBookingAmbiguousRecovery = async (manualBooking) => {
+    const session = createManualBookingRecoverySession(manualBooking);
+    rememberPersistentManualBookingRecovery(
+      session,
+      'checking',
+      MANUAL_BOOKING_RECOVERY_MAX_MS
+    );
+
+    hideManualBookingRecoveryFinal();
+    showManualBookingRecovery(MANUAL_BOOKING_RECOVERY_MAX_MS);
+
+    const recoveryResult = await runManualBookingRecovery(manualBooking, {
+      signal: session.controller.signal,
+      onTick: ({ remainingMs }) => {
+        if (!isCurrentManualBookingRecoverySession(session)) {
+          return;
+        }
+
+        if (session.detachedFromModal || !overlay.isConnected) {
+          renderManualBookingRecoveryBanner(session, remainingMs);
+          return;
+        }
+
+        showManualBookingRecovery(remainingMs);
+      }
+    });
+
+    if (!isCurrentManualBookingRecoverySession(session)) {
+      return recoveryResult;
+    }
+
+    if (recoveryResult?.state === 'confirmed') {
+      finalizeManualBookingConfirmed(recoveryResult.booking, session);
+      return recoveryResult;
+    }
+
+    if (recoveryResult?.state === 'aborted') {
+      return recoveryResult;
+    }
+
+    const currentTexts = getManualBookingTexts();
+
+    rememberPersistentManualBookingRecovery(session, 'unresolved');
+    completeManualBookingRecoverySession(session);
+    renderPersistentManualBookingRecovery();
+
+    lastUnresolvedManualBooking = {
+      ...manualBooking
+    };
+
+    setManualBookingSubmitBusy(false);
+
+    if (session.detachedFromModal || !overlay.isConnected) {
+      showRestaurantToast(currentTexts.finalMessage, 'danger');
+      return recoveryResult;
+    }
+
+    showManualBookingRecoveryFinal();
+
+    return recoveryResult;
+  };
+
+  const processManualBookingAttempt = async (
+    manualBooking,
+    { readBeforeInsert = false } = {}
+  ) => {
+    if (readBeforeInsert) {
+      const recoveredBooking = await recoverManualBookingFromSupabase(
+        manualBooking
+      );
+
+      if (recoveredBooking?.recoveryState === 'confirmed') {
+        finalizeManualBookingConfirmed(recoveredBooking);
+
+        return { state: 'confirmed' };
+      }
+
+      if (recoveredBooking?.recoveryState !== 'not_found') {
+        if (recoveredBooking?.recoveryState === 'read_error') {
+          await startManualBookingAmbiguousRecovery(manualBooking);
+
+          return { state: 'recovery_started' };
+        }
+
+        return {
+          state: 'blocked',
+          booking: recoveredBooking
+        };
+      }
+    }
+
+    const syncedBooking = await createManualBookingInSupabase(manualBooking);
+
+    if (syncedBooking?.liveRequestId) {
+      finalizeManualBookingConfirmed(syncedBooking);
+
+      return { state: 'confirmed' };
+    }
+
+    if (isManualBookingAmbiguousSyncFailure(syncedBooking)) {
+      await startManualBookingAmbiguousRecovery(manualBooking);
+
+      return { state: 'recovery_started' };
+    }
+
+    return {
+      state: 'blocked',
+      booking: syncedBooking
+    };
+  };
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -7375,70 +8568,246 @@ function openManualBookingModal() {
     const currentTexts = getManualBookingTexts();
     const formData = new FormData(form);
     const customerName = String(formData.get('customerName') || '').trim();
+    const customerPhone = String(formData.get('customerPhone') || '').trim();
     const bookingDate = String(formData.get('bookingDate') || '').trim();
     const bookingTime = String(formData.get('bookingTime') || '').trim();
     const bookingPeople = Number(formData.get('bookingPeople') || 0);
 
     clearManualBookingFormError();
+    clearAllManualBookingFieldErrors();
+
+    const validationErrors = [];
 
     if (!customerName) {
-      showManualBookingFormError(currentTexts.required, 'input[name="customerName"]');
-      return;
+      validationErrors.push({
+        field: 'customerName',
+        message: currentTexts.nameRequired
+      });
+    }
+
+    if (!customerPhone) {
+      validationErrors.push({
+        field: 'customerPhone',
+        message: currentTexts.phoneRequired
+      });
+    } else if (!isPlausibleInternationalPhone(customerPhone)) {
+      validationErrors.push({
+        field: 'customerPhone',
+        message: currentTexts.phoneInvalid
+      });
     }
 
     if (!bookingDate) {
-      showManualBookingFormError(currentTexts.dateRequired, 'input[name="bookingDate"]');
-      return;
+      validationErrors.push({
+        field: 'bookingDate',
+        message: currentTexts.dateRequired
+      });
     }
 
     if (!bookingTime) {
-      showManualBookingFormError(currentTexts.timeRequired, 'input[name="bookingTime"]');
+      validationErrors.push({
+        field: 'bookingTime',
+        message: currentTexts.timeRequired
+      });
+    }
+
+    if (
+      !Number.isFinite(bookingPeople) ||
+      bookingPeople < 1 ||
+      !Number.isInteger(bookingPeople)
+    ) {
+      validationErrors.push({
+        field: 'bookingPeople',
+        message: currentTexts.peopleRequired
+      });
+    }
+
+    if (validationErrors.length > 0) {
+      validationErrors.forEach(({ field, message }) => {
+        showManualBookingFieldError(field, message);
+      });
+
+      scrollThenFocusManualBookingField(validationErrors[0].field);
       return;
     }
 
-    if (!Number.isFinite(bookingPeople) || bookingPeople < 1) {
-      showManualBookingFormError(currentTexts.peopleRequired, 'input[name="bookingPeople"]');
-      return;
-    }
+    const reuseExistingRequestId = canReuseLastUnresolvedManualBookingId();
 
-    const submitButton = form.querySelector('button[type="submit"]');
-    if (submitButton) {
-      submitButton.disabled = true;
-      submitButton.classList.add('opacity-60', 'pointer-events-none');
-    }
-
-    const localManualBooking = buildManualBookingRequestFromForm(form);
-    const syncedManualBooking = await createManualBookingInSupabase(localManualBooking);
-
-    if (!syncedManualBooking.liveRequestId) {
-      console.warn(
-        'TapCarta Restaurant: réservation manuelle non enregistrée, synchronisation Supabase non confirmée.',
-        syncedManualBooking
+    if (
+      lastUnresolvedManualBooking?.requestId &&
+      !reuseExistingRequestId
+    ) {
+      const allowNewAttempt = window.confirm(
+        `${currentTexts.retryModifiedConfirmTitle}\n\n${currentTexts.retryModifiedConfirmMessage}`
       );
 
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.classList.remove('opacity-60', 'pointer-events-none');
+      if (!allowNewAttempt) {
+        return;
       }
 
+      lastUnresolvedManualBooking = null;
+    }
+
+    setManualBookingSubmitBusy(true);
+
+    let localManualBooking;
+
+    try {
+      localManualBooking = buildManualBookingRequestFromForm(
+        form,
+        reuseExistingRequestId
+          ? lastUnresolvedManualBooking.requestId
+          : ''
+      );
+    } catch (error) {
+      console.warn(
+        'TapCarta Restaurant: impossible de préparer la réservation manuelle.',
+        error
+      );
+
+      setManualBookingSubmitBusy(false);
+
       showManualBookingFormError(
-        'Impossible d’enregistrer la réservation pour le moment. Réessayez dans quelques instants.',
-        'input[name="customerName"]'
+        currentLang === 'es'
+          ? 'No se puede preparar la reserva en este momento.'
+          : currentLang === 'en'
+            ? 'The booking cannot be prepared at the moment.'
+            : currentLang === 'nl'
+              ? 'De reservatie kan momenteel niet worden voorbereid.'
+              : 'Impossible de préparer la réservation pour le moment.'
       );
 
       return;
     }
 
-    saveManualBookingToLocalStorage(syncedManualBooking);
+    const attemptResult = await processManualBookingAttempt(
+      localManualBooking,
+      {
+        readBeforeInsert: reuseExistingRequestId
+      }
+    );
 
+    if (attemptResult.state !== 'blocked') {
+      return;
+    }
+
+    console.warn(
+      'TapCarta Restaurant: réservation manuelle refusée avant confirmation.',
+      attemptResult.booking
+    );
+
+    setManualBookingSubmitBusy(false);
+
+    showManualBookingFormError(
+      currentLang === 'es'
+        ? 'No se puede registrar la reserva en este momento. Inténtelo de nuevo dentro de unos instantes.'
+        : currentLang === 'en'
+          ? 'The booking cannot be registered at the moment. Please try again in a few moments.'
+          : currentLang === 'nl'
+            ? 'De reservatie kan momenteel niet worden geregistreerd. Probeer het over enkele ogenblikken opnieuw.'
+            : 'Impossible d’enregistrer la réservation pour le moment. Réessayez dans quelques instants.'
+    );
+  });
+  const copyManualBookingSupportDiagnostics = async () => {
+    const now = new Date();
+
+    const diagnostics = [
+      'TapCarta support',
+      'Code: R-MANUAL-04',
+      'Action: manual_booking',
+      'Stage: recovery_unresolved',
+      `Time: ${now.toISOString()}`,
+      `Index version: ${APP_VERSION}`,
+      `Network: ${navigator.onLine ? 'online' : 'offline'}`,
+      `Service worker controller: ${navigator.serviceWorker?.controller ? 'present' : 'absent'}`
+    ].join('\n');
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(diagnostics);
+      } else {
+        const copyArea = document.createElement('textarea');
+
+        copyArea.value = diagnostics;
+        copyArea.setAttribute('readonly', '');
+        copyArea.style.position = 'fixed';
+        copyArea.style.opacity = '0';
+
+        document.body.appendChild(copyArea);
+        copyArea.select();
+        document.execCommand('copy');
+        copyArea.remove();
+      }
+
+      showRestaurantToast(getManualBookingTexts().copiedSupportInfo, 'info');
+    } catch (error) {
+      console.warn(
+        'TapCarta Restaurant: copie des informations assistance impossible.',
+        error
+      );
+    }
+  };
+
+    manualBookingRetryEntryButton?.addEventListener('click', async () => {
+    const retryBooking = lastUnresolvedManualBooking;
+
+    if (!retryBooking?.requestId) {
+      return;
+    }
+
+    const currentTexts = getManualBookingTexts();
+    const reuseSameId = canReuseLastUnresolvedManualBookingId();
+
+    if (!reuseSameId) {
+      const allowNewAttempt = window.confirm(
+        `${currentTexts.retryModifiedConfirmTitle}\n\n${currentTexts.retryModifiedConfirmMessage}`
+      );
+
+      if (!allowNewAttempt) {
+        return;
+      }
+
+      lastUnresolvedManualBooking = null;
+      hideManualBookingRecoveryFinal();
+      form?.requestSubmit();
+      return;
+    }
+
+    setManualBookingSubmitBusy(true);
+    hideManualBookingRecoveryFinal();
+
+    const attemptResult = await processManualBookingAttempt(
+      retryBooking,
+      {
+        readBeforeInsert: true
+      }
+    );
+
+    if (attemptResult.state !== 'blocked') {
+      return;
+    }
+
+    setManualBookingSubmitBusy(false);
+    lastUnresolvedManualBooking = { ...retryBooking };
+    showManualBookingRecoveryFinal();
+  });
+
+  manualBookingViewBookingsButton?.addEventListener('click', async () => {
+    setManualBookingSubmitBusy(false);
     overlay.remove();
 
-    syncRequestsState();
-    renderMenu();
+    window.setRestaurantRequestTypeFilter?.('bookings');
 
-    void playRestaurantManualConfirmationSound();
+    try {
+      await window.syncLiveBookingsToLocalStorage?.();
+    } finally {
+      syncRequestsState();
+      renderMenu();
+    }
+  });
 
-    showRestaurantToast(currentTexts.saved, 'info');
+  manualBookingCopySupportButton?.addEventListener('click', () => {
+    void copyManualBookingSupportDiagnostics();
   });
 
   if (window.lucide) {
