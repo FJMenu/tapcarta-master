@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.6.1.1';
+        const APP_VERSION = 'V2.6.1.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -20657,6 +20657,41 @@ if (dishFinishBtn) {
   updateInstallUI();
   updateLangButtons();
   applyDishEditorTranslations();
+
+  const shouldRestoreManualBookingRecovery =
+    !window.tapCartaManualBookingRecoveryBootstrapped;
+
+  if (shouldRestoreManualBookingRecovery) {
+    window.tapCartaManualBookingRecoveryBootstrapped = true;
+  }
+
+  const restoredManualBookingRecovery =
+    shouldRestoreManualBookingRecovery
+      ? restorePersistentManualBookingRecoveryFromSession()
+      : persistentManualBookingRecovery;
+
+  renderPersistentManualBookingRecovery();
+
+  if (
+    shouldRestoreManualBookingRecovery &&
+    restoredManualBookingRecovery?.state === 'checking' &&
+    restoredManualBookingRecovery.manualBooking?.requestId &&
+    Number(restoredManualBookingRecovery.deadlineAt || 0) > Date.now()
+  ) {
+    window.setTimeout(() => {
+      if (!document.getElementById('restaurant-manual-booking-modal')) {
+        openManualBookingModal(
+          restoredManualBookingRecovery.manualBooking,
+          {
+            resumeRecovery: true,
+            startedAt: restoredManualBookingRecovery.startedAt,
+            deadlineAt: restoredManualBookingRecovery.deadlineAt,
+            sessionId: restoredManualBookingRecovery.sessionId
+          }
+        );
+      }
+    }, 0);
+  }
 }
 
 function ensureFreshHtmlVersion() {
@@ -21262,38 +21297,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 console.log('Restaurant actif chargé :', activeRestaurantData);
-
-  const restoredManualBookingRecovery =
-    restorePersistentManualBookingRecoveryFromSession();
-
-  renderPersistentManualBookingRecovery();
-
-  try {
-    renderMenu();
-  } catch (error) {
-    console.error(
-      'TapCarta Resto: erreur pendant le premier rendu de l’interface',
-      error
-    );
-  }
-
-  if (
-    restoredManualBookingRecovery?.state === 'checking' &&
-    restoredManualBookingRecovery.manualBooking?.requestId &&
-    Number(restoredManualBookingRecovery.deadlineAt || 0) > Date.now()
-  ) {
-    window.setTimeout(() => {
-      openManualBookingModal(
-        restoredManualBookingRecovery.manualBooking,
-        {
-          resumeRecovery: true,
-          startedAt: restoredManualBookingRecovery.startedAt,
-          deadlineAt: restoredManualBookingRecovery.deadlineAt,
-          sessionId: restoredManualBookingRecovery.sessionId
-        }
-      );
-    }, 0);
-  }
 
   try {
     if (typeof window.syncLiveBookingsToLocalStorage === 'function') {
