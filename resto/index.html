@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.6.1.4';
+        const APP_VERSION = 'V2.6.2.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -6941,6 +6941,19 @@ function getManualBookingTexts() {
       origin: 'Origen',
       note: 'Nota',
       notePlaceholder: 'Nota interna opcional',
+      noteSuggestionsLabel: 'Sugerencias rápidas',
+      noteChips: [
+        'Cumpleaños',
+        'Terraza solicitada',
+        'Interior solicitado',
+        'Trona',
+        'Acceso facilitado / PMR',
+        'Perro acompañado',
+        'Grupo / ocasión especial',
+        'Alergia o dieta — por precisar',
+        'Tarta aportada / por prever',
+        'Llamar al cliente'
+      ],
       cancel: 'Cancelar',
       save: 'Guardar reserva',
 
@@ -6992,6 +7005,19 @@ function getManualBookingTexts() {
       origin: 'Origine',
       note: 'Note',
       notePlaceholder: 'Note interne facultative',
+      noteSuggestionsLabel: 'Suggestions rapides',
+      noteChips: [
+        'Anniversaire',
+        'Terrasse souhaitée',
+        'Intérieur souhaité',
+        'Chaise haute',
+        'Accès facilité / PMR',
+        'Chien accompagné',
+        'Groupe / occasion spéciale',
+        'Allergie ou régime — à préciser',
+        'Gâteau apporté / à prévoir',
+        'Rappeler le client'
+      ],
       cancel: 'Annuler',
       save: 'Enregistrer',
 
@@ -7043,6 +7069,19 @@ function getManualBookingTexts() {
       origin: 'Origin',
       note: 'Note',
       notePlaceholder: 'Optional internal note',
+      noteSuggestionsLabel: 'Quick suggestions',
+      noteChips: [
+        'Birthday',
+        'Terrace requested',
+        'Indoor seating requested',
+        'High chair',
+        'Easy access / PMR',
+        'Dog accompanying guest',
+        'Group / special occasion',
+        'Allergy or dietary requirement — details needed',
+        'Cake brought in / to arrange',
+        'Call the customer back'
+      ],
       cancel: 'Cancel',
       save: 'Save booking',
 
@@ -7094,6 +7133,19 @@ function getManualBookingTexts() {
       origin: 'Herkomst',
       note: 'Notitie',
       notePlaceholder: 'Optionele interne notitie',
+      noteSuggestionsLabel: 'Snelle suggesties',
+      noteChips: [
+        'Verjaardag',
+        'Terras gewenst',
+        'Binnen gewenst',
+        'Kinderstoel',
+        'Toegankelijke toegang / PMR',
+        'Hond mee',
+        'Groep / speciale gelegenheid',
+        'Allergie of dieet — nader te bepalen',
+        'Taart meegebracht / te voorzien',
+        'Klant terugbellen'
+      ],
       cancel: 'Annuleren',
       save: 'Reservatie opslaan',
 
@@ -8448,10 +8500,31 @@ function openManualBookingModal(initialManualBooking = null, options = {}) {
             </div>
 
             <div class="md:col-span-2">
-              <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.note}</label>
+              <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">
+                ${texts.note}
+              </label>
+
+              <div class="mb-3">
+                <div class="mb-2 text-[10px] font-bold uppercase tracking-wide text-cream/45">
+                  ${texts.noteSuggestionsLabel}
+                </div>
+
+                <div data-manual-booking-note-chips class="flex flex-wrap gap-2">
+                  ${(texts.noteChips || []).map((chip, index) => `
+                    <button
+                      type="button"
+                      data-manual-booking-note-chip="${index}"
+                      class="btn-action rounded-full border border-white/15 bg-black/25 px-3 py-2 text-xs font-semibold text-cream/85 hover:border-gold/60 hover:bg-gold/10 transition-all"
+                    >
+                      ${chip}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
               <textarea
                 name="bookingNote"
-                rows="2"
+                rows="3"
                 placeholder="${texts.notePlaceholder}"
                 class="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-cream outline-none focus:border-gold/70 resize-none"
               ></textarea>
@@ -8535,6 +8608,104 @@ function openManualBookingModal(initialManualBooking = null, options = {}) {
   );
   const manualOriginInput = overlay.querySelector('input[name="manualOrigin"]');
   const manualOriginButtons = overlay.querySelectorAll('[data-manual-origin]');
+
+  const manualBookingNoteInput = overlay.querySelector(
+    'textarea[name="bookingNote"]'
+  );
+
+  const manualBookingNoteChipButtons = overlay.querySelectorAll(
+    '[data-manual-booking-note-chip]'
+  );
+
+  const manualBookingNoteChips = Array.isArray(texts.noteChips)
+    ? texts.noteChips
+    : [];
+
+  const insertedManualBookingNoteChips = new Map();
+
+  const getManualBookingNoteLines = () => String(
+    manualBookingNoteInput?.value || ''
+  )
+    .replace(/\r\n?/g, '\n')
+    .split('\n');
+
+  const setManualBookingNoteLines = (lines) => {
+    if (!manualBookingNoteInput) return;
+
+    manualBookingNoteInput.value = lines
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    manualBookingNoteInput.dispatchEvent(
+      new Event('input', { bubbles: true })
+    );
+  };
+
+  const syncManualBookingNoteChips = () => {
+    const currentLines = getManualBookingNoteLines();
+
+    insertedManualBookingNoteChips.forEach((chipText, chipIndex) => {
+      if (!currentLines.includes(chipText)) {
+        insertedManualBookingNoteChips.delete(chipIndex);
+      }
+    });
+
+    manualBookingNoteChipButtons.forEach((button) => {
+      const chipIndex = Number(
+        button.getAttribute('data-manual-booking-note-chip')
+      );
+
+      const isSelected = insertedManualBookingNoteChips.has(chipIndex);
+
+      button.classList.toggle('border-gold', isSelected);
+      button.classList.toggle('bg-gold/15', isSelected);
+      button.classList.toggle('text-gold', isSelected);
+
+      button.classList.toggle('border-white/15', !isSelected);
+      button.classList.toggle('bg-black/25', !isSelected);
+      button.classList.toggle('text-cream/85', !isSelected);
+    });
+  };
+
+  manualBookingNoteChipButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const chipIndex = Number(
+        button.getAttribute('data-manual-booking-note-chip')
+      );
+
+      const chipText = String(
+        manualBookingNoteChips[chipIndex] || ''
+      ).trim();
+
+      if (!chipText || !manualBookingNoteInput) return;
+
+      const currentLines = getManualBookingNoteLines();
+      const isSelected = insertedManualBookingNoteChips.has(chipIndex);
+
+      if (isSelected) {
+        const lineIndex = currentLines.lastIndexOf(chipText);
+
+        if (lineIndex !== -1) {
+          currentLines.splice(lineIndex, 1);
+          setManualBookingNoteLines(currentLines);
+        }
+
+        insertedManualBookingNoteChips.delete(chipIndex);
+      } else if (!currentLines.includes(chipText)) {
+        currentLines.push(chipText);
+        setManualBookingNoteLines(currentLines);
+        insertedManualBookingNoteChips.set(chipIndex, chipText);
+      }
+
+      syncManualBookingNoteChips();
+    });
+  });
+
+  manualBookingNoteInput?.addEventListener(
+    'input',
+    syncManualBookingNoteChips
+  );
 
     let lastUnresolvedManualBooking = initialManualBooking
 ? { ...initialManualBooking }
