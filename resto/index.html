@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.5.6.3';
+        const APP_VERSION = 'V2.6.1.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -7255,7 +7255,18 @@ async function createManualBookingInSupabase(manualBooking) {
     };
   }
 }
-async function recoverManualBookingFromSupabase(manualBooking) {
+
+async function recoverManualBookingFromSupabase(manualBooking, options = {}) {
+  const canContinue =
+    typeof options.canContinue === 'function'
+      ? options.canContinue
+      : () => true;
+
+  const deadlineResult = () => ({
+    ...manualBooking,
+    recoveryState: 'deadline'
+  });
+
   if (
     typeof supabaseClient === 'undefined' ||
     !supabaseClient ||
@@ -7268,7 +7279,15 @@ async function recoverManualBookingFromSupabase(manualBooking) {
     };
   }
 
+  if (!canContinue()) {
+    return deadlineResult();
+  }
+
   const readExactBooking = async () => {
+    if (!canContinue()) {
+      return null;
+    }
+
     const { data, error } = await supabaseClient
       .from('requests')
       .select('*')
@@ -7277,13 +7296,23 @@ async function recoverManualBookingFromSupabase(manualBooking) {
       .eq('type', 'booking')
       .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
+
+    if (!canContinue()) {
+      return null;
+    }
 
     return data;
   };
 
   try {
     let recoveredRequest = await readExactBooking();
+
+    if (!canContinue()) {
+      return deadlineResult();
+    }
 
     if (!recoveredRequest?.id) {
       return {
@@ -7293,6 +7322,10 @@ async function recoverManualBookingFromSupabase(manualBooking) {
     }
 
     if (recoveredRequest.status === 'pending') {
+      if (!canContinue()) {
+        return deadlineResult();
+      }
+
       const confirmedAt = new Date().toISOString();
 
       const { data: confirmedRequest, error: confirmError } = await supabaseClient
@@ -7315,13 +7348,25 @@ async function recoverManualBookingFromSupabase(manualBooking) {
         .select('*')
         .single();
 
-      if (confirmError) throw confirmError;
+      if (!canContinue()) {
+        return deadlineResult();
+      }
+
+      if (confirmError) {
+        throw confirmError;
+      }
 
       if (confirmedRequest?.id !== manualBooking.requestId) {
-        throw new Error('La réservation récupérée ne correspond pas à l’identifiant attendu.');
+        throw new Error(
+          'La réservation récupérée ne correspond pas à l’identifiant attendu.'
+        );
       }
 
       recoveredRequest = await readExactBooking();
+
+      if (!canContinue()) {
+        return deadlineResult();
+      }
     }
 
     if (
@@ -7341,7 +7386,10 @@ async function recoverManualBookingFromSupabase(manualBooking) {
       status: 'confirmed',
       createdAt: recoveredRequest.created_at || manualBooking.createdAt,
       updatedAt: recoveredRequest.updated_at || manualBooking.updatedAt,
-      confirmedAt: recoveredRequest.updated_at || manualBooking.confirmedAt || new Date().toISOString(),
+      confirmedAt:
+        recoveredRequest.updated_at ||
+        manualBooking.confirmedAt ||
+        new Date().toISOString(),
       recoveryState: 'confirmed',
       restaurantResponse: {
         ...(manualBooking.restaurantResponse || {}),
@@ -7351,6 +7399,10 @@ async function recoverManualBookingFromSupabase(manualBooking) {
       }
     };
   } catch (error) {
+    if (!canContinue()) {
+      return deadlineResult();
+    }
+
     console.warn(
       'TapCarta Restaurant: impossible de relire la réservation manuelle exacte dans Supabase',
       error
@@ -7366,6 +7418,7 @@ async function recoverManualBookingFromSupabase(manualBooking) {
     };
   }
 }
+
 const MANUAL_BOOKING_RECOVERY_MAX_MS = 75000;
 const MANUAL_BOOKING_RECOVERY_INTERVAL_MS = 5000;
 
@@ -7384,50 +7437,139 @@ function waitForManualBookingRecoveryDelay(delayMs, signal) {
     const timer = window.setTimeout(() => {
       signal?.removeEventListener('abort', onAbort);
       resolve(true);
-    }, delayMs);
+    }, Math.max(0, delayMs));
 
     signal?.addEventListener('abort', onAbort, { once: true });
   });
 }
 
 async function runManualBookingRecovery(manualBooking, options = {}) {
-  const startedAt = Date.now();
-  const maxDurationMs = Number.isFinite(options.maxDurationMs)
-    ? options.maxDurationMs
-    : MANUAL_BOOKING_RECOVERY_MAX_MS;
-
+  const deadlineAt = Number(options.deadlineAt || 0);
   const signal = options.signal;
-  const onTick = typeof options.onTick === 'function'
-    ? options.onTick
-    : null;
+  const onTick =
+    typeof options.onTick === 'function'
+      ? options.onTick
+      : null;
+
+  const unresolvedResult = (lastRecoveryResult = null) => ({
+    state: 'unresolved',
+    booking: manualBooking,
+    lastRecoveryResult,
+    remainingMs: 0
+  });
+
+  if (!Number.isFinite(deadlineAt) || deadlineAt <= 0) {
+    return unresolvedResult();
+  }
 
   let lastRecoveryResult = null;
-  let lastKnownRemainingMs = maxDurationMs;
+
+  const isWithinDeadline = () =>
+    !signal?.aborted &&
+    Date.now() < deadlineAt;
 
   const notifyTick = () => {
-    const elapsedMs = Date.now() - startedAt;
-    const remainingMs = Math.max(0, maxDurationMs - elapsedMs);
-
-    lastKnownRemainingMs = remainingMs;
+    const remainingMs = Math.max(0, deadlineAt - Date.now());
 
     onTick?.({
-      elapsedMs,
+      deadlineAt,
       remainingMs
     });
 
     return remainingMs;
   };
 
-  const countdownTimer = window.setInterval(() => {
-    if (signal?.aborted) {
-      return;
-    }
+  const waitForRecoveryRead = () => {
+    return new Promise((resolve) => {
+      if (signal?.aborted) {
+        resolve({ state: 'aborted' });
+        return;
+      }
 
-    notifyTick();
+      const remainingMs = Math.max(0, deadlineAt - Date.now());
+
+      if (remainingMs <= 0) {
+        resolve({ state: 'deadline' });
+        return;
+      }
+
+      let settled = false;
+
+      const finish = (result) => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        window.clearTimeout(deadlineTimer);
+        signal?.removeEventListener('abort', onAbort);
+        resolve(result);
+      };
+
+      const onAbort = () => {
+        finish({ state: 'aborted' });
+      };
+
+      const deadlineTimer = window.setTimeout(() => {
+        finish({ state: 'deadline' });
+      }, remainingMs);
+
+      signal?.addEventListener('abort', onAbort, { once: true });
+
+      Promise.resolve()
+        .then(() =>
+          recoverManualBookingFromSupabase(manualBooking, {
+            canContinue: isWithinDeadline
+          })
+        )
+        .then((result) => {
+          if (settled) {
+            return;
+          }
+
+          if (!isWithinDeadline()) {
+            finish({ state: 'deadline' });
+            return;
+          }
+
+          finish({
+            state: 'result',
+            result
+          });
+        })
+        .catch((error) => {
+          if (settled) {
+            return;
+          }
+
+          if (!isWithinDeadline()) {
+            finish({ state: 'deadline' });
+            return;
+          }
+
+          finish({
+            state: 'result',
+            result: {
+              ...manualBooking,
+              recoveryState: 'read_error',
+              recoveryError: {
+                code: String(error?.code || ''),
+                message: String(error?.message || 'unknown_error')
+              }
+            }
+          });
+        });
+    });
+  };
+
+  const countdownTimer = window.setInterval(() => {
+    if (!signal?.aborted) {
+      notifyTick();
+    }
   }, 1000);
 
   try {
-    while (Date.now() - startedAt <= maxDurationMs) {
+    while (true) {
       if (signal?.aborted) {
         return {
           state: 'aborted',
@@ -7438,41 +7580,53 @@ async function runManualBookingRecovery(manualBooking, options = {}) {
 
       const remainingBeforeReadMs = notifyTick();
 
-      lastRecoveryResult = await recoverManualBookingFromSupabase(manualBooking);
+      if (remainingBeforeReadMs <= 0) {
+        return unresolvedResult(lastRecoveryResult);
+      }
+
+      const readOutcome = await waitForRecoveryRead();
+
+      if (readOutcome.state === 'aborted') {
+        return {
+          state: 'aborted',
+          booking: manualBooking,
+          lastRecoveryResult
+        };
+      }
+
+      if (readOutcome.state === 'deadline') {
+        notifyTick();
+        return unresolvedResult(lastRecoveryResult);
+      }
+
+      lastRecoveryResult = readOutcome.result;
+
+      if (!isWithinDeadline()) {
+        notifyTick();
+        return unresolvedResult(lastRecoveryResult);
+      }
 
       if (lastRecoveryResult?.recoveryState === 'confirmed') {
         return {
           state: 'confirmed',
           booking: lastRecoveryResult,
-          lastRecoveryResult
+          lastRecoveryResult,
+          remainingMs: Math.max(0, deadlineAt - Date.now())
         };
       }
 
-      const remainingAfterReadMs = Math.max(
-        0,
-        maxDurationMs - (Date.now() - startedAt)
-      );
+      const remainingBeforeDelayMs = Math.max(0, deadlineAt - Date.now());
 
-      if (remainingAfterReadMs === 0) {
-        break;
-      }
-
-      let nextDelayMs = Math.min(
-        MANUAL_BOOKING_RECOVERY_INTERVAL_MS,
-        remainingAfterReadMs
-      );
-
-      const crossedFinalControlWindow =
-        remainingBeforeReadMs > 15000 &&
-        remainingAfterReadMs > 15000 &&
-        remainingAfterReadMs - nextDelayMs < 15000;
-
-      if (crossedFinalControlWindow) {
-        nextDelayMs = remainingAfterReadMs - 15000;
+      if (remainingBeforeDelayMs <= 0) {
+        notifyTick();
+        return unresolvedResult(lastRecoveryResult);
       }
 
       const shouldContinue = await waitForManualBookingRecoveryDelay(
-        Math.max(0, nextDelayMs),
+        Math.min(
+          MANUAL_BOOKING_RECOVERY_INTERVAL_MS,
+          remainingBeforeDelayMs
+        ),
         signal
       );
 
@@ -7484,15 +7638,6 @@ async function runManualBookingRecovery(manualBooking, options = {}) {
         };
       }
     }
-
-    notifyTick();
-
-    return {
-      state: 'unresolved',
-      booking: manualBooking,
-      lastRecoveryResult,
-      remainingMs: lastKnownRemainingMs
-    };
   } finally {
     window.clearInterval(countdownTimer);
   }
@@ -7559,12 +7704,147 @@ function buildManualBookingRequestFromForm(form, requestIdOverride = '') {
     }
   };
 }
+
 let activeManualBookingRecoverySession = null;
 let manualBookingRecoverySequence = 0;
 let persistentManualBookingRecovery = null;
+let activeManualBookingLocalFlow = null;
+const finalizedManualBookingRequestIds = new Set();
+
+function isManualBookingLocalFlowLocked() {
+  return [
+    'submitting',
+    'recovering',
+    'retrying'
+  ].includes(activeManualBookingLocalFlow?.state);
+}
+
+function setManualBookingLocalFlow(state, requestId = '') {
+  activeManualBookingLocalFlow = {
+    state,
+    requestId: String(requestId || ''),
+    startedAt: Date.now()
+  };
+}
+
+function clearManualBookingLocalFlow(requestId = '') {
+  if (
+    requestId &&
+    activeManualBookingLocalFlow?.requestId &&
+    activeManualBookingLocalFlow.requestId !== requestId
+  ) {
+    return;
+  }
+
+  activeManualBookingLocalFlow = null;
+}
+
+const MANUAL_BOOKING_RECOVERY_SESSION_KEY =
+  'tapcarta-resto-manual-booking-recovery-v1';
+
+function getManualBookingRecoveryRemainingMs(recovery) {
+  const deadlineAt = Number(recovery?.deadlineAt || 0);
+
+  return deadlineAt
+    ? Math.max(0, deadlineAt - Date.now())
+    : 0;
+}
+
+function savePersistentManualBookingRecoveryToSession() {
+  if (!persistentManualBookingRecovery?.manualBooking?.requestId) {
+    return;
+  }
+
+  try {
+    sessionStorage.setItem(
+      MANUAL_BOOKING_RECOVERY_SESSION_KEY,
+      JSON.stringify(persistentManualBookingRecovery)
+    );
+  } catch (error) {
+    console.warn(
+      'TapCarta Restaurant: sauvegarde temporaire de récupération impossible.',
+      error
+    );
+  }
+}
+
+function restorePersistentManualBookingRecoveryFromSession() {
+  if (persistentManualBookingRecovery?.manualBooking?.requestId) {
+    return persistentManualBookingRecovery;
+  }
+
+  try {
+    const rawRecovery = sessionStorage.getItem(
+      MANUAL_BOOKING_RECOVERY_SESSION_KEY
+    );
+
+    if (!rawRecovery) {
+      return null;
+    }
+
+    const recovery = JSON.parse(rawRecovery);
+    const requestId = String(recovery?.manualBooking?.requestId || '');
+    const restaurantId = String(recovery?.restaurantId || '');
+    const startedAt = Number(recovery?.startedAt || 0);
+    const deadlineAt = Number(recovery?.deadlineAt || 0);
+
+    const isValidRecovery =
+      isUuid(requestId) &&
+      Boolean(restaurantId) &&
+      restaurantId === siteConfig.restaurantId &&
+      Number.isFinite(startedAt) &&
+      Number.isFinite(deadlineAt) &&
+      deadlineAt > startedAt;
+
+    if (!isValidRecovery) {
+      sessionStorage.removeItem(MANUAL_BOOKING_RECOVERY_SESSION_KEY);
+      return null;
+    }
+
+    const remainingMs = Math.max(0, deadlineAt - Date.now());
+
+    persistentManualBookingRecovery = {
+      sessionId: String(
+        recovery.sessionId ||
+        `manual_booking_restored_${Date.now()}`
+      ),
+      restaurantId,
+      manualBooking: {
+        ...recovery.manualBooking
+      },
+      state:
+        recovery.state === 'checking' && remainingMs > 0
+          ? 'checking'
+          : 'unresolved',
+      startedAt,
+      deadlineAt,
+      remainingMs,
+      updatedAt: Date.now()
+    };
+
+    savePersistentManualBookingRecoveryToSession();
+
+    return persistentManualBookingRecovery;
+  } catch (error) {
+    console.warn(
+      'TapCarta Restaurant: récupération temporaire illisible.',
+      error
+    );
+
+    try {
+      sessionStorage.removeItem(MANUAL_BOOKING_RECOVERY_SESSION_KEY);
+    } catch (_) {}
+
+    return null;
+  }
+}
 
 function formatManualBookingRecoveryClock(milliseconds) {
-  const totalSeconds = Math.max(0, Math.ceil(Number(milliseconds || 0) / 1000));
+  const totalSeconds = Math.max(
+    0,
+    Math.ceil(Number(milliseconds || 0) / 1000)
+  );
+
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = String(totalSeconds % 60).padStart(2, '0');
 
@@ -7572,26 +7852,55 @@ function formatManualBookingRecoveryClock(milliseconds) {
 }
 
 function getManualBookingRecoveryBanner() {
-  return document.getElementById('tapcarta-manual-booking-recovery-banner');
+  return document.getElementById(
+    'tapcarta-manual-booking-recovery-banner'
+  );
 }
 
 function removeManualBookingRecoveryBanner() {
   getManualBookingRecoveryBanner()?.remove();
 }
 
-function rememberPersistentManualBookingRecovery(session, state, remainingMs = 0) {
+function rememberPersistentManualBookingRecovery(
+  session,
+  state,
+  remainingMs = 0
+) {
   if (!session?.manualBooking?.requestId) {
+    return;
+  }
+
+  const startedAt = Number(session.startedAt || 0);
+  const deadlineAt = Number(session.deadlineAt || 0);
+
+  if (
+    !Number.isFinite(startedAt) ||
+    !Number.isFinite(deadlineAt) ||
+    deadlineAt <= startedAt
+  ) {
     return;
   }
 
   persistentManualBookingRecovery = {
     sessionId: session.id,
     restaurantId: session.manualBooking.restaurantId,
-    manualBooking: { ...session.manualBooking },
+    manualBooking: {
+      ...session.manualBooking
+    },
     state,
-    remainingMs: Math.max(0, Number(remainingMs) || 0),
+    startedAt,
+    deadlineAt,
+    remainingMs: Math.max(
+      0,
+      Math.min(
+        Number(remainingMs) || 0,
+        deadlineAt - Date.now()
+      )
+    ),
     updatedAt: Date.now()
   };
+
+  savePersistentManualBookingRecoveryToSession();
 }
 
 function clearPersistentManualBookingRecovery(sessionId = '') {
@@ -7603,6 +7912,16 @@ function clearPersistentManualBookingRecovery(sessionId = '') {
   }
 
   persistentManualBookingRecovery = null;
+
+  try {
+    sessionStorage.removeItem(MANUAL_BOOKING_RECOVERY_SESSION_KEY);
+  } catch (error) {
+    console.warn(
+      'TapCarta Restaurant: nettoyage temporaire de récupération impossible.',
+      error
+    );
+  }
+
   removeManualBookingRecoveryBanner();
 }
 
@@ -7733,20 +8052,54 @@ function renderManualBookingRecoveryBanner(session, remainingMs) {
   renderPersistentManualBookingRecovery();
 }
 
-function createManualBookingRecoverySession(manualBooking) {
+function createManualBookingRecoverySession(manualBooking, options = {}) {
+  if (
+    activeManualBookingRecoverySession &&
+    isCurrentManualBookingRecoverySession(
+      activeManualBookingRecoverySession
+    )
+  ) {
+    return null;
+  }
+
   if (activeManualBookingRecoverySession?.controller) {
     activeManualBookingRecoverySession.controller.abort();
   }
 
   removeManualBookingRecoveryBanner();
 
+  const now = Date.now();
+  const providedStartedAt = Number(options.startedAt || 0);
+  const providedDeadlineAt = Number(options.deadlineAt || 0);
+
+  const hasUsableRestoredDeadline =
+    Number.isFinite(providedDeadlineAt) &&
+    providedDeadlineAt > now;
+
+  const deadlineAt = hasUsableRestoredDeadline
+    ? providedDeadlineAt
+    : now + MANUAL_BOOKING_RECOVERY_MAX_MS;
+
+  const startedAt =
+    hasUsableRestoredDeadline &&
+    Number.isFinite(providedStartedAt) &&
+    providedStartedAt > 0 &&
+    providedStartedAt < deadlineAt
+      ? providedStartedAt
+      : now;
+
   const session = {
-    id: `manual_booking_recovery_${Date.now()}_${++manualBookingRecoverySequence}`,
+    id: String(
+      options.sessionId ||
+      `manual_booking_recovery_${now}_${++manualBookingRecoverySequence}`
+    ),
     manualBooking,
     controller: new AbortController(),
-    startedAt: Date.now(),
+    startedAt,
+    deadlineAt,
     detachedFromModal: false,
-    completed: false
+    completed: false,
+    terminalState: ''
   };
 
   activeManualBookingRecoverySession = session;
@@ -7759,20 +8112,53 @@ function isCurrentManualBookingRecoverySession(session) {
     session &&
     activeManualBookingRecoverySession &&
     activeManualBookingRecoverySession.id === session.id &&
+    !session.completed &&
+    session.terminalState !== 'unresolved' &&
     !session.controller.signal.aborted
   );
 }
 
-function completeManualBookingRecoverySession(session) {
-  if (!isCurrentManualBookingRecoverySession(session)) {
+function completeManualBookingRecoverySession(
+  session,
+  terminalState = 'completed'
+) {
+  if (
+    !session ||
+    activeManualBookingRecoverySession?.id !== session.id
+  ) {
     return;
   }
 
+  session.terminalState = terminalState;
   session.completed = true;
+  session.controller.abort();
   activeManualBookingRecoverySession = null;
 }
 
-function openManualBookingModal(initialManualBooking = null) {
+function openManualBookingModal(initialManualBooking = null, options = {}) {
+  const isResumingRecovery = Boolean(options.resumeRecovery);
+
+  if (!isResumingRecovery && isManualBookingLocalFlowLocked()) {
+    showRestaurantToast(
+      getManualBookingTexts().checkingTitle,
+      'info'
+    );
+    return null;
+  }
+
+  if (
+    !isResumingRecovery &&
+    isCurrentManualBookingRecoverySession(
+      activeManualBookingRecoverySession
+    )
+  ) {
+    showRestaurantToast(
+      getManualBookingTexts().checkingTitle,
+      'info'
+    );
+    return null;
+  }
+
   document.getElementById('restaurant-manual-booking-modal')?.remove();
 
   const texts = getManualBookingTexts();
@@ -8081,10 +8467,7 @@ function openManualBookingModal(initialManualBooking = null) {
       if (isCurrentManualBookingRecoverySession(session)) {
         session.detachedFromModal = true;
 
-        const remainingMs = Math.max(
-          0,
-          MANUAL_BOOKING_RECOVERY_MAX_MS - (Date.now() - session.startedAt)
-        );
+      const remainingMs = getManualBookingRecoveryRemainingMs(session);
 
         renderManualBookingRecoveryBanner(session, remainingMs);
       }
@@ -8136,42 +8519,6 @@ function openManualBookingModal(initialManualBooking = null) {
 ? { ...initialManualBooking }
 : null;
 
-      const getManualBookingRetrySignatureFromForm = () => {
-    const formData = new FormData(form);
-
-    return JSON.stringify({
-      manualOrigin: String(formData.get('manualOrigin') || 'phone').trim(),
-      customerName: String(formData.get('customerName') || '').trim(),
-      customerPhone: String(formData.get('customerPhone') || '').trim(),
-      bookingDate: String(formData.get('bookingDate') || '').trim(),
-      bookingTime: String(formData.get('bookingTime') || '').trim(),
-      bookingPeople: Number(formData.get('bookingPeople') || 0),
-      bookingNote: String(formData.get('bookingNote') || '').trim()
-    });
-  };
-
-  const getManualBookingRetrySignatureFromBooking = (manualBooking) => {
-    return JSON.stringify({
-      manualOrigin: String(manualBooking?.manualOrigin || 'phone').trim(),
-      customerName: String(manualBooking?.customer?.name || '').trim(),
-      customerPhone: String(manualBooking?.customer?.phone || '').trim(),
-      bookingDate: String(manualBooking?.booking?.date || '').trim(),
-      bookingTime: String(manualBooking?.booking?.time || '').trim(),
-      bookingPeople: Number(manualBooking?.booking?.people || 0),
-      bookingNote: String(manualBooking?.booking?.note || '').trim()
-    });
-  };
-
-  const canReuseLastUnresolvedManualBookingId = () => {
-    if (!lastUnresolvedManualBooking?.requestId) {
-      return false;
-    }
-
-    return (
-      getManualBookingRetrySignatureFromForm() ===
-      getManualBookingRetrySignatureFromBooking(lastUnresolvedManualBooking)
-    );
-  };
   const formatManualBookingRecoveryTime = (milliseconds) => {
     const totalSeconds = Math.max(0, Math.ceil(Number(milliseconds || 0) / 1000));
     const minutes = Math.floor(totalSeconds / 60);
@@ -8372,40 +8719,45 @@ function openManualBookingModal(initialManualBooking = null) {
 
     session.detachedFromModal = true;
 
-    const remainingMs = Math.max(
-      0,
-      MANUAL_BOOKING_RECOVERY_MAX_MS - (Date.now() - session.startedAt)
-    );
+  const remainingMs = getManualBookingRecoveryRemainingMs(session);
 
     renderManualBookingRecoveryBanner(session, remainingMs);
     overlay.remove();
   });
 
 const isManualBookingAmbiguousSyncFailure = (manualBooking) => {
-const syncError = manualBooking?.syncError || {};
-const code = String(syncError.code || '').toUpperCase();
-const message = String(syncError.message || '').toLowerCase();
+  const syncError = manualBooking?.syncError || {};
+  const stage = String(syncError.stage || '');
+  const code = String(syncError.code || '').toUpperCase();
+  const message = String(syncError.message || '').toLowerCase();
 
-if (code === '23505') {
-  return true;
-}
+  /*
+   * Dès qu’une écriture a été lancée, on ne peut jamais supposer
+   * qu’elle n’a produit aucun effet côté Supabase.
+   */
+  if (
+    stage === 'pending_insert' ||
+    stage === 'confirm_update' ||
+    code === '23505'
+  ) {
+    return true;
+  }
 
-return [
-  'failed to fetch',
-  'networkerror',
-  'network error',
-  'network request failed',
-  'load failed',
-  'timeout',
-  'timed out',
-  'abort',
-  'aborted',
-  'connection',
-  'offline',
-  'socket',
-  'econnreset'
-].some((keyword) => message.includes(keyword));
-
+  return [
+    'failed to fetch',
+    'networkerror',
+    'network error',
+    'network request failed',
+    'load failed',
+    'timeout',
+    'timed out',
+    'abort',
+    'aborted',
+    'connection',
+    'offline',
+    'socket',
+    'econnreset'
+  ].some((keyword) => message.includes(keyword));
 };
 
  const setManualBookingSubmitBusy = (isBusy) => {
@@ -8418,26 +8770,53 @@ return [
     submitButton.classList.toggle('pointer-events-none', Boolean(isBusy));
   };
 
-  const finalizeManualBookingConfirmed = (confirmedBooking, session = null) => {
-    if (!confirmedBooking?.liveRequestId) {
-      return false;
-    }
+  const finalizeManualBookingConfirmed = (
+    confirmedBooking,
+    session = null
+  ) => {
+    const requestId = String(
+      confirmedBooking?.liveRequestId ||
+      confirmedBooking?.requestId ||
+      ''
+    );
 
-    if (session && !isCurrentManualBookingRecoverySession(session)) {
+    if (!isUuid(requestId)) {
       return false;
     }
 
     if (session) {
+      const isAuthorizedSession =
+        isCurrentManualBookingRecoverySession(session) &&
+        session.terminalState !== 'unresolved' &&
+        Date.now() < session.deadlineAt;
+
+      if (!isAuthorizedSession) {
+        return false;
+      }
+    }
+
+    if (finalizedManualBookingRequestIds.has(requestId)) {
+      return false;
+    }
+
+    finalizedManualBookingRequestIds.add(requestId);
+
+    if (session) {
       clearPersistentManualBookingRecovery(session.id);
-      completeManualBookingRecoverySession(session);
+      completeManualBookingRecoverySession(session, 'confirmed');
     } else if (
-      persistentManualBookingRecovery?.manualBooking?.requestId ===
-      confirmedBooking.requestId
+      persistentManualBookingRecovery?.manualBooking?.requestId === requestId
     ) {
       clearPersistentManualBookingRecovery();
     }
 
-    saveManualBookingToLocalStorage(confirmedBooking);
+    clearManualBookingLocalFlow(requestId);
+
+    saveManualBookingToLocalStorage({
+      ...confirmedBooking,
+      requestId,
+      liveRequestId: requestId
+    });
 
     syncRequestsState();
     renderMenu();
@@ -8451,67 +8830,113 @@ return [
     return true;
   };
 
-  const startManualBookingAmbiguousRecovery = async (manualBooking) => {
-    const session = createManualBookingRecoverySession(manualBooking);
-    rememberPersistentManualBookingRecovery(
-      session,
-      'checking',
-      MANUAL_BOOKING_RECOVERY_MAX_MS
-    );
+const startManualBookingAmbiguousRecovery = async (
+  manualBooking,
+  options = {}
+) => {
+  const existingSession = activeManualBookingRecoverySession;
 
-    hideManualBookingRecoveryFinal();
-    showManualBookingRecovery(MANUAL_BOOKING_RECOVERY_MAX_MS);
-
-    const recoveryResult = await runManualBookingRecovery(manualBooking, {
-      signal: session.controller.signal,
-      onTick: ({ remainingMs }) => {
-        if (!isCurrentManualBookingRecoverySession(session)) {
-          return;
-        }
-
-        if (session.detachedFromModal || !overlay.isConnected) {
-          renderManualBookingRecoveryBanner(session, remainingMs);
-          return;
-        }
-
-        showManualBookingRecovery(remainingMs);
-      }
-    });
-
-    if (!isCurrentManualBookingRecoverySession(session)) {
-      return recoveryResult;
-    }
-
-    if (recoveryResult?.state === 'confirmed') {
-      finalizeManualBookingConfirmed(recoveryResult.booking, session);
-      return recoveryResult;
-    }
-
-    if (recoveryResult?.state === 'aborted') {
-      return recoveryResult;
-    }
-
-    const currentTexts = getManualBookingTexts();
-
-    rememberPersistentManualBookingRecovery(session, 'unresolved');
-    completeManualBookingRecoverySession(session);
-    renderPersistentManualBookingRecovery();
-
-    lastUnresolvedManualBooking = {
-      ...manualBooking
+  if (
+    existingSession &&
+    isCurrentManualBookingRecoverySession(existingSession)
+  ) {
+    return {
+      state: 'blocked',
+      booking: existingSession.manualBooking
     };
+  }
 
-    setManualBookingSubmitBusy(false);
+  const session = createManualBookingRecoverySession(manualBooking, {
+    startedAt: options.startedAt,
+    deadlineAt: options.deadlineAt,
+    sessionId: options.sessionId
+  });
 
-    if (session.detachedFromModal || !overlay.isConnected) {
-      showRestaurantToast(currentTexts.finalMessage, 'danger');
-      return recoveryResult;
+  if (!session) {
+    return {
+      state: 'blocked',
+      booking: manualBooking
+    };
+  }
+
+  setManualBookingLocalFlow(
+    'recovering',
+    manualBooking.requestId
+  );
+
+  setManualBookingSubmitBusy(true);
+
+  rememberPersistentManualBookingRecovery(
+    session,
+    'checking',
+    getManualBookingRecoveryRemainingMs(session)
+  );
+
+  hideManualBookingRecoveryFinal();
+  showManualBookingRecovery(
+    getManualBookingRecoveryRemainingMs(session)
+  );
+
+  const recoveryResult = await runManualBookingRecovery(manualBooking, {
+    deadlineAt: session.deadlineAt,
+    signal: session.controller.signal,
+    onTick: ({ remainingMs }) => {
+      if (!isCurrentManualBookingRecoverySession(session)) {
+        return;
+      }
+
+      if (session.detachedFromModal || !overlay.isConnected) {
+        renderManualBookingRecoveryBanner(session, remainingMs);
+        return;
+      }
+
+      showManualBookingRecovery(remainingMs);
     }
+  });
 
-    showManualBookingRecoveryFinal();
-
+  if (!isCurrentManualBookingRecoverySession(session)) {
     return recoveryResult;
+  }
+
+  if (
+    recoveryResult?.state === 'confirmed' &&
+    Date.now() < session.deadlineAt
+  ) {
+    finalizeManualBookingConfirmed(recoveryResult.booking, session);
+    return recoveryResult;
+  }
+
+  if (recoveryResult?.state === 'aborted') {
+    return recoveryResult;
+  }
+
+  const currentTexts = getManualBookingTexts();
+
+  rememberPersistentManualBookingRecovery(
+    session,
+    'unresolved',
+    0
+  );
+
+  completeManualBookingRecoverySession(session, 'unresolved');
+  clearManualBookingLocalFlow(manualBooking.requestId);
+  renderPersistentManualBookingRecovery();
+
+  lastUnresolvedManualBooking = {
+    ...manualBooking
   };
+
+  setManualBookingSubmitBusy(false);
+
+  if (session.detachedFromModal || !overlay.isConnected) {
+    showRestaurantToast(currentTexts.finalMessage, 'danger');
+    return recoveryResult;
+  }
+
+  showManualBookingRecoveryFinal();
+
+  return recoveryResult;
+};
 
   const processManualBookingAttempt = async (
     manualBooking,
@@ -8564,6 +8989,35 @@ return [
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
+
+    if (isManualBookingLocalFlowLocked()) {
+      return;
+    }
+
+    const retryBooking = lastUnresolvedManualBooking;
+
+    if (retryBooking?.requestId) {
+      setManualBookingLocalFlow('retrying', retryBooking.requestId);
+      setManualBookingSubmitBusy(true);
+      hideManualBookingRecoveryFinal();
+
+      const retryResult = await processManualBookingAttempt(
+        retryBooking,
+        {
+          readBeforeInsert: true
+        }
+      );
+
+      if (retryResult.state !== 'blocked') {
+        return;
+      }
+
+      clearManualBookingLocalFlow(retryBooking.requestId);
+      setManualBookingSubmitBusy(false);
+      lastUnresolvedManualBooking = { ...retryBooking };
+      showManualBookingRecoveryFinal();
+      return;
+    }
 
     const currentTexts = getManualBookingTexts();
     const formData = new FormData(form);
@@ -8631,33 +9085,16 @@ return [
       return;
     }
 
-    const reuseExistingRequestId = canReuseLastUnresolvedManualBookingId();
-
-    if (
-      lastUnresolvedManualBooking?.requestId &&
-      !reuseExistingRequestId
-    ) {
-      const allowNewAttempt = window.confirm(
-        `${currentTexts.retryModifiedConfirmTitle}\n\n${currentTexts.retryModifiedConfirmMessage}`
-      );
-
-      if (!allowNewAttempt) {
-        return;
-      }
-
-      lastUnresolvedManualBooking = null;
-    }
-
+    setManualBookingLocalFlow('submitting');
     setManualBookingSubmitBusy(true);
 
     let localManualBooking;
 
     try {
-      localManualBooking = buildManualBookingRequestFromForm(
-        form,
-        reuseExistingRequestId
-          ? lastUnresolvedManualBooking.requestId
-          : ''
+      localManualBooking = buildManualBookingRequestFromForm(form);
+      setManualBookingLocalFlow(
+        'submitting',
+        localManualBooking.requestId
       );
     } catch (error) {
       console.warn(
@@ -8665,6 +9102,7 @@ return [
         error
       );
 
+      clearManualBookingLocalFlow();
       setManualBookingSubmitBusy(false);
 
       showManualBookingFormError(
@@ -8681,10 +9119,7 @@ return [
     }
 
     const attemptResult = await processManualBookingAttempt(
-      localManualBooking,
-      {
-        readBeforeInsert: reuseExistingRequestId
-      }
+      localManualBooking
     );
 
     if (attemptResult.state !== 'blocked') {
@@ -8696,6 +9131,7 @@ return [
       attemptResult.booking
     );
 
+    clearManualBookingLocalFlow(localManualBooking.requestId);
     setManualBookingSubmitBusy(false);
 
     showManualBookingFormError(
@@ -8708,6 +9144,7 @@ return [
             : 'Impossible d’enregistrer la réservation pour le moment. Réessayez dans quelques instants.'
     );
   });
+
   const copyManualBookingSupportDiagnostics = async () => {
     const now = new Date();
 
@@ -8748,31 +9185,18 @@ return [
     }
   };
 
-    manualBookingRetryEntryButton?.addEventListener('click', async () => {
+  manualBookingRetryEntryButton?.addEventListener('click', async () => {
+    if (isManualBookingLocalFlowLocked()) {
+      return;
+    }
+
     const retryBooking = lastUnresolvedManualBooking;
 
     if (!retryBooking?.requestId) {
       return;
     }
 
-    const currentTexts = getManualBookingTexts();
-    const reuseSameId = canReuseLastUnresolvedManualBookingId();
-
-    if (!reuseSameId) {
-      const allowNewAttempt = window.confirm(
-        `${currentTexts.retryModifiedConfirmTitle}\n\n${currentTexts.retryModifiedConfirmMessage}`
-      );
-
-      if (!allowNewAttempt) {
-        return;
-      }
-
-      lastUnresolvedManualBooking = null;
-      hideManualBookingRecoveryFinal();
-      form?.requestSubmit();
-      return;
-    }
-
+    setManualBookingLocalFlow('retrying', retryBooking.requestId);
     setManualBookingSubmitBusy(true);
     hideManualBookingRecoveryFinal();
 
@@ -8787,6 +9211,7 @@ return [
       return;
     }
 
+    clearManualBookingLocalFlow(retryBooking.requestId);
     setManualBookingSubmitBusy(false);
     lastUnresolvedManualBooking = { ...retryBooking };
     showManualBookingRecoveryFinal();
@@ -8810,13 +9235,36 @@ return [
     void copyManualBookingSupportDiagnostics();
   });
 
+  if (
+    options.resumeRecovery &&
+    initialManualBooking?.requestId &&
+    Number(options.deadlineAt || 0) > Date.now()
+  ) {
+    window.setTimeout(() => {
+      if (!overlay.isConnected) {
+        return;
+      }
+
+      void startManualBookingAmbiguousRecovery(
+        initialManualBooking,
+        {
+          startedAt: options.startedAt,
+          deadlineAt: options.deadlineAt,
+          sessionId: options.sessionId
+        }
+      );
+    }, 0);
+  }
+
   if (window.lucide) {
     requestAnimationFrame(() => lucide.createIcons());
   }
 
-  window.setTimeout(() => {
-    overlay.querySelector('input[name="customerName"]')?.focus();
-  }, 80);
+  if (!options.resumeRecovery) {
+    window.setTimeout(() => {
+      overlay.querySelector('input[name="customerName"]')?.focus();
+    }, 80);
+  }
 }
 
 function getManualOrderTexts() {
@@ -13049,6 +13497,39 @@ function renderRequestRow(item, displayMode = 'active') {
   const manualBookingBtn = document.getElementById('restaurant-manual-booking-btn');
   if (manualBookingBtn) {
     manualBookingBtn.addEventListener('click', () => {
+      if (isManualBookingLocalFlowLocked()) {
+        showRestaurantToast(
+          getManualBookingTexts().checkingTitle,
+          'info'
+        );
+        return;
+      }
+
+      const pendingRecovery = persistentManualBookingRecovery;
+
+      if (
+        pendingRecovery?.state === 'checking' &&
+        pendingRecovery.manualBooking?.requestId
+      ) {
+        showRestaurantToast(
+          getManualBookingTexts().checkingTitle,
+          'info'
+        );
+        return;
+      }
+
+      if (
+        pendingRecovery?.manualBooking?.requestId &&
+        (
+          !pendingRecovery.restaurantId ||
+          !siteConfig.restaurantId ||
+          pendingRecovery.restaurantId === siteConfig.restaurantId
+        )
+      ) {
+        openManualBookingModal(pendingRecovery.manualBooking);
+        return;
+      }
+
       openManualBookingModal();
     });
   }
@@ -20780,13 +21261,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     showTapCartaRestoAccessBlocked(error?.message || 'Accès Resto non valide ou révoqué.');
     return;
   }
+console.log('Restaurant actif chargé :', activeRestaurantData);
 
-  console.log('Restaurant actif chargé :', activeRestaurantData);
+  const restoredManualBookingRecovery =
+    restorePersistentManualBookingRecoveryFromSession();
+
+  renderPersistentManualBookingRecovery();
 
   try {
     renderMenu();
   } catch (error) {
-    console.error('TapCarta Resto: erreur pendant le premier rendu de l’interface', error);
+    console.error(
+      'TapCarta Resto: erreur pendant le premier rendu de l’interface',
+      error
+    );
+  }
+
+  if (
+    restoredManualBookingRecovery?.state === 'checking' &&
+    restoredManualBookingRecovery.manualBooking?.requestId &&
+    Number(restoredManualBookingRecovery.deadlineAt || 0) > Date.now()
+  ) {
+    window.setTimeout(() => {
+      openManualBookingModal(
+        restoredManualBookingRecovery.manualBooking,
+        {
+          resumeRecovery: true,
+          startedAt: restoredManualBookingRecovery.startedAt,
+          deadlineAt: restoredManualBookingRecovery.deadlineAt,
+          sessionId: restoredManualBookingRecovery.sessionId
+        }
+      );
+    }, 0);
   }
 
   try {
