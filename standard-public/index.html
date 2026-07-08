@@ -6,7 +6,11 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.4.2.2';
+    const APP_VERSION = 'V2.5.1.1';
+    const STANDARD_RELEASE_APP_KEY = 'tapcarta-standard';
+const STANDARD_RELEASE_STORAGE_KEY = 'tapcarta-standard-active-release-id';
+const STANDARD_RELEASE_VERSION_STORAGE_KEY = 'tapcarta-standard-active-release-version';
+const STANDARD_RELEASE_PENDING_TOAST_KEY = 'tapcarta-standard-pending-update-toast-release-id';
 const TAPCARTA_PUBLIC_LOGO_URL = './tapcarta-logo-www.png';
 const LIVE_REQUESTS_ENABLED = true;
 let LIVE_RESTAURANT_ID = '';
@@ -3013,8 +3017,10 @@ const translations = {
         iosInstallHelp: 'Sur iPhone : appuyez sur <strong>Partager</strong>, puis <strong>Sur l’écran d’accueil</strong>.',
         samsungInstallHelp: '<div class="install-help-box"><div class="install-help-title">Installer le menu sur votre téléphone</div><div class="install-help-step"><span class="install-help-num">1</span><span>Appuyez sur <strong>☰ les 3 lignes en bas à droite</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Appuyez sur <strong>+ Ajouter à</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Appuyez sur <strong>Écran d’accueil</strong></span></div><div class="install-help-note">Le menu apparaîtra ensuite comme une application sur votre téléphone.</div></div>',
         installToastTitle: 'Menu ajouté au téléphone',
-        installToastText: 'Retrouvez-le dans vos applications.',
-        versionLabel: 'Version',
+installToastText: 'Retrouvez-le dans vos applications.',
+appUpdatedToastTitle: 'Votre app a été mise à jour',
+appUpdatedToastText: 'Vous profitez maintenant de la dernière version.',
+versionLabel: 'Version',
         discoverTapCarta: 'Découvrir TapCarta',
         seeMenu: 'Voir le menu',
         orderButton: 'À emporter',
@@ -3077,9 +3083,11 @@ shareUnavailableTitle: 'Compartir no disponible',
 shareUnavailableText: 'No se ha podido copiar el enlace automáticamente.',
         iosInstallHelp: 'En iPhone: pulse <strong>Compartir</strong> y luego <strong>Añadir a la pantalla de inicio</strong>.',
         samsungInstallHelp: '<div class="install-help-box"><div class="install-help-title">Instalar el menú en su teléfono</div><div class="install-help-step"><span class="install-help-num">1</span><span>Pulse <strong>☰ las 3 líneas abajo a la derecha</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Pulse <strong>+ Añadir a</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Pulse <strong>Pantalla de inicio</strong></span></div><div class="install-help-note">Después, el menú aparecerá como una aplicación en su teléfono.</div></div>',
-        installToastTitle: 'Menú añadido al teléfono',
-        installToastText: 'Ya puede encontrarlo en sus aplicaciones.',
-        versionLabel: 'Versión',
+installToastTitle: 'Menú añadido al teléfono',
+installToastText: 'Lo encontrarás en tus aplicaciones.',
+appUpdatedToastTitle: 'Tu app se ha actualizado',
+appUpdatedToastText: 'Ya estás usando la última versión.',
+versionLabel: 'Versión',
         discoverTapCarta: 'Descubrir TapCarta',
         seeMenu: 'Ver el menú',
 orderButton: 'Para llevar',
@@ -3143,9 +3151,11 @@ shareUnavailableTitle: 'Sharing unavailable',
 shareUnavailableText: 'The link could not be copied automatically.',
         iosInstallHelp: 'On iPhone: tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.',
         samsungInstallHelp: '<div class="install-help-box"><div class="install-help-title">Install the menu on your phone</div><div class="install-help-step"><span class="install-help-num">1</span><span>Tap <strong>☰ the 3 lines at the bottom right</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tap <strong>+ Add to</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Tap <strong>Home screen</strong></span></div><div class="install-help-note">The menu will then appear like an app on your phone.</div></div>',
-        installToastTitle: 'Menu added to your phone',
-        installToastText: 'You can now find it in your apps.',
-        versionLabel: 'Version',
+installToastTitle: 'Menu added to your phone',
+installToastText: 'You will find it in your apps.',
+appUpdatedToastTitle: 'Your app has been updated',
+appUpdatedToastText: 'You are now using the latest version.',
+versionLabel: 'Version',
         discoverTapCarta: 'Discover TapCarta',
        seeMenu: 'View menu',
 orderButton: 'Takeaway',
@@ -3210,9 +3220,11 @@ shareUnavailableTitle: 'Delen niet beschikbaar',
 shareUnavailableText: 'De link kon niet automatisch worden gekopieerd.',
         iosInstallHelp: 'Op iPhone: tik op <strong>Deel</strong> en daarna op <strong>Zet op beginscherm</strong>.',
         samsungInstallHelp: '<div class="install-help-box"><div class="install-help-title">Installeer het menu op uw telefoon</div><div class="install-help-step"><span class="install-help-num">1</span><span>Tik op <strong>☰ de 3 lijnen rechtsonder</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tik op <strong>+ Toevoegen aan</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Tik op <strong>Startscherm</strong></span></div><div class="install-help-note">Daarna verschijnt het menu als een app op uw telefoon.</div></div>',
-        installToastTitle: 'Menu toegevoegd aan uw telefoon',
-        installToastText: 'U vindt het nu terug bij uw apps.',
-        versionLabel: 'Versie',
+installToastTitle: 'Menu toegevoegd aan je telefoon',
+installToastText: 'Je vindt het terug tussen je apps.',
+appUpdatedToastTitle: 'Je app is bijgewerkt',
+appUpdatedToastText: 'Je gebruikt nu de nieuwste versie.',
+versionLabel: 'Versie',
         discoverTapCarta: 'TapCarta ontdekken',
        seeMenu: 'Bekijk het menu',
 orderButton: 'Afhalen',
@@ -3662,7 +3674,65 @@ function persistClientActiveView() {
         toast.classList.remove('show');
       }, 3200);
     }
+function showStandardAppUpdatedToast() {
+  const t = translations[currentLang] || translations.fr;
 
+  showStandardShareToast(
+    t.appUpdatedToastTitle || 'Votre app a été mise à jour',
+    t.appUpdatedToastText || 'Vous profitez maintenant de la dernière version.'
+  );
+}
+async function fetchStandardActiveRelease() {
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('app_release_versions')
+      .select('id, app_key, version, release_status, published_at')
+      .eq('app_key', STANDARD_RELEASE_APP_KEY)
+      .eq('release_status', 'published')
+      .order('published_at', { ascending: false })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return data || null;
+  } catch (error) {
+    console.warn('TapCarta Standard: impossible de lire la release active.', error);
+    return null;
+  }
+}
+async function syncStandardActiveRelease() {
+  const activeRelease = await fetchStandardActiveRelease();
+
+  if (!activeRelease?.id) {
+    return;
+  }
+
+  const currentReleaseId = String(activeRelease.id);
+  const previousReleaseId = localStorage.getItem(STANDARD_RELEASE_STORAGE_KEY);
+
+  localStorage.setItem(STANDARD_RELEASE_STORAGE_KEY, currentReleaseId);
+
+  if (activeRelease.version) {
+    localStorage.setItem(STANDARD_RELEASE_VERSION_STORAGE_KEY, String(activeRelease.version));
+  }
+
+  if (!previousReleaseId) {
+    return;
+  }
+
+  if (previousReleaseId !== currentReleaseId) {
+    showStandardAppUpdatedToast();
+  }
+}
     async function handleShareRestaurantClick() {
       const t = translations[currentLang] || translations.fr;
       const restaurantName = siteConfig.restaurantName || siteConfig.identity?.name || siteConfig.productName || 'TapCarta';
@@ -9424,6 +9494,12 @@ updateTapCartaPublicSignature();
     await loadRestaurantData();
   } catch (error) {
     console.error('Restaurant data loading error:', error);
+  }
+
+  try {
+    await syncStandardActiveRelease();
+  } catch (error) {
+    console.warn('TapCarta Standard: contrôle de release ignoré.', error);
   }
 
   renderMenu();
