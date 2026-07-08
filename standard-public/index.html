@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.5.1.1';
+    const APP_VERSION = 'V2.5.1.2';
     const STANDARD_RELEASE_APP_KEY = 'tapcarta-standard';
 const STANDARD_RELEASE_STORAGE_KEY = 'tapcarta-standard-active-release-id';
 const STANDARD_RELEASE_VERSION_STORAGE_KEY = 'tapcarta-standard-active-release-version';
@@ -9496,13 +9496,13 @@ updateTapCartaPublicSignature();
     console.error('Restaurant data loading error:', error);
   }
 
-  try {
-    await syncStandardActiveRelease();
-  } catch (error) {
-    console.warn('TapCarta Standard: contrôle de release ignoré.', error);
-  }
+renderMenu();
 
-  renderMenu();
+try {
+  await syncStandardActiveRelease();
+} catch (error) {
+  console.warn('TapCarta Standard: contrôle de release ignoré.', error);
+}
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
