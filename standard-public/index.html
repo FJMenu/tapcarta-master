@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.5.2.2';
+    const APP_VERSION = 'V2.5.2.3';
     const STANDARD_RELEASE_APP_KEY = 'tapcarta-standard';
 const STANDARD_RELEASE_STORAGE_KEY = 'tapcarta-standard-active-release-id';
 const STANDARD_RELEASE_VERSION_STORAGE_KEY = 'tapcarta-standard-active-release-version';
@@ -7078,20 +7078,10 @@ function openClientStandbyServiceModal(type) {
 }
 
 function handleOrderEntryClick() {
-  if (hasClientOrderHistory()) {
-    openClientEntryChoiceModal('order');
-    return;
-  }
-
   activateOrderMode();
 }
 
 function handleBookingEntryClick() {
-  if (hasClientBookingHistory()) {
-    openClientEntryChoiceModal('booking');
-    return;
-  }
-
   activateBookingMode();
 }
 
@@ -9051,7 +9041,7 @@ ${orderMode ? `
   ${getBookingTexts(currentLang).bookingBackToHome}
 </button>
       </div>
-      <div id="client-order-card-slot"></div>
+      <div id="client-order-form-slot"></div>
     </div>
   </div>
 ` : ''}
@@ -9131,7 +9121,7 @@ ${bookingMode ? `
 </button>
       </div>
 
-      <div id="client-booking-card-slot"></div>
+      <div id="client-booking-form-slot"></div>
 
       ${renderBookingFeedbackMessage()}
 
