@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.5.1.2';
+    const APP_VERSION = 'V2.5.2.1';
     const STANDARD_RELEASE_APP_KEY = 'tapcarta-standard';
 const STANDARD_RELEASE_STORAGE_KEY = 'tapcarta-standard-active-release-id';
 const STANDARD_RELEASE_VERSION_STORAGE_KEY = 'tapcarta-standard-active-release-version';
@@ -1752,6 +1752,76 @@ function renderStandardInstallShareRow(t) {
     </div>
   `;
 }
+function renderStandardClientTrackingAccessSection(t) {
+  const hasBookingTracking = Boolean(renderLastBookingRequestCard());
+  const hasOrderTracking = Boolean(renderLastOrderRequestCard());
+
+  if (!hasBookingTracking && !hasOrderTracking) {
+    return '';
+  }
+
+  const title =
+    currentLang === 'es'
+      ? 'Seguimiento en curso'
+      : currentLang === 'en'
+        ? 'Current tracking'
+        : currentLang === 'nl'
+          ? 'Lopende opvolging'
+          : 'Suivi en cours';
+
+  const bookingLabel =
+    currentLang === 'es'
+      ? 'Mis reservas'
+      : currentLang === 'en'
+        ? 'My bookings'
+        : currentLang === 'nl'
+          ? 'Mijn reservaties'
+          : 'Mes réservations';
+
+  const orderLabel =
+    currentLang === 'es'
+      ? 'Mis pedidos'
+      : currentLang === 'en'
+        ? 'My orders'
+        : currentLang === 'nl'
+          ? 'Mijn bestellingen'
+          : 'Mes commandes';
+
+  return `
+    <div class="max-w-[560px] mx-auto rounded-2xl border border-gold/25 bg-darkCard/80 px-4 py-4 shadow-lg">
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <div class="text-xs font-bold uppercase tracking-[0.18em] text-gold/90">
+          ${title}
+        </div>
+        <div class="h-px flex-1 bg-gold/20"></div>
+      </div>
+
+      <div class="grid grid-cols-1 ${hasBookingTracking && hasOrderTracking ? 'md:grid-cols-2' : ''} gap-3">
+        ${hasBookingTracking ? `
+          <button
+            type="button"
+            onclick="handleBookingEntryClick()"
+            class="btn-action w-full flex items-center justify-center gap-2 rounded-xl border border-gold/35 bg-black/20 px-4 py-3 text-sm font-semibold text-cream/90 hover:border-gold/60 hover:bg-gold/10 transition-all"
+          >
+            <i data-lucide="calendar-days" class="w-4 h-4 text-gold"></i>
+            <span>${bookingLabel}</span>
+          </button>
+        ` : ''}
+
+        ${hasOrderTracking ? `
+          <button
+            type="button"
+            onclick="handleOrderEntryClick()"
+            class="btn-action w-full flex items-center justify-center gap-2 rounded-xl border border-gold/35 bg-black/20 px-4 py-3 text-sm font-semibold text-cream/90 hover:border-gold/60 hover:bg-gold/10 transition-all"
+          >
+            <i data-lucide="shopping-bag" class="w-4 h-4 text-gold"></i>
+            <span>${orderLabel}</span>
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
 
 function renderStandardMainActionsSection(t) {
   return `
@@ -1761,6 +1831,8 @@ function renderStandardMainActionsSection(t) {
           renderStandardOrderButton(t),
           renderStandardBookingButton(t)
         ])}
+
+        ${renderStandardClientTrackingAccessSection(t)}
 
         ${renderStandardActionRow([
           renderStandardPhoneButton(t),
@@ -1780,6 +1852,7 @@ function renderStandardMainActionsSection(t) {
     </section>
   `;
 }
+
 function normalizeStandardCustomerMessages(messages) {
   if (!Array.isArray(messages)) return [];
 
@@ -4972,8 +5045,6 @@ function renderLastBookingRequestCard() {
     return '';
   }
 
-  const canEdit = !['confirmed', 'cancelled', 'cancelled_by_client', 'refused', 'modified', 'accepted_by_client', 'rejected_by_client', 'arrived', 'not_arrived', 'presence_unknown_no_action'].includes(status);
-  const canCancel = !['confirmed', 'cancelled', 'cancelled_by_client', 'refused', 'accepted_by_client', 'rejected_by_client', 'arrived', 'not_arrived', 'presence_unknown_no_action'].includes(status);
   const preorderItems = Array.isArray(bookingRequest.booking.preorderItems)
     ? bookingRequest.booking.preorderItems
     : [];
@@ -5146,27 +5217,17 @@ function renderLastBookingRequestCard() {
           </div>
         </div>
 
-        <div class="flex flex-wrap gap-2">
-          <button onclick="viewLastBookingRequest()" class="btn-action px-3 py-2 rounded-xl border border-gold/25 bg-black/20 text-xs font-semibold text-cream/85 hover:border-gold/50 hover:bg-gold/10 transition-all">
-            ${tBooking.bookingActionView}
-          </button>
-
-          ${status === 'modified' ? `
+        ${status === 'modified' ? `
+          <div class="flex flex-wrap gap-2">
             <button onclick="acceptLastBookingModification()" class="btn-action px-3 py-2 rounded-xl border border-emerald-400/40 bg-emerald-500/10 text-xs font-semibold text-cream/90 hover:border-emerald-300/70 hover:bg-emerald-500/20 transition-all">
               ${tDecision.acceptButton}
             </button>
             <button onclick="rejectLastBookingModification()" class="btn-action px-3 py-2 rounded-xl border border-red-400/40 bg-red-500/10 text-xs font-semibold text-cream/90 hover:border-red-300/70 hover:bg-red-500/20 transition-all">
               ${tDecision.rejectButton}
             </button>
-          ` : `
-            <button onclick="editLastBookingRequest()" ${!canEdit ? 'disabled' : ''} class="btn-action px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${!canEdit ? 'border-gold/10 bg-black/10 text-cream/30 cursor-not-allowed' : 'border-gold/25 bg-black/20 text-cream/85 hover:border-gold/50 hover:bg-gold/10'}">
-              ${tBooking.bookingActionEdit}
-            </button>
-            <button onclick="cancelLastBookingRequest()" ${!canCancel ? 'disabled' : ''} class="btn-action px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${!canCancel ? 'border-gold/10 bg-black/10 text-cream/30 cursor-not-allowed' : 'border-red-400/40 bg-red-500/10 text-cream/90 hover:border-red-300/70 hover:bg-red-500/20'}">
-              ${tBooking.bookingActionCancel}
-            </button>
-          `}
-        </div>
+          </div>
+        ` : ''}
+
       </div>
 
       ${status === 'modified' && proposedTime ? `
