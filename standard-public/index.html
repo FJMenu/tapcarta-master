@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.5.2.3';
+    const APP_VERSION = 'V2.5.3.1';
     const STANDARD_RELEASE_APP_KEY = 'tapcarta-standard';
 const STANDARD_RELEASE_STORAGE_KEY = 'tapcarta-standard-active-release-id';
 const STANDARD_RELEASE_VERSION_STORAGE_KEY = 'tapcarta-standard-active-release-version';
@@ -7521,6 +7521,111 @@ function getClientOrderTrackingSnapshot() {
     status: orderRequest.status || 'pending'
   };
 }
+function getClientBookingTrackingSnapshot() {
+  const bookingRequest = getLastBookingRequest();
+
+  if (!bookingRequest || !bookingRequest.requestId) {
+    return null;
+  }
+
+  return {
+    requestId: String(bookingRequest.requestId),
+    status: bookingRequest.status || 'pending'
+  };
+}
+
+function isClientImportantStatusChange(type, previousSnapshot, nextSnapshot) {
+  if (!previousSnapshot || !nextSnapshot) return false;
+  if (previousSnapshot.requestId !== nextSnapshot.requestId) return false;
+  if (previousSnapshot.status === nextSnapshot.status) return false;
+
+  const importantStatuses = [
+    'confirmed',
+    'modified',
+    'refused',
+    'cancelled',
+    'cancelled_by_restaurant',
+    'accepted_by_restaurant',
+    'ready',
+    'completed'
+  ];
+
+  return importantStatuses.includes(nextSnapshot.status || '');
+}
+
+function getClientStatusNotificationStorageKey(type, snapshot) {
+  return `tapcarta-client-status-sound-${type}-${snapshot.requestId}-${snapshot.status}`;
+}
+
+function hasClientStatusNotificationAlreadyPlayed(type, snapshot) {
+  try {
+    return localStorage.getItem(getClientStatusNotificationStorageKey(type, snapshot)) === '1';
+  } catch (error) {
+    return false;
+  }
+}
+
+function markClientStatusNotificationPlayed(type, snapshot) {
+  try {
+    localStorage.setItem(getClientStatusNotificationStorageKey(type, snapshot), '1');
+  } catch (error) {
+    console.warn('TapCarta: impossible de mémoriser la notification sonore client', error);
+  }
+}
+
+function playClientPremiumNotificationSound() {
+  if (document.hidden) return;
+
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  try {
+    const audioContext = new AudioContextClass();
+    const now = audioContext.currentTime;
+
+    const masterGain = audioContext.createGain();
+    masterGain.gain.setValueAtTime(0.0001, now);
+    masterGain.gain.exponentialRampToValueAtTime(0.075, now + 0.035);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.95);
+    masterGain.connect(audioContext.destination);
+
+    const playTone = (frequency, start, duration, volume = 0.7) => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, now + start);
+
+      gain.gain.setValueAtTime(0.0001, now + start);
+      gain.gain.exponentialRampToValueAtTime(volume, now + start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+
+      oscillator.connect(gain);
+      gain.connect(masterGain);
+
+      oscillator.start(now + start);
+      oscillator.stop(now + start + duration + 0.04);
+    };
+
+    playTone(659.25, 0, 0.32, 0.55);
+    playTone(987.77, 0.11, 0.42, 0.42);
+    playTone(1318.51, 0.26, 0.50, 0.25);
+
+    setTimeout(() => {
+      audioContext.close?.();
+    }, 1300);
+  } catch (error) {
+    console.warn('TapCarta: son de notification client indisponible', error);
+  }
+}
+
+function notifyClientImportantStatusChange(type, previousSnapshot, nextSnapshot) {
+  if (!isClientImportantStatusChange(type, previousSnapshot, nextSnapshot)) return;
+  if (hasClientStatusNotificationAlreadyPlayed(type, nextSnapshot)) return;
+
+  playClientPremiumNotificationSound();
+  markClientStatusNotificationPlayed(type, nextSnapshot);
+}
 
 function shouldFocusClientOrderCardAfterRefresh(previousSnapshot, nextSnapshot) {
   if (!orderMode) return false;
@@ -7544,6 +7649,7 @@ function focusClientOrderCardAfterRefresh() {
 
 async function refreshClientRequestCards() {
   const previousOrderSnapshot = getClientOrderTrackingSnapshot();
+const previousBookingSnapshot = getClientBookingTrackingSnapshot();
 
   if (LIVE_REQUESTS_ENABLED) {
     try {
@@ -7556,9 +7662,13 @@ await syncLastBookingRequestFromSource();
     }
   }
 
-  const nextOrderSnapshot = getClientOrderTrackingSnapshot();
-  const shouldFocusOrderCard = shouldFocusClientOrderCardAfterRefresh(previousOrderSnapshot, nextOrderSnapshot);
+const nextOrderSnapshot = getClientOrderTrackingSnapshot();
+const nextBookingSnapshot = getClientBookingTrackingSnapshot();
 
+notifyClientImportantStatusChange('order', previousOrderSnapshot, nextOrderSnapshot);
+notifyClientImportantStatusChange('booking', previousBookingSnapshot, nextBookingSnapshot);
+
+const shouldFocusOrderCard = shouldFocusClientOrderCardAfterRefresh(previousOrderSnapshot, nextOrderSnapshot);
   const orderSlot = document.getElementById('client-order-card-slot');
   const bookingSlot = document.getElementById('client-booking-card-slot');
 
