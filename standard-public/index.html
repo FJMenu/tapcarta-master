@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.5.3.2';
+    const APP_VERSION = 'V2.5.3.3';
     const STANDARD_RELEASE_APP_KEY = 'tapcarta-standard';
 const STANDARD_RELEASE_STORAGE_KEY = 'tapcarta-standard-active-release-id';
 const STANDARD_RELEASE_VERSION_STORAGE_KEY = 'tapcarta-standard-active-release-version';
@@ -2497,8 +2497,12 @@ function applyStandardVisualTheme(themeCode) {
     }
   };
 
-  const selectedTheme = themes[themeCode] || themes.gold;
-  const appWrapper = document.getElementById('app-wrapper');
+const selectedTheme = themes[themeCode] || themes.gold;
+const readableText = selectedTheme.isLight ? '#0F172A' : '#FAF6EE';
+const readableMutedText = selectedTheme.isLight ? 'rgba(15, 23, 42, 0.78)' : 'rgba(250, 246, 238, 0.72)';
+const readableAccentText = selectedTheme.isLight ? '#7A5208' : '#F2C744';
+
+const appWrapper = document.getElementById('app-wrapper');
 
   document.documentElement.style.background = selectedTheme.background;
   document.body.style.background = selectedTheme.background;
@@ -2527,7 +2531,7 @@ function applyStandardVisualTheme(themeCode) {
     #app-wrapper,
     #app-wrapper .text-cream,
     #app-wrapper [class*="text-cream"] {
-      color: ${selectedTheme.text} !important;
+      color: ${readableText} !important;
     }
 
     #app-wrapper .text-cream\\/80,
@@ -2539,7 +2543,7 @@ function applyStandardVisualTheme(themeCode) {
     #app-wrapper .text-cream\\/45,
     #app-wrapper .text-cream\\/40,
     #app-wrapper [class*="text-cream/"] {
-      color: ${selectedTheme.mutedText} !important;
+      color: ${readableMutedText} !important;
     }
 
     #app-wrapper .bg-dark,
@@ -2576,8 +2580,8 @@ function applyStandardVisualTheme(themeCode) {
 
     #app-wrapper button[class*="repeating-linear-gradient"] i,
     #app-wrapper a[class*="repeating-linear-gradient"] i {
-      color: ${selectedTheme.accentText} !important;
-      stroke: ${selectedTheme.accentText} !important;
+      color: ${readableAccentText} !important;
+      stroke: ${readableAccentText} !important;
     }
 
     .language-selector {
