@@ -6,7 +6,7 @@
   <title>TapCarta</title>
 
   <script>
-    const APP_VERSION = 'V2.5.2.1';
+    const APP_VERSION = 'V2.5.2.2';
     const STANDARD_RELEASE_APP_KEY = 'tapcarta-standard';
 const STANDARD_RELEASE_STORAGE_KEY = 'tapcarta-standard-active-release-id';
 const STANDARD_RELEASE_VERSION_STORAGE_KEY = 'tapcarta-standard-active-release-version';
@@ -1800,7 +1800,7 @@ function renderStandardClientTrackingAccessSection(t) {
         ${hasBookingTracking ? `
           <button
             type="button"
-            onclick="handleBookingEntryClick()"
+            onclick="openClientTrackingView('booking')"
             class="btn-action w-full flex items-center justify-center gap-2 rounded-xl border border-gold/35 bg-black/20 px-4 py-3 text-sm font-semibold text-cream/90 hover:border-gold/60 hover:bg-gold/10 transition-all"
           >
             <i data-lucide="calendar-days" class="w-4 h-4 text-gold"></i>
@@ -1811,7 +1811,7 @@ function renderStandardClientTrackingAccessSection(t) {
         ${hasOrderTracking ? `
           <button
             type="button"
-            onclick="handleOrderEntryClick()"
+            onclick="openClientTrackingView('order')"
             class="btn-action w-full flex items-center justify-center gap-2 rounded-xl border border-gold/35 bg-black/20 px-4 py-3 text-sm font-semibold text-cream/90 hover:border-gold/60 hover:bg-gold/10 transition-all"
           >
             <i data-lucide="shopping-bag" class="w-4 h-4 text-gold"></i>
@@ -3534,6 +3534,7 @@ let bookingForm = {
   preorder: []
 };
 let editingBookingRequestId = null;
+let clientTrackingMode = null;
 
 const VERSION_STORAGE_KEY = 'tapcarta-last-loaded-version';
 const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
@@ -3545,9 +3546,19 @@ try {
   if (savedClientView === 'order') {
     orderMode = true;
     bookingMode = false;
+    clientTrackingMode = null;
   } else if (savedClientView === 'booking') {
     bookingMode = true;
     orderMode = false;
+    clientTrackingMode = null;
+  } else if (savedClientView === 'tracking-order') {
+    orderMode = false;
+    bookingMode = false;
+    clientTrackingMode = 'order';
+  } else if (savedClientView === 'tracking-booking') {
+    orderMode = false;
+    bookingMode = false;
+    clientTrackingMode = 'booking';
   }
 } catch (error) {
   console.warn('TapCarta: impossible de relire la vue client sauvegardée', error);
@@ -3555,7 +3566,14 @@ try {
 
 function persistClientActiveView() {
   try {
-    const activeView = orderMode ? 'order' : bookingMode ? 'booking' : 'home';
+    const activeView = clientTrackingMode
+      ? `tracking-${clientTrackingMode}`
+      : orderMode
+        ? 'order'
+        : bookingMode
+          ? 'booking'
+          : 'home';
+
     localStorage.setItem(CLIENT_VIEW_STORAGE_KEY, activeView);
   } catch (error) {
     console.warn('TapCarta: impossible de sauvegarder la vue client active', error);
@@ -5542,17 +5560,14 @@ async function validateAndSubmitBooking() {
   console.log('TapCarta booking request saved:', bookingRequest);
   console.log('TapCarta booking requests history:', bookingRequests);
 
-  setBookingFeedback('success', 'bookingSent');
+ setBookingFeedback('success', 'bookingSent');
 
-  resetBookingForm();
-  renderMenu();
+resetBookingForm();
+openClientTrackingView('booking');
 
-  setTimeout(() => {
-    const bookingCard = document.getElementById('client-booking-card');
-    if (bookingCard) {
-      bookingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, 80);
+setTimeout(() => {
+  refreshClientRequestCards();
+}, 120);
 }
 
 function activateOrderMode() {
@@ -5580,6 +5595,7 @@ function activateOrderMode() {
 
   orderMode = true;
   bookingMode = false;
+  clientTrackingMode = null;
   cartPanelOpen = false;
   activeOrderCategory = 'all';
   orderReviewOpen = false;
@@ -5605,6 +5621,38 @@ function deactivateOrderMode() {
   activeOrderCategory = 'all';
   orderReviewOpen = false;
   renderMenu();
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+function openClientTrackingView(type) {
+  if (type !== 'booking' && type !== 'order') {
+    return;
+  }
+
+  clientTrackingMode = type;
+  orderMode = false;
+  bookingMode = false;
+  cartPanelOpen = false;
+  activeOrderCategory = 'all';
+  orderReviewOpen = false;
+  editingBookingRequestId = null;
+
+  persistClientActiveView();
+  renderMenu();
+
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function closeClientTrackingView() {
+  clientTrackingMode = null;
+  orderMode = false;
+  bookingMode = false;
+  cartPanelOpen = false;
+  activeOrderCategory = 'all';
+  orderReviewOpen = false;
+
+  persistClientActiveView();
+  renderMenu();
+
   window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
@@ -6489,7 +6537,7 @@ function isFinalClientOrderStatus(status) {
 }
 
 function isActiveClientOrderStatus(status) {
-  return ['pending', 'sent', 'processing', 'modified', 'rejected_by_client'].includes(status || 'pending');
+ return ['pending', 'sent', 'processing', 'modified', 'confirmed', 'accepted_by_client', 'rejected_by_client'].includes(status || 'pending');
 }
 
 function isClientOrderVisibleInHistory(status) {
@@ -6501,7 +6549,7 @@ function isFinalClientBookingStatus(status) {
 }
 
 function isActiveClientBookingStatus(status) {
-  return ['pending', 'processing', 'modified', 'rejected_by_client'].includes(status || 'pending');
+return ['pending', 'processing', 'modified', 'confirmed', 'accepted_by_client', 'rejected_by_client'].includes(status || 'pending');
 }
 
 function isClientBookingVisibleInHistory(status) {
@@ -7510,7 +7558,7 @@ async function refreshClientRequestCards() {
   if (LIVE_REQUESTS_ENABLED) {
     try {
       await syncLastOrderRequestFromSource();
-      await readBookingRequestsFromStorage();
+await syncLastBookingRequestFromSource();
     } catch (error) {
       console.error('Supabase client cards refresh error:', error);
       clientOrderSyncUnavailable = true;
@@ -7607,7 +7655,7 @@ function startClientRequestAutoRefresh() {
   stopClientRequestAutoRefresh();
 
   if (document.hidden) return;
-  if (!orderMode && !bookingMode) return;
+if (!orderMode && !bookingMode && !clientTrackingMode) return;
 
   const shouldKeepRefreshing =
     hasPendingClientBookingRequest() ||
@@ -7721,10 +7769,11 @@ function activateBookingMode() {
   editingBookingRequestId = null;
   resetBookingForm();
 
-  bookingMode = true;
-  orderMode = false;
-  cartPanelOpen = false;
-  orderReviewOpen = false;
+bookingMode = true;
+orderMode = false;
+clientTrackingMode = null;
+cartPanelOpen = false;
+orderReviewOpen = false;
 
   initializeBookingForm();
 
@@ -8070,22 +8119,25 @@ async function validateOrderReview() {
     renderMenu();
     return;
   }
+setOrderFeedback('success', 'orderSent');
 
-  setOrderFeedback('success', 'orderSent');
+cart = [];
+cartPanelOpen = false;
+orderReviewOpen = false;
 
-  cart = [];
-  cartPanelOpen = false;
-  orderReviewOpen = false;
+orderForm = {
+  name: '',
+  phone: '',
+  date: '',
+  time: '',
+  note: ''
+};
 
-  orderForm = {
-    name: '',
-    phone: '',
-    date: '',
-    time: '',
-    note: ''
-  };
+openClientTrackingView('order');
 
-  renderMenu();
+setTimeout(() => {
+  refreshClientRequestCards();
+}, 120);
 }
 
 function removeFromCart(itemId) {
@@ -9000,6 +9052,66 @@ ${orderMode ? `
 </button>
       </div>
       <div id="client-order-card-slot"></div>
+    </div>
+  </div>
+` : ''}
+${clientTrackingMode ? `
+  <div class="mt-6 flex justify-center">
+    <div class="w-full max-w-2xl rounded-2xl border border-gold/40 bg-darkCard px-4 py-4 shadow-lg">
+      <div class="flex items-start justify-between gap-3">
+        <div class="text-left">
+          <div class="text-sm font-semibold text-gold tracking-wide uppercase">
+            ${
+              clientTrackingMode === 'booking'
+                ? (
+                    currentLang === 'es'
+                      ? 'Mis reservas'
+                      : currentLang === 'en'
+                        ? 'My bookings'
+                        : currentLang === 'nl'
+                          ? 'Mijn reservaties'
+                          : 'Mes réservations'
+                  )
+                : (
+                    currentLang === 'es'
+                      ? 'Mis pedidos'
+                      : currentLang === 'en'
+                        ? 'My orders'
+                        : currentLang === 'nl'
+                          ? 'Mijn bestellingen'
+                          : 'Mes commandes'
+                  )
+            }
+          </div>
+          <div class="text-sm text-cream/75 mt-1">
+            ${
+              currentLang === 'es'
+                ? 'Sigue aquí el estado de tu solicitud.'
+                : currentLang === 'en'
+                  ? 'Track the status of your request here.'
+                  : currentLang === 'nl'
+                    ? 'Volg hier de status van je aanvraag.'
+                    : 'Suivez ici l’état de votre demande.'
+            }
+          </div>
+        </div>
+
+        <button onclick="closeClientTrackingView()" class="btn-action px-3 py-1.5 rounded-lg border border-gold/35 text-xs font-semibold text-cream/85 hover:bg-gold/10 transition-all">
+          ${getBookingTexts(currentLang).bookingBackToHome}
+        </button>
+      </div>
+
+      ${clientTrackingMode === 'booking' ? `
+        <div id="client-booking-card-slot" class="mt-4">
+          ${renderLastBookingRequestCard()}
+        </div>
+      ` : ''}
+
+      ${clientTrackingMode === 'order' ? `
+        <div id="client-order-card-slot" class="mt-4">
+          ${renderLastOrderRequestCard()}
+        </div>
+      ` : ''}
     </div>
   </div>
 ` : ''}
