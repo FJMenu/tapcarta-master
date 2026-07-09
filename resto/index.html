@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-        const APP_VERSION = 'V2.6.2.1';
+        const APP_VERSION = 'V2.6.2.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -5056,11 +5056,110 @@ function getRestaurantNotificationType(item) {
   return '';
 }
 
-function getRestaurantRequestNotificationKey(item) {
-  const sourceStatus = item?.sourceRequest?.status || '';
-  const requestId = String(item?.id || item?.sourceRequest?.requestId || item?.sourceRequest?.liveRequestId || '');
+function getActiveRestaurantNotificationId() {
+  return String(
+    activeRestaurantData?.identity?.id ||
+    activeRestaurantData?.identity?.restaurantId ||
+    activeRestaurantData?.restaurantId ||
+    activeRestaurantData?.id ||
+    siteConfig?.restaurantId ||
+    siteConfig?.identity?.id ||
+    ''
+  ).trim();
+}
 
-  return `${requestId}:${sourceStatus}`;
+function getRestaurantNotificationStorageKey() {
+  const restaurantId = getActiveRestaurantNotificationId();
+
+  if (!restaurantId) {
+    return '';
+  }
+
+  return `tapcarta-resto-notified-events:${restaurantId}`;
+}
+
+function readRestaurantNotifiedEventKeys() {
+  const storageKey = getRestaurantNotificationStorageKey();
+
+  if (!storageKey) {
+    return new Set();
+  }
+
+  try {
+    const rawValue = localStorage.getItem(storageKey);
+    const parsedValue = rawValue ? JSON.parse(rawValue) : [];
+
+    return new Set(
+      Array.isArray(parsedValue)
+        ? parsedValue.map((entry) => String(entry)).filter(Boolean)
+        : []
+    );
+  } catch (error) {
+    console.warn('TapCarta Restaurant: mémoire notification locale illisible.', error);
+    return new Set();
+  }
+}
+
+function saveRestaurantNotifiedEventKeys(eventKeys) {
+  const storageKey = getRestaurantNotificationStorageKey();
+
+  if (!storageKey) {
+    return;
+  }
+
+  try {
+    const safeKeys = [...ensureRestaurantNotificationSet(eventKeys)]
+      .map((entry) => String(entry))
+      .filter(Boolean)
+      .slice(-300);
+
+    localStorage.setItem(storageKey, JSON.stringify(safeKeys));
+  } catch (error) {
+    console.warn('TapCarta Restaurant: impossible de sauvegarder la mémoire notification locale.', error);
+  }
+}
+
+function markRestaurantNotificationEventsAsSeen(eventKeys) {
+  const keysToMark = Array.isArray(eventKeys)
+    ? eventKeys
+    : [...ensureRestaurantNotificationSet(eventKeys)];
+
+  if (!keysToMark.length) {
+    return;
+  }
+
+  const storedKeys = readRestaurantNotifiedEventKeys();
+
+  keysToMark.forEach((key) => {
+    if (key) {
+      storedKeys.add(String(key));
+    }
+  });
+
+  saveRestaurantNotifiedEventKeys(storedKeys);
+}
+
+function getRestaurantRequestNotificationKey(item) {
+  const notificationType = getRestaurantNotificationType(item);
+  const sourceStatus = String(item?.sourceRequest?.status || '').trim();
+  const requestId = String(
+    item?.sourceRequest?.liveRequestId ||
+    item?.sourceRequest?.requestId ||
+    item?.id ||
+    ''
+  ).trim();
+
+  const restaurantId = String(
+    item?.sourceRequest?.restaurantId ||
+    item?.restaurantId ||
+    getActiveRestaurantNotificationId()
+  ).trim();
+
+  if (!notificationType || !restaurantId || !requestId || !sourceStatus) {
+    return '';
+  }
+
+  return `${notificationType}:${restaurantId}:${requestId}:${sourceStatus}`;
 }
 
 function getRestaurantNotificationText(items) {
@@ -5286,6 +5385,8 @@ function notifyIfNewActionRequests() {
     ? state.knownActionRequestIds
     : null;
 
+  const effectiveKnownKeys = knownKeys || new Set();
+
   const dismissedKeys = ensureRestaurantNotificationSet(state.dismissedActionRequestIds);
   const responseCycles = state.responseNotificationCycles instanceof Map
     ? state.responseNotificationCycles
@@ -5294,14 +5395,9 @@ function notifyIfNewActionRequests() {
   state.dismissedActionRequestIds = dismissedKeys;
   state.responseNotificationCycles = responseCycles;
 
-  if (!popupKeys.length || isRestaurantRequestModalOpen()) {
+  if (!popupKeys.length) {
     document.getElementById('restaurant-new-request-notification')?.remove();
-    state.knownActionRequestIds = new Set(popupKeys);
-    return;
-  }
-
-  if (!knownKeys) {
-    state.knownActionRequestIds = new Set(popupKeys);
+    state.knownActionRequestIds = new Set();
     return;
   }
 
@@ -5309,10 +5405,18 @@ function notifyIfNewActionRequests() {
     popupItems.map((item) => [getRestaurantRequestNotificationKey(item), item])
   );
 
-  const newKeys = popupKeys.filter((key) => !knownKeys.has(key) && !dismissedKeys.has(key));
+  const storedNotifiedKeys = readRestaurantNotifiedEventKeys();
+
+  const newKeys = popupKeys.filter((key) => (
+    !effectiveKnownKeys.has(key) &&
+    !dismissedKeys.has(key) &&
+    !storedNotifiedKeys.has(key)
+  ));
+
   state.knownActionRequestIds = new Set(popupKeys);
 
   const activePopupKeySet = new Set(popupKeys);
+
   dismissedKeys.forEach((key) => {
     if (!activePopupKeySet.has(key)) {
       dismissedKeys.delete(key);
@@ -5364,6 +5468,7 @@ function notifyIfNewActionRequests() {
 
     if (newKeys.length && now - state.lastNotificationAt >= 5000) {
       state.lastNotificationAt = now;
+      markRestaurantNotificationEventsAsSeen(newKeys);
       notifyRestaurantNewRequestSound();
     }
 
