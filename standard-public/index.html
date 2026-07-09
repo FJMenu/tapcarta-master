@@ -7585,7 +7585,7 @@ function playClientPremiumNotificationSound() {
 
     const masterGain = audioContext.createGain();
     masterGain.gain.setValueAtTime(0.0001, now);
-    masterGain.gain.exponentialRampToValueAtTime(0.30, now + 0.035);
+    masterGain.gain.exponentialRampToValueAtTime(0.50, now + 0.035);
     masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.95);
     masterGain.connect(audioContext.destination);
 
